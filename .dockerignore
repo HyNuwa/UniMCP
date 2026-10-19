@@ -1,0 +1,8 @@
+node_modules
+build
+vendor
+.env
+.git
+.claude
+.agents
+skills-lock.json

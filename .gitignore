@@ -1,0 +1,14 @@
+/node_modules
+/build
+/vendor
+.env
+# Links locales a .agents/skills (junction/symlink): no se versionan
+/.claude/skills
+
+# Evaluaciones: preguntas y reportes con datos académicos del alumno
+/.venv
+/evals/*.xml
+/evals/*.md
+
+# Diagramas generados con archify
+/.archify
