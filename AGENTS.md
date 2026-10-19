@@ -60,7 +60,7 @@ The user's token never leaves the server. The model and the user get URLs that o
 
 ## Code conventions
 
-- **Response fields** in Spanish and camelCase (`ultimoAcceso`, `nombreCorto`). An empty field is omitted with `|| undefined`, so it takes no space in the JSON. Dates are ISO (`isoDate`).
+- **Response fields** in Spanish and camelCase (`ultimoAcceso`, `nombreCorto`). An empty field is omitted with `|| undefined`, so it takes no space in the JSON. Dates are ISO 8601 in Argentine time, `-03:00` (`isoDate`), never UTC: a post from the night would show up as the next day.
 - **Identifier language**: all code identifiers are in English: variables, functions, types, constants and file names. In `client/` they follow the platform's vocabulary (`courseId`, `cmid`). What the model sees stays in Spanish: response fields, tool parameters and string values (`direccion`, `ultimoAcceso`). When an object's keys reach the model, they stay in Spanish even inside internal code (`FileRead`, `Campus`).
 - **Text for people and for the model** (comments, errors, descriptions, logs) in Rioplatense Spanish with voseo: "corré `unimcp login`", "No tenés acceso al módulo".
 - **Actionable errors**: the message says what to do next. Our own errors are classes with a `name` (`MoodleError`, `LoginRequiredError`, `GuaraniLoginRequiredError`).
