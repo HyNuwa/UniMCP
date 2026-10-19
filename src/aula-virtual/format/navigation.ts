@@ -64,6 +64,11 @@ async function viewCourses(session: AulaSession) {
     }));
 }
 
+/** Etiquetas enteras primero, cortadas si así no entra: el texto de una etiqueta es todo su contenido. */
+const LABEL_MODES = [true, false];
+
+const fits = (value: unknown) => JSON.stringify(value).length <= BUDGET_CHARS;
+
 /**
  * Mapa del curso: secciones y módulos con descripciones recortadas. Si no entra en el presupuesto, va un
  * índice de secciones y cada una se abre aparte. El índice sale de la misma descarga: pedir las secciones
@@ -74,12 +79,14 @@ async function viewCourse(session: AulaSession, courseId: number) {
         .filter((s) => s.uservisible !== false)
         .filter((s) => htmlToText(s.summary) || visibleModules(s).length > 0);
 
-    const secciones = sections.map((s) => ({
-        ...sectionHeader(s, courseId),
-        resumen: htmlToText(s.summary) || undefined,
-        modulos: visibleModules(s).map((m) => toModule(m, courseId, true)),
-    }));
-    if (JSON.stringify(secciones).length <= BUDGET_CHARS) return { secciones };
+    for (const labelsInFull of LABEL_MODES) {
+        const secciones = sections.map((s) => ({
+            ...sectionHeader(s, courseId),
+            resumen: htmlToText(s.summary) || undefined,
+            modulos: visibleModules(s).map((m) => toModule(m, courseId, { labelsInFull })),
+        }));
+        if (fits(secciones)) return { secciones };
+    }
 
     return {
         indice:
@@ -87,17 +94,34 @@ async function viewCourse(session: AulaSession, courseId: number) {
             "necesites con su `direccion`.",
         secciones: sections.map((s) => {
             const modules = visibleModules(s);
+            const activities = modules.filter((m) => !CONTENT_TYPES.has(m.modname));
             return {
                 ...sectionHeader(s, courseId),
                 resumen: htmlToSnippet(s.summary) || undefined,
                 modulos: modules.length,
                 tipos: modules.length ? countTypes(modules) : undefined,
+                actividades: activities.length
+                    ? activities.map((m) => ({
+                          direccion: moduleAddr(courseId, m.id),
+                          nombre: cleanName(m.name),
+                          tipo: m.modname,
+                      }))
+                    : undefined,
             };
         }),
     };
 }
 
-/** Una sección con todos sus módulos. Si ni así entra en el presupuesto, se cortan los últimos. */
+/**
+ * Tipos de módulo que son material y no algo para hacer. El índice nombra solo el resto (foros, tareas,
+ * cuestionarios): nombrar también el material lo multiplica por cinco en un curso grande.
+ */
+const CONTENT_TYPES = new Set(["label", "resource", "url", "folder", "page"]);
+
+/**
+ * Una sección con todos sus módulos. Si no entra en el presupuesto, primero se cortan las etiquetas y, si
+ * ni así entra, los últimos módulos.
+ */
 async function viewSection(session: AulaSession, courseId: number, sectionNumber: number) {
     const sections = await getCourseSections(session, courseId, { sectionNumber });
     const section = sections.find((s) => s.section === sectionNumber);
@@ -109,7 +133,12 @@ async function viewSection(session: AulaSession, courseId: number, sectionNumber
     }
 
     const seccion = { ...sectionHeader(section, courseId), resumen: htmlToText(section.summary) || undefined };
-    const modules = visibleModules(section).map((m) => toModule(m, courseId, true));
+    const map = (labelsInFull: boolean) =>
+        visibleModules(section).map((m) => toModule(m, courseId, { labelsInFull }));
+    const withFullLabels = map(true);
+    if (fits({ seccion, modulos: withFullLabels })) return { seccion, modulos: withFullLabels };
+
+    const modules = map(false);
     let spent = JSON.stringify(seccion).length;
     let kept = 0;
     for (const m of modules) {
@@ -230,26 +259,29 @@ export async function findModule(
 }
 
 /**
- * Con `summarized` el módulo va adelgazado para los mapas de curso y de sección: sin `id` ni `url`, que ya
- * cubre la `direccion`, sin el nombre de las etiquetas, que repite su texto, y con los archivos reducidos a
- * lo que pide aula_read_file. Lo demás aparece al abrir el módulo.
+ * Con `map` el módulo va adelgazado para los mapas de curso y de sección: sin `id` ni `url`, que ya cubre la
+ * `direccion`, sin el nombre de las etiquetas, que repite su texto, con la descripción recortada (la de las
+ * etiquetas, solo si no van `labelsInFull`) y con los archivos reducidos a lo que pide aula_read_file. Lo
+ * demás aparece al abrir el módulo.
  */
-function toModule(m: CourseModule, courseId: number, summarized = false) {
+function toModule(m: CourseModule, courseId: number, map?: { labelsInFull: boolean }) {
     const contents = m.contents ?? [];
     const files = contents.filter((c) => c.type === "file");
     const links = contents.filter((c) => c.type === "url");
+    const isLabel = m.modname === "label";
+    const fullDescription = !map || (isLabel && map.labelsInFull);
     return {
         direccion: moduleAddr(courseId, m.id),
-        id: summarized ? undefined : m.id,
-        nombre: summarized && m.modname === "label" ? undefined : cleanName(m.name),
+        id: map ? undefined : m.id,
+        nombre: map && isLabel ? undefined : cleanName(m.name),
         tipo: m.modname,
-        url: summarized ? undefined : m.url,
-        descripcion: (summarized ? htmlToSnippet(m.description) : htmlToText(m.description)) || undefined,
+        url: map ? undefined : m.url,
+        descripcion: (fullDescription ? htmlToText(m.description) : htmlToSnippet(m.description)) || undefined,
         restriccion: htmlToText(m.availabilityinfo) || undefined,
         fechas: m.dates?.length
             ? m.dates.map((d) => ({ etiqueta: d.label, fecha: isoDate(d.timestamp) }))
             : undefined,
-        archivos: files.length ? files.map(summarized ? toFileSummary : toFile) : undefined,
+        archivos: files.length ? files.map(map ? toFileSummary : toFile) : undefined,
         enlaces: links.length ? links.map((l) => l.fileurl) : undefined,
     };
 }

@@ -72,11 +72,13 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "y módulos, una sección con sus módulos, un módulo con sus archivos y fechas, un foro con el " +
                 "índice de sus discusiones, o una discusión con sus mensajes completos.\n\n" +
                 "Un curso grande no entra en una respuesta: viene con `indice` y cada sección trae solo su " +
-                "nombre, un resumen, cuántos `modulos` tiene y de qué `tipos`. Para ver sus módulos se abre la " +
-                "sección con su `direccion`. Si una sección sola tampoco entra, viene `recortado` con la " +
-                "cantidad de `modulosOmitidos`.\n\n" +
-                "En los mapas de curso y de sección los módulos vienen resumidos. Al abrir un módulo aparecen " +
-                "su `url` web, la descripción entera y todos los datos de sus archivos.\n\n" +
+                "nombre, un resumen, cuántos `modulos` tiene y de qué `tipos`, y sus `actividades` (foros, " +
+                "tareas, cuestionarios) con nombre y `direccion` para entrar directo. Para ver el resto de sus " +
+                "módulos se abre la sección con su `direccion`. Si una sección sola tampoco entra, viene " +
+                "`recortado` con la cantidad de `modulosOmitidos`.\n\n" +
+                "En los mapas de curso y de sección los módulos vienen resumidos: las etiquetas traen su texto " +
+                "entero cuando entra, y el resto una descripción corta. Al abrir un módulo aparecen su `url` " +
+                "web, la descripción entera y todos los datos de sus archivos.\n\n" +
                 "Según el tipo de módulo trae además: en una tarea (assign), `entrega` con el estado, el " +
                 "vencimiento, lo que se subió y la devolución con la nota; en una elección (choice) o " +
                 "selección de grupos (choicegroup), `eleccion` con las opciones y sus ids; en un foro, " +
