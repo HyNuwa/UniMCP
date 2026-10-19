@@ -63,7 +63,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 ### SIU Guaraní (autogestión, G3W)
 | Tool | Qué hace |
 |---|---|
-| `guarani_menu` | Lista las operaciones que tu universidad habilitó (historia académica, plan, inscripciones, mesas…) con su dirección. |
+| `guarani_menu` | Lista las operaciones que tu universidad habilitó (historia académica, plan, inscripciones, mesas…) con su dirección. Si tenés más de una carrera, dice cuál está activa y cómo cambiar a las otras. |
 | `guarani_open` | Abre una página de Guaraní y la devuelve como texto, con las tablas fila por fila, los avisos y los enlaces a otras páginas. |
 
 Guaraní no tiene API: el servidor entra con tu usuario y lee las páginas como lo harías vos. Por ahora **solo lee**: para inscribirte, el agente te pasa el link. Las tools solo aparecen si tu campus tiene esa plataforma.

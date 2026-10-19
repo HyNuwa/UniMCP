@@ -74,7 +74,21 @@ export async function fetchWithCookies(
             init = undefined; // después de un redirect se sigue con GET
             continue;
         }
-        return { url, status: res.status, html: await res.text() };
+        return { url, status: res.status, html: await decodeBody(res) };
     }
     throw new HttpError("Demasiadas redirecciones.");
+}
+
+/**
+ * El cuerpo como texto en el charset que declara el servidor: `res.text()` asume UTF-8, y Guaraní de UNJu
+ * manda ISO-8859-1, así que las tildes del menú llegaban como "�".
+ */
+async function decodeBody(res: Response): Promise<string> {
+    const charset = res.headers.get("content-type")?.match(/charset=["']?([\w-]+)/i)?.[1];
+    const bytes = await res.arrayBuffer();
+    try {
+        return new TextDecoder(charset ?? "utf-8").decode(bytes);
+    } catch {
+        return new TextDecoder().decode(bytes); // charset desconocido
+    }
 }

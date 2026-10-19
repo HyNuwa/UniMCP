@@ -46,7 +46,9 @@ The user's token never leaves the server. The model and the user get URLs that o
 - G3W has no API. Each page arrives as pagelets, `kernel.renderer.on_arrival({op, info: {id}, content})`, with the HTML inside a JSON (`parsePagelets`).
 - Login is the form at `<base>/acceso?auth=form` (`usuario`, `password`). A rejected login, or an expired session, shows the `#guarani_form_login` form again; the rejection reason is in `#error_login`.
 - The session is a cookie that expires in minutes, so renewing means logging in again with the password. That's why Guaraní is local-only for now: the hosted mode doesn't store passwords.
-- Menus and operation names change between universities and versions, so the tools are generic navigation (`guarani_menu`, `guarani_open`) rather than one tool per hard-coded operation. Pages under `acceso` (login, logout) are never opened.
+- Menus and operation names change between universities and versions, so the tools are generic navigation (`guarani_menu`, `guarani_open`) rather than one tool per hard-coded operation. Pages under `acceso` (login, logout) are never opened, except `acceso/cambiar_carrera`, which switches the active career: history, plan and enrollments belong to it.
+- Some versions send the menu and the career selector in the page HTML, not as a pagelet (`G3wPage.shell`). Pages are decoded with the charset of `content-type` (UNJu sends ISO-8859-1).
+- A page with a filter form (`#form_filtros`, the academic history) arrives without data: it's requested again with every checkbox on.
 - It's read-only. Signing up for courses or exams needs to observe the real forms first.
 
 ## Tool design

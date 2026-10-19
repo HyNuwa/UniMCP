@@ -12,4 +12,6 @@ export interface G3wPage {
     url: string;
     op: string | null;
     pagelets: Pagelet[];
+    /** El HTML de la página sin los scripts: en UNJu el menú y el selector de carrera vienen acá, no en una parte. */
+    shell: string;
 }

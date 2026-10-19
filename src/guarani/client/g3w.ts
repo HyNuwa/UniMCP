@@ -22,6 +22,8 @@ export class InvalidGuaraniCredentialsError extends Error {
 
 /** Las operaciones de `acceso` son el login y el logout: el modelo no tiene nada que hacer ahí. */
 const ACCESS_OP = /^acceso(\/|$|\?)/;
+/** La excepción: cambiar la propuesta (carrera) activa, que G3W también pone bajo `acceso`. */
+const CAREER_SWITCH = /^acceso\/cambiar_carrera\?/;
 
 /**
  * Entra a la autogestión con el formulario de login (`acceso?auth=form`). Primero se pide la página
@@ -63,7 +65,12 @@ export async function getPage(session: GuaraniSession, address: string): Promise
         }
         await session.save(jar);
         if (res.status >= 400) throw new Error(`Guaraní contestó HTTP ${res.status} en ${new URL(res.url).pathname}.`);
-        return { url: res.url, op: pagelets[0]?.op ?? null, pagelets };
+        return {
+            url: res.url,
+            op: pagelets[0]?.op ?? null,
+            pagelets,
+            shell: res.html.replace(/<script\b[\s\S]*?<\/script>/gi, ""),
+        };
     }
 }
 
@@ -84,7 +91,8 @@ export function pageUrl(site: GuaraniSite, address: string): URL {
     if (u.origin !== base.origin || !u.pathname.startsWith(base.pathname)) {
         throw new Error(`Solo se pueden abrir páginas de la autogestión (${base.href}...).`);
     }
-    if (ACCESS_OP.test(toAddress(site, u))) {
+    const relative = toAddress(site, u);
+    if (ACCESS_OP.test(relative) && !CAREER_SWITCH.test(relative)) {
         throw new Error("Las páginas de acceso (login y logout) no se abren: la sesión la maneja el servidor.");
     }
     u.hash = "";

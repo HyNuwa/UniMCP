@@ -27,7 +27,11 @@ export function registerGuaraniTools(server: McpServer, session: GuaraniSession)
                 "(notas finales, correlativas, regularidades, mesas), que no está en el aula virtual.\n\n" +
                 "Cada operación trae su `direccion`, que se le pasa a guarani_open. Los nombres los pone cada " +
                 "universidad, así que buscá por sentido (\"Historia Académica\", \"Mis Inscripciones\", " +
-                "\"Inscripción a Exámenes\"). `encabezado` trae el alumno y la propuesta (carrera) activa.",
+                "\"Inscripción a Exámenes\"). La página de inicio (`inicio`, se abre con la dirección \"\") suele " +
+                "traer los períodos lectivos con sus fechas de inscripción y los turnos de examen.\n\n" +
+                "`propuesta` es la carrera activa: la historia, el plan y las inscripciones que muestra Guaraní " +
+                "son de esa carrera. Si el alumno tiene otras, vienen en `otrasPropuestas`, cada una con una " +
+                "`direccion` que la activa al abrirla con guarani_open; después se abre la operación de nuevo.",
             annotations: READ_ONLY,
         },
         async () => {
@@ -47,7 +51,8 @@ export function registerGuaraniTools(server: McpServer, session: GuaraniSession)
                 "fila por fila y las celdas separadas por \" | \" (materia | fecha | nota | resultado, por ejemplo), " +
                 "los `avisos` que muestra Guaraní y los `enlaces` a otras páginas, cada uno con su `direccion`.\n\n" +
                 "No hace falta armar la dirección: sale de guarani_menu o de los `enlaces` de otra respuesta. Si " +
-                "viene `recortado`, la página era más larga que lo que entra en una respuesta.\n\n" +
+                "viene `recortado`, la página era más larga que lo que entra en una respuesta. `propuesta` dice de " +
+                "qué carrera son los datos.\n\n" +
                 "Solo lee: no inscribe ni da de baja. Si el usuario quiere inscribirse, pasale `urlParaUsuario` " +
                 "para que lo haga desde el navegador.",
             inputSchema: {

@@ -1,7 +1,7 @@
 import { htmlToText } from "../../shared/html.js";
 import { getPage, pageUrl, toAddress } from "../client/g3w.js";
 import type { GuaraniSession } from "../client/session.js";
-import type { Pagelet } from "../client/types.js";
+import type { G3wPage, Pagelet } from "../client/types.js";
 
 /** Cuánto texto de las secciones se devuelve por página, en caracteres. */
 const BUDGET_CHARS = 30_000;
@@ -20,7 +20,7 @@ interface Link {
  * otras páginas. La dirección vacía es la página de inicio del alumno.
  */
 export async function openPage(session: GuaraniSession, address = "") {
-    const page = await getPage(session, address);
+    const page = await withAllFilters(session, await getPage(session, address));
     const content = page.pagelets.filter((p) => !MENU_PAGELET.test(p.id));
 
     const sections: { id: string; texto: string }[] = [];
@@ -40,10 +40,11 @@ export async function openPage(session: GuaraniSession, address = "") {
         spent += cut.length;
     }
 
-    const links = collectLinks(session, page.url, content);
+    const links = collectLinks(session, page.url, content.map((p) => p.content));
     return {
         direccion: toAddress(session.site, page.url),
         operacion: page.op || undefined,
+        propuesta: careers(page.shell, page.op).propuesta,
         urlParaUsuario: page.url,
         avisos: notices(page.pagelets),
         secciones: sections,
@@ -56,14 +57,51 @@ export async function openPage(session: GuaraniSession, address = "") {
 export async function openMenu(session: GuaraniSession) {
     const page = await getPage(session, "");
     const menu = page.pagelets.filter((p) => MENU_PAGELET.test(p.id));
-    // Si la versión de G3W nombra distinto al menú, mejor todos los enlaces que ninguno.
-    const links = collectLinks(session, page.url, menu.length ? menu : page.pagelets);
+    // Algunas versiones mandan el menú como una parte; UNJu lo manda en el HTML de la página.
+    const links = collectLinks(session, page.url, menu.length ? menu.map((p) => p.content) : [page.shell]);
     const header = menu.map((p) => tableAwareText(p.content)).filter(Boolean).join("\n");
     return {
         inicio: toAddress(session.site, page.url),
         encabezado: header ? header.slice(0, 2_000) : undefined,
+        ...careers(page.shell, page.op),
         operaciones: links.slice(0, MAX_LINKS),
     };
+}
+
+/**
+ * Las propuestas (carreras) del alumno, del selector de G3W: historia, plan e inscripciones son de la
+ * activa. Las otras traen la dirección que la activa, que es la misma que usa el selector.
+ */
+function careers(shell: string, op: string | null) {
+    const found = [...shell.matchAll(/<a\b([^>]*\bjs-select-carreras\b[^>]*)>([\s\S]*?)<\/a>/gi)].map((m) => ({
+        nombre: htmlToText(m[2]),
+        id: m[1].match(/data-carrera-id=['"](\d+)['"]/)?.[1],
+        activa: /class=['"][^'"]*\bselected\b/.test(m[1]),
+    }));
+    const others = found.filter((c) => !c.activa && c.id);
+    return {
+        propuesta: found.find((c) => c.activa)?.nombre,
+        otrasPropuestas: others.length
+            ? others.map((c) => ({
+                  nombre: c.nombre,
+                  direccion: `acceso/cambiar_carrera?id=${c.id}&op=${op || "inicio_alumno"}`,
+              }))
+            : undefined,
+    };
+}
+
+/**
+ * Algunas páginas (la historia académica) llegan con un formulario de filtros y sin datos: el JS de G3W
+ * los pide al tocar un filtro. Se pide de nuevo con todas las casillas marcadas, leídas de la página.
+ */
+async function withAllFilters(session: GuaraniSession, page: G3wPage): Promise<G3wPage> {
+    if (new URL(page.url).search) return page;
+    const form = page.pagelets.find((p) => p.content.includes('id="form_filtros"'));
+    if (!form) return page;
+    const checks = [...form.content.matchAll(/<input\b[^>]*type=['"]checkbox['"][^>]*value=['"]([^'"]+)['"]/gi)];
+    if (!checks.length) return page;
+    const query = new URLSearchParams({ checks: checks.map((m) => m[1]).join(",") });
+    return getPage(session, `${toAddress(session.site, page.url)}?${query}`);
 }
 
 /**
@@ -94,11 +132,11 @@ function notices(pagelets: Pagelet[]): string[] | undefined {
 }
 
 /** Los enlaces a otras páginas de la autogestión, sin repetir y sin los de acceso (login, logout). */
-function collectLinks(session: GuaraniSession, from: string, pagelets: Pagelet[]): Link[] {
+function collectLinks(session: GuaraniSession, from: string, htmls: string[]): Link[] {
     const seen = new Set<string>();
     const links: Link[] = [];
-    for (const p of pagelets) {
-        for (const m of p.content.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    for (const html of htmls) {
+        for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
             const href = m[1].match(/href=['"]([^'"]+)['"]/i)?.[1];
             if (!href || href.startsWith("#") || /^(javascript|mailto):/i.test(href)) continue;
             let address: string;
