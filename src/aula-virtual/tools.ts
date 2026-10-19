@@ -69,8 +69,14 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         {
             description:
                 "Entra a una dirección del aula virtual y devuelve lo que hay ahí: un curso con sus secciones " +
-                "y módulos, un módulo con sus archivos y fechas, un foro con el índice de sus discusiones, o " +
-                "una discusión con sus mensajes completos.\n\n" +
+                "y módulos, una sección con sus módulos, un módulo con sus archivos y fechas, un foro con el " +
+                "índice de sus discusiones, o una discusión con sus mensajes completos.\n\n" +
+                "Un curso grande no entra en una respuesta: viene con `indice` y cada sección trae solo su " +
+                "nombre, un resumen, cuántos `modulos` tiene y de qué `tipos`. Para ver sus módulos se abre la " +
+                "sección con su `direccion`. Si una sección sola tampoco entra, viene `recortado` con la " +
+                "cantidad de `modulosOmitidos`.\n\n" +
+                "En los mapas de curso y de sección los módulos vienen resumidos. Al abrir un módulo aparecen " +
+                "su `url` web, la descripción entera y todos los datos de sus archivos.\n\n" +
                 "Según el tipo de módulo trae además: en una tarea (assign), `entrega` con el estado, el " +
                 "vencimiento, lo que se subió y la devolución con la nota; en una elección (choice) o " +
                 "selección de grupos (choicegroup), `eleccion` con las opciones y sus ids; en un foro, " +
@@ -89,7 +95,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                     .string()
                     .describe(
                         'Dirección a abrir, sacada de una respuesta anterior. Ej: "/", "/curso/691", ' +
-                            '"/curso/691/mod/34806", "/curso/691/mod/34806/disc/421348".',
+                            '"/curso/691/sec/6", "/curso/691/mod/34806", "/curso/691/mod/34806/disc/421348".',
                     ),
                 pagina: z
                     .number()

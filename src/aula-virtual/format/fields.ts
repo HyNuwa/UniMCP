@@ -5,6 +5,9 @@ import { userFacingUrl } from "./files.js";
 export const isoDate = (seconds: number | null | undefined) =>
     seconds ? new Date(seconds * 1000).toISOString() : null;
 
+/** Moodle guarda nombres con saltos de línea y espacios de más, sobre todo en las etiquetas. */
+export const cleanName = (name: string) => name.replace(/\s+/g, " ").trim();
+
 export function toFile(f: MoodleFile) {
     return {
         nombre: f.filename,
@@ -15,4 +18,9 @@ export function toFile(f: MoodleFile) {
         // Le sirve al usuario para bajarlo y al modelo para leerlo con aula_read_file.
         url: userFacingUrl(f.fileurl),
     };
+}
+
+/** Lo justo de un archivo para un mapa de curso o de sección: leerlo con aula_read_file pide la `url`. */
+export function toFileSummary(f: MoodleFile) {
+    return { nombre: f.filename, url: userFacingUrl(f.fileurl), modificado: isoDate(f.timemodified) };
 }

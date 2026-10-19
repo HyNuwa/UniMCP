@@ -50,6 +50,7 @@ export interface CourseSection {
     section: number;
     summary: string;
     uservisible?: boolean;
+    availabilityinfo?: string;
     modules: CourseModule[];
 }
 

@@ -84,6 +84,18 @@ mkdir -p .claude/skills && for s in .agents/skills/*/; do n=$(basename "$s"); ln
 
 `evals/` holds the evaluation: `run_eval.py` wraps the mcp-builder harness, and the questions (`*.xml`) and reports stay untracked because they contain the student's data.
 
+### Issue tracker
+
+Issues and specs live in GitHub Issues of HyNuwa/UniMCP, through the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 ## Verify and publish
 
 - There are no tests. Verify with `npx tsc --noEmit` and try it against a real campus with `npm run dev` (requires `npm run login` once).

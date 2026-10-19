@@ -6,6 +6,7 @@ import {
     moduleAddr,
     parentOf,
     parseAddress,
+    sectionAddr,
     type Address,
 } from "./address.js";
 import {
@@ -19,7 +20,8 @@ import {
 import type { AulaSession } from "../client/session.js";
 import type { CourseModule, CourseSection } from "../client/types.js";
 import { viewChoice, viewChoicegroup, viewSubmission } from "./activities.js";
-import { isoDate, toFile } from "./fields.js";
+import { cleanName, isoDate, toFile, toFileSummary } from "./fields.js";
+import { BUDGET_CHARS } from "./files.js";
 
 type ModuleAddress = Extract<Address, { level: "module" }>;
 
@@ -36,7 +38,10 @@ export async function open(session: AulaSession, rawAddress: string, page = 0) {
             return { ...base, cursos: await viewCourses(session) };
 
         case "course":
-            return { ...base, secciones: await viewCourse(session, address.courseId) };
+            return { ...base, ...(await viewCourse(session, address.courseId)) };
+
+        case "section":
+            return { ...base, ...(await viewSection(session, address.courseId, address.section)) };
 
         case "module":
             return { ...base, ...(await viewModule(session, address, page)) };
@@ -59,23 +64,89 @@ async function viewCourses(session: AulaSession) {
     }));
 }
 
-/** Mapa del curso: secciones y módulos con descripciones recortadas. */
+/**
+ * Mapa del curso: secciones y módulos con descripciones recortadas. Si no entra en el presupuesto, va un
+ * índice de secciones y cada una se abre aparte. El índice sale de la misma descarga: pedir las secciones
+ * sin módulos (`excludemodules`) igual pesa megas y no dice cuántos módulos tiene cada una.
+ */
 async function viewCourse(session: AulaSession, courseId: number) {
-    const sections = await getCourseSections(session, courseId);
-    return sections
+    const sections = (await getCourseSections(session, courseId))
         .filter((s) => s.uservisible !== false)
-        .map((s) => ({
-            nombre: s.name,
-            numero: s.section,
-            resumen: htmlToText(s.summary) || undefined,
-            modulos: s.modules.filter((m) => m.uservisible).map((m) => toModule(m, courseId, true)),
-        }))
-        .filter((s) => s.resumen || s.modulos.length > 0);
+        .filter((s) => htmlToText(s.summary) || visibleModules(s).length > 0);
+
+    const secciones = sections.map((s) => ({
+        ...sectionHeader(s, courseId),
+        resumen: htmlToText(s.summary) || undefined,
+        modulos: visibleModules(s).map((m) => toModule(m, courseId, true)),
+    }));
+    if (JSON.stringify(secciones).length <= BUDGET_CHARS) return { secciones };
+
+    return {
+        indice:
+            "El curso entero no entra en una respuesta, así que vino como índice. Abrí la sección que " +
+            "necesites con su `direccion`.",
+        secciones: sections.map((s) => {
+            const modules = visibleModules(s);
+            return {
+                ...sectionHeader(s, courseId),
+                resumen: htmlToSnippet(s.summary) || undefined,
+                modulos: modules.length,
+                tipos: modules.length ? countTypes(modules) : undefined,
+            };
+        }),
+    };
+}
+
+/** Una sección con todos sus módulos. Si ni así entra en el presupuesto, se cortan los últimos. */
+async function viewSection(session: AulaSession, courseId: number, sectionNumber: number) {
+    const sections = await getCourseSections(session, courseId, { sectionNumber });
+    const section = sections.find((s) => s.section === sectionNumber);
+    if (!section || section.uservisible === false) {
+        throw new Error(
+            `No existe la sección ${sectionNumber} en el curso ${courseId}, o no tenés acceso. ` +
+                `Abrí "${courseAddr(courseId)}" para ver sus secciones.`,
+        );
+    }
+
+    const seccion = { ...sectionHeader(section, courseId), resumen: htmlToText(section.summary) || undefined };
+    const modules = visibleModules(section).map((m) => toModule(m, courseId, true));
+    let spent = JSON.stringify(seccion).length;
+    let kept = 0;
+    for (const m of modules) {
+        spent += JSON.stringify(m).length + 1;
+        if (spent > BUDGET_CHARS) break;
+        kept++;
+    }
+    const omitted = modules.length - kept;
+    return {
+        seccion,
+        modulos: modules.slice(0, kept),
+        recortado: omitted > 0 || undefined,
+        modulosOmitidos: omitted || undefined,
+    };
+}
+
+function sectionHeader(s: CourseSection, courseId: number) {
+    return {
+        direccion: sectionAddr(courseId, s.section),
+        nombre: cleanName(s.name),
+        numero: s.section,
+        restriccion: htmlToText(s.availabilityinfo) || undefined,
+    };
+}
+
+const visibleModules = (s: CourseSection) => s.modules.filter((m) => m.uservisible);
+
+/** Cuántos módulos hay de cada tipo, para ver de un vistazo dónde hay tareas, foros o recursos. */
+function countTypes(modules: CourseModule[]) {
+    const types: Record<string, number> = {};
+    for (const m of modules) types[m.modname] = (types[m.modname] ?? 0) + 1;
+    return types;
 }
 
 async function viewModule(session: AulaSession, address: ModuleAddress, page: number) {
     const { sectionName, module } = await findModule(session, address.courseId, address.cmid);
-    const base = { seccion: sectionName, modulo: toModule(module, address.courseId) };
+    const base = { seccion: cleanName(sectionName), modulo: toModule(module, address.courseId) };
     switch (module.modname) {
         case "forum":
             return { ...base, ...(await viewForum(session, address, module.instance, page)) };
@@ -148,7 +219,7 @@ export async function findModule(
     courseId: number,
     cmid: number,
 ): Promise<{ sectionName: string; module: CourseModule }> {
-    const sections: CourseSection[] = await getCourseSections(session, courseId, cmid);
+    const sections: CourseSection[] = await getCourseSections(session, courseId, { cmid });
     for (const section of sections) {
         const module = section.modules.find((m) => m.id === cmid);
         if (!module) continue;
@@ -158,23 +229,27 @@ export async function findModule(
     throw new Error(`No existe el módulo ${cmid} en el curso ${courseId}.`);
 }
 
-/** Con `summarized` la descripción se recorta: en el mapa del curso basta para decidir si entrar. */
+/**
+ * Con `summarized` el módulo va adelgazado para los mapas de curso y de sección: sin `id` ni `url`, que ya
+ * cubre la `direccion`, sin el nombre de las etiquetas, que repite su texto, y con los archivos reducidos a
+ * lo que pide aula_read_file. Lo demás aparece al abrir el módulo.
+ */
 function toModule(m: CourseModule, courseId: number, summarized = false) {
     const contents = m.contents ?? [];
     const files = contents.filter((c) => c.type === "file");
     const links = contents.filter((c) => c.type === "url");
     return {
         direccion: moduleAddr(courseId, m.id),
-        id: m.id,
-        nombre: m.name,
+        id: summarized ? undefined : m.id,
+        nombre: summarized && m.modname === "label" ? undefined : cleanName(m.name),
         tipo: m.modname,
-        url: m.url,
+        url: summarized ? undefined : m.url,
         descripcion: (summarized ? htmlToSnippet(m.description) : htmlToText(m.description)) || undefined,
         restriccion: htmlToText(m.availabilityinfo) || undefined,
         fechas: m.dates?.length
             ? m.dates.map((d) => ({ etiqueta: d.label, fecha: isoDate(d.timestamp) }))
             : undefined,
-        archivos: files.length ? files.map(toFile) : undefined,
+        archivos: files.length ? files.map(summarized ? toFileSummary : toFile) : undefined,
         enlaces: links.length ? links.map((l) => l.fileurl) : undefined,
     };
 }

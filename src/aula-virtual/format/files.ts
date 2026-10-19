@@ -6,8 +6,8 @@ import type { AulaSession } from "../client/session.js";
 const WS_PATH = "/webservice/pluginfile.php/";
 const WEB_PATH = "/pluginfile.php/";
 
-/** Presupuesto por llamada, en caracteres de texto. */
-const BUDGET_CHARS = 30_000;
+/** Presupuesto por llamada, en caracteres de texto. Lo usan también los mapas de curso y de sección. */
+export const BUDGET_CHARS = 30_000;
 /** Costo de una página como imagen (unos 1.600 tokens) expresado en caracteres de texto. */
 const IMAGE_COST_CHARS = 6_000;
 /** El archivo más pesado que encontramos en los cursos tiene 12 MB. */

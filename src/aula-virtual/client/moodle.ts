@@ -33,13 +33,25 @@ export async function getUserCourses(session: AulaSession): Promise<Course[]> {
 
 /**
  * Secciones y módulos de un curso. Si se pasa `cmid`, Moodle trae todas las secciones pero completa
- * solo ese módulo: alcanza para abrir uno sin cargar el curso completo.
+ * solo ese módulo: alcanza para abrir uno sin cargar el curso completo. Con `sectionNumber` trae solo esa
+ * sección, mucho más rápido que el curso entero (0,4 s contra 7 s en un curso de 378 módulos).
  */
-export function getCourseSections(session: AulaSession, courseId: number, cmid?: number): Promise<CourseSection[]> {
+export function getCourseSections(
+    session: AulaSession,
+    courseId: number,
+    filter: { cmid?: number; sectionNumber?: number } = {},
+): Promise<CourseSection[]> {
     const params: Record<string, string | number> = { courseid: courseId };
-    if (cmid !== undefined) {
-        params["options[0][name]"] = "cmid";
-        params["options[0][value]"] = cmid;
+    const options: [string, number | undefined][] = [
+        ["cmid", filter.cmid],
+        ["sectionnumber", filter.sectionNumber],
+    ];
+    let i = 0;
+    for (const [name, value] of options) {
+        if (value === undefined) continue;
+        params[`options[${i}][name]`] = name;
+        params[`options[${i}][value]`] = value;
+        i++;
     }
     return callWs<CourseSection[]>(session, "core_course_get_contents", params);
 }
