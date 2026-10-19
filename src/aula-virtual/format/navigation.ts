@@ -17,10 +17,11 @@ import {
     getUserCourses,
     PAGE_SIZE,
 } from "../client/moodle.js";
+import type { AulaSite } from "../../shared/campus.js";
 import type { AulaSession } from "../client/session.js";
 import type { CourseModule, CourseSection } from "../client/types.js";
 import { viewChoice, viewChoicegroup, viewSubmission } from "./activities.js";
-import { cleanName, isoDate, toFile, toFileSummary } from "./fields.js";
+import { cleanName, isoDate, richText, safeLink, toFile, toFileSummary } from "./fields.js";
 import { BUDGET_CHARS } from "./files.js";
 
 type ModuleAddress = Extract<Address, { level: "module" }>;
@@ -82,8 +83,8 @@ async function viewCourse(session: AulaSession, courseId: number) {
     for (const labelsInFull of LABEL_MODES) {
         const secciones = sections.map((s) => ({
             ...sectionHeader(s, courseId),
-            resumen: htmlToText(s.summary) || undefined,
-            modulos: visibleModules(s).map((m) => toModule(m, courseId, { labelsInFull })),
+            resumen: richText(session.site, s.summary) || undefined,
+            modulos: visibleModules(s).map((m) => toModule(m, courseId, session.site, { labelsInFull })),
         }));
         if (fits(secciones)) return { secciones };
     }
@@ -132,9 +133,9 @@ async function viewSection(session: AulaSession, courseId: number, sectionNumber
         );
     }
 
-    const seccion = { ...sectionHeader(section, courseId), resumen: htmlToText(section.summary) || undefined };
+    const seccion = { ...sectionHeader(section, courseId), resumen: richText(session.site, section.summary) || undefined };
     const map = (labelsInFull: boolean) =>
-        visibleModules(section).map((m) => toModule(m, courseId, { labelsInFull }));
+        visibleModules(section).map((m) => toModule(m, courseId, session.site, { labelsInFull }));
     const withFullLabels = map(true);
     if (fits({ seccion, modulos: withFullLabels })) return { seccion, modulos: withFullLabels };
 
@@ -175,7 +176,7 @@ function countTypes(modules: CourseModule[]) {
 
 async function viewModule(session: AulaSession, address: ModuleAddress, page: number) {
     const { sectionName, module } = await findModule(session, address.courseId, address.cmid);
-    const base = { seccion: cleanName(sectionName), modulo: toModule(module, address.courseId) };
+    const base = { seccion: cleanName(sectionName), modulo: toModule(module, address.courseId, session.site) };
     switch (module.modname) {
         case "forum":
             return { ...base, ...(await viewForum(session, address, module.instance, page)) };
@@ -229,7 +230,7 @@ async function viewDiscussion(session: AulaSession, discussionId: number) {
             fecha: isoDate(p.timecreated),
             respuestaA: p.parentid ?? undefined,
             id: p.id,
-            mensaje: htmlToText(p.message),
+            mensaje: richText(session.site, p.message),
             adjuntos: p.attachments.length ? p.attachments.map(toFile) : undefined,
             // Qué acciones permite cada publicación, para no intentar lo que Moodle rechazaría.
             acciones: allowedActions(p.capabilities),
@@ -264,7 +265,7 @@ export async function findModule(
  * etiquetas, solo si no van `labelsInFull`) y con los archivos reducidos a lo que pide aula_read_file. Lo
  * demás aparece al abrir el módulo.
  */
-function toModule(m: CourseModule, courseId: number, map?: { labelsInFull: boolean }) {
+function toModule(m: CourseModule, courseId: number, site: AulaSite, map?: { labelsInFull: boolean }) {
     const contents = m.contents ?? [];
     const files = contents.filter((c) => c.type === "file");
     const links = contents.filter((c) => c.type === "url");
@@ -276,12 +277,12 @@ function toModule(m: CourseModule, courseId: number, map?: { labelsInFull: boole
         nombre: map && isLabel ? undefined : cleanName(m.name),
         tipo: m.modname,
         url: map ? undefined : m.url,
-        descripcion: (fullDescription ? htmlToText(m.description) : htmlToSnippet(m.description)) || undefined,
+        descripcion: (fullDescription ? richText(site, m.description) : htmlToSnippet(m.description)) || undefined,
         restriccion: htmlToText(m.availabilityinfo) || undefined,
         fechas: m.dates?.length
             ? m.dates.map((d) => ({ etiqueta: d.label, fecha: isoDate(d.timestamp) }))
             : undefined,
         archivos: files.length ? files.map(map ? toFileSummary : toFile) : undefined,
-        enlaces: links.length ? links.map((l) => l.fileurl) : undefined,
+        enlaces: links.length ? links.map((l) => safeLink(site, l.fileurl)).filter(Boolean) : undefined,
     };
 }

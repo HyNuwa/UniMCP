@@ -6,9 +6,10 @@ import {
     getChoices,
     getSubmissionStatus,
 } from "../client/moodle.js";
+import type { AulaSite } from "../../shared/campus.js";
 import type { AulaSession } from "../client/session.js";
 import type { AssignPlugin, ChoiceOption, CourseModule, MoodleFile } from "../client/types.js";
-import { isoDate, toFile } from "./fields.js";
+import { isoDate, richText, toFile } from "./fields.js";
 
 const SUBMISSION_STATUS_LABELS: Record<string, string> = {
     new: "sin entregar",
@@ -66,23 +67,23 @@ export async function viewSubmission(session: AulaSession, courseId: number, mod
         puedeEditar: attempt?.canedit ?? false,
         puedeEnviar: attempt?.cansubmit || undefined,
         bloqueada: attempt?.locked || undefined,
-        ...pluginContent(submission?.plugins),
+        ...pluginContent(session.site, submission?.plugins),
         devolucion: feedback
             ? {
                   calificacion: feedback.gradefordisplay || undefined,
                   fecha: isoDate(feedback.gradeddate),
-                  ...pluginContent(feedback.plugins),
+                  ...pluginContent(session.site, feedback.plugins),
               }
             : undefined,
     };
 }
 
 /** Archivos y textos de una entrega o devolución, salteando los plugins sin contenido. */
-function pluginContent(plugins: AssignPlugin[] = []) {
+function pluginContent(site: AulaSite, plugins: AssignPlugin[] = []) {
     const files: MoodleFile[] = plugins.flatMap((p) => p.fileareas?.flatMap((a) => a.files ?? []) ?? []);
     const texts = plugins
         .flatMap((p) => p.editorfields ?? [])
-        .map((e) => htmlToText(e.text))
+        .map((e) => richText(site, e.text))
         .filter(Boolean);
     return {
         archivos: files.length ? files.map(toFile) : undefined,

@@ -125,7 +125,7 @@ async function withAllFilters(session: GuaraniSession, page: G3wPage): Promise<G
  * " | ": así se leen la historia académica, las mesas y las inscripciones sin perder las columnas.
  */
 function pageletText(html: string): string {
-    return htmlToText(html, { drop: NOISE, tableCells: true });
+    return htmlToText(html, { drop: NOISE });
 }
 
 function notices(pagelets: Pagelet[]): string[] | undefined {

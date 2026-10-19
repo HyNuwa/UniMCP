@@ -1,5 +1,20 @@
+import type { AulaSite } from "../../shared/campus.js";
+import { htmlToText, safeUrl } from "../../shared/html.js";
 import type { MoodleFile } from "../client/types.js";
 import { userFacingUrl } from "./files.js";
+
+/**
+ * Texto rico del aula (resúmenes, etiquetas, mensajes, devoluciones) con la URL de cada link e iframe: el
+ * docente escribe "LINK" y la dirección de la clase está en el href. Las URLs van sin credenciales y las
+ * del propio aula abren con la sesión del navegador.
+ */
+export const richText = (site: AulaSite, html: string | undefined) =>
+    htmlToText(html, { links: linkOptions(site) });
+
+/** Una URL del aula o de afuera lista para el modelo, con las mismas reglas que los links de richText. */
+export const safeLink = (site: AulaSite, url: string) => safeUrl(url, linkOptions(site));
+
+const linkOptions = (site: AulaSite) => ({ base: site.baseUrl, rewrite: userFacingUrl });
 
 /**
  * Hora argentina, en minutos respecto de UTC. Es fija: Argentina no usa horario de verano desde 2009. No se

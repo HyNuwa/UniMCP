@@ -15,32 +15,88 @@ interface Node {
     type: string;
     data?: string;
     name?: string;
+    attribs?: Record<string, string>;
     children?: Node[];
+}
+
+/**
+ * Parámetros de URL que son credenciales: con ellos el link abre como el usuario o con su sesión. Se
+ * quitan siempre antes de mostrarle una URL al modelo (los de Moodle, los de las firmas de S3 y los
+ * genéricos).
+ */
+const CREDENTIAL_PARAMS =
+    /^(token|wstoken|privatetoken|sesskey|moodlesession|phpsessid|sessionid|session|access_token|id_token|refresh_token|auth|authtoken|apikey|api_key|password|passwd|pass|pwd|secret|client_secret|x-amz-signature|x-amz-credential|x-amz-security-token|signature|sig)$/i;
+
+/** Cómo se muestran las URLs de links e iframes. Sin esto se muestra solo el texto del link. */
+export interface LinkOptions {
+    /** Contra qué se resuelven las URLs relativas: la URL del sitio. */
+    base: string;
+    /** Un último paso propio de la plataforma, como `userFacingUrl` en el aula. */
+    rewrite?: (url: string) => string;
 }
 
 export interface TextOptions {
     /** Selector de lo que se descarta con todo su contenido, además de scripts y estilos: botones, modales. */
     drop?: string;
-    /** Las tablas fila por fila, una por línea, con las celdas separadas por " | ". */
-    tableCells?: boolean;
+    /** Links como "texto (url)" e iframes con su URL, sin credenciales. */
+    links?: LinkOptions;
 }
 
 /**
- * HTML a texto plano para el modelo. Lo parsea cheerio con parse5, el algoritmo del estándar, que corrige el
- * HTML mal formado (G3W deja etiquetas sin cerrar) y decodifica todas las entidades.
+ * HTML a texto para el modelo. Lo parsea cheerio con parse5, el algoritmo del estándar, que corrige el
+ * HTML mal formado (G3W deja etiquetas sin cerrar) y decodifica todas las entidades. Los títulos van con
+ * `#`, los ítems de lista con `- ` y las tablas fila por fila con las celdas separadas por " | ".
  */
 export function htmlToText(html: string | undefined, options: TextOptions = {}): string {
     if (!html) return "";
     const $ = load(html, null, false);
     $(NOT_TEXT).remove();
     if (options.drop) $(options.drop).remove();
-    return normalize(render($.root()[0].children as unknown as Node[], options));
+    const text = render($.root()[0].children as unknown as Node[], options);
+    return normalize(options.links ? placeLinks(cleanUrls(text, options.links)) : text);
 }
+
+/** Marcas de dónde va la URL de un link con texto; placeLinks la ubica al final de la palabra. */
+const LINK_START = "\u0001";
+const LINK_END = "\u0002";
+
+/** Una URL escrita en el texto, sin la puntuación que la cierra ("…/clase."). */
+const URL_IN_TEXT = /https?:\/\/[^\s<>"'()[\]\u0001\u0002]+[^\s<>"'()[\]\u0001\u0002.,;:!?]/g;
+
+/** Las URLs del texto también, no solo las de los links: un docente puede pegar una con `token=`. */
+const cleanUrls = (text: string, links: LinkOptions) => text.replace(URL_IN_TEXT, (u) => safeUrl(u, links) ?? u);
+
+/**
+ * La URL de un link va después de la palabra donde termina el link: si el docente enlazó solo la "G" de
+ * "Gabinete", queda "Gabinete (url)" y no "G (url)abinete".
+ */
+const placeLinks = (text: string) =>
+    text.replace(new RegExp(`${LINK_START}([^${LINK_END}]*)${LINK_END}([\\p{L}\\p{N}]*)`, "gu"), "$2 ($1)");
 
 /** Igual que htmlToText, pero recortado, para índices donde solo hay que decidir si entrar. */
 export function htmlToSnippet(html: string | undefined, max = 200): string {
     const text = htmlToText(html);
     return text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
+}
+
+/**
+ * Una URL que se le puede mostrar al modelo: absoluta, http(s) o mailto, y sin credenciales. Si no es
+ * ninguna de esas, `undefined`.
+ */
+export function safeUrl(raw: string, { base, rewrite }: LinkOptions): string | undefined {
+    let u: URL;
+    try {
+        u = new URL(raw.trim(), base);
+    } catch {
+        return undefined;
+    }
+    if (!/^(https?|mailto):$/.test(u.protocol)) return undefined;
+    u.username = "";
+    u.password = "";
+    for (const key of [...u.searchParams.keys()]) {
+        if (CREDENTIAL_PARAMS.test(key)) u.searchParams.delete(key);
+    }
+    return rewrite ? rewrite(u.href) : u.href;
 }
 
 function render(nodes: Node[], options: TextOptions): string {
@@ -52,21 +108,56 @@ function render(nodes: Node[], options: TextOptions): string {
     return text;
 }
 
+/** El texto de un elemento en una sola línea: para celdas, títulos e ítems de lista. */
+const oneLine = (el: Node, options: TextOptions) => render(el.children ?? [], options).replace(/\s+/g, " ").trim();
+
 function renderElement(el: Node, options: TextOptions): string {
-    if (el.name === "br") return "\n";
-    if (options.tableCells && el.name === "tr") {
-        const cells = (el.children ?? [])
-            .filter((c) => c.name === "td" || c.name === "th")
-            // Dentro de una celda todo va en una línea: si no, la fila se parte y se pierden las columnas.
-            .map((c) => render(c.children ?? [], options).replace(/\s+/g, " ").trim());
+    const name = el.name ?? "";
+    if (name === "br") return "\n";
+    if (name === "tr") {
+        // Las celdas van en una línea, si no la fila se parte y se pierden las columnas. Las filas de
+        // encabezado (`th`) quedan como una fila más, así el modelo sabe qué es cada columna.
+        const cells = (el.children ?? []).filter((c) => c.name === "td" || c.name === "th").map((c) => oneLine(c, options));
         // Una fila que solo tenía botones queda vacía y no aporta nada.
         return cells.some(Boolean) ? `\n${cells.join(" | ")}\n` : "\n";
     }
+    const heading = /^h([1-6])$/.exec(name);
+    if (heading) {
+        const title = oneLine(el, options);
+        return title ? `\n${"#".repeat(Number(heading[1]))} ${title}\n` : "\n";
+    }
+    if (name === "li") {
+        // Una lista adentro de otra sigue en sus propias líneas, después del ítem.
+        const inner = render(el.children ?? [], options).trim();
+        // G3W pone títulos adentro de ítems: "- #### 1º anual" no aporta el guion.
+        return inner ? `\n${inner.startsWith("#") ? "" : "- "}${inner}\n` : "\n";
+    }
+    if (options.links && name === "iframe") {
+        const src = attr(el, "src");
+        const url = src && safeUrl(src, options.links);
+        return url ? `\n[Contenido incrustado: ${url}]\n` : "";
+    }
     const inner = render(el.children ?? [], options);
+    if (options.links && name === "a") return linkText(inner, attr(el, "href"), options.links);
     // Un bloque corta la línea al abrir y al cerrar. Los elementos en línea no suman espacios: parten
     // palabras ("d<span>eben</span>", "chi<sup>2</sup>").
-    return BLOCK.has(el.name ?? "") ? `\n${inner}\n` : inner;
+    return BLOCK.has(name) ? `\n${inner}\n` : inner;
 }
+
+/** "texto (url)", o solo la URL si el link no tiene texto o su texto ya es la URL. */
+function linkText(inner: string, href: string | undefined, links: LinkOptions): string {
+    if (!href || href.startsWith("#")) return inner;
+    const url = safeUrl(href, links);
+    if (!url) return inner;
+    const text = inner.replace(/\s+/g, " ").trim();
+    const shown = url.replace(/^mailto:/, "");
+    // Un link cuyo texto ya es una URL (o una dirección de mail) se muestra con la del href, que está limpia.
+    // Con espacios alrededor: si no, se pega a lo de al lado ("Clave: 2026https://…", dos links seguidos).
+    if (!text || /^(https?:\/\/|www\.)\S+$/i.test(text) || text === shown) return ` ${shown} `;
+    return `${inner}${LINK_START}${shown}${LINK_END}`;
+}
+
+const attr = (el: Node, name: string) => el.attribs?.[name];
 
 function normalize(text: string): string {
     return text

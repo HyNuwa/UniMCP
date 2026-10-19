@@ -1,9 +1,8 @@
-import { htmlToText } from "../../shared/html.js";
 import { getCourseSections, getForumDiscussions, getUserCourses } from "../client/moodle.js";
 import type { AulaSession } from "../client/session.js";
 import type { Course, CourseModule } from "../client/types.js";
 import { discussionAddr, moduleAddr, parseAddress, sectionAddr } from "./address.js";
-import { cleanName, isoDate } from "./fields.js";
+import { cleanName, isoDate, richText } from "./fields.js";
 import { BUDGET_CHARS } from "./files.js";
 
 /** Caracteres de texto a cada lado de la coincidencia en el `fragmento`. */
@@ -85,7 +84,7 @@ async function courseCandidates(session: AulaSession, course: Course): Promise<C
         const seccion = cleanName(s.name);
         candidates.push({
             result: { direccion: sectionAddr(course.id, s.section), tipo: "seccion", nombre: seccion, curso },
-            text: htmlToText(s.summary),
+            text: richText(session.site, s.summary),
         });
         for (const m of s.modules.filter((m) => m.uservisible)) {
             const files = (m.contents ?? []).filter((c) => c.type === "file").map((f) => f.filename);
@@ -98,7 +97,7 @@ async function courseCandidates(session: AulaSession, course: Course): Promise<C
                     curso,
                     seccion,
                 },
-                text: [htmlToText(m.description), ...files].filter(Boolean).join("\n"),
+                text: [richText(session.site, m.description), ...files].filter(Boolean).join("\n"),
             });
         }
     }
@@ -126,7 +125,7 @@ async function forumCandidates(
             autor: d.userfullname,
             fecha: isoDate(d.created),
         },
-        text: htmlToText(d.message),
+        text: richText(session.site, d.message),
     }));
 }
 

@@ -61,6 +61,8 @@ The user's token never leaves the server. The model and the user get URLs that o
 - **Summarized indexes, detail on open**: a listing shows just enough to decide whether to go in (`htmlToSnippet`) and the full content is shown when the item is opened.
 - **Per-response budget**: anything that can be long is cut with a budget and says how to continue (`siguiente`, `hayMasDiscusiones`, `recortado`).
 - **Responses**: compact JSON via `json()` and errors via `failure()`. Every handler is `try { return json(...) } catch (e) { return failure(e) }`.
+- **Rich text**: `htmlToText` writes headings as `#`, list items as `- ` and tables row by row with " | ", header included. In the aula, full texts (summaries, labels, posts, feedback) go through `richText`, which also shows each link as "texto (url)" and each iframe as its URL: teachers write "LINK" and the class address is in the `href`. Snippets for indexes stay plain.
+- **URLs shown to the model** go through `safeUrl` (`shared/html.ts`): absolute, http(s) or mailto only, with credential parameters removed (`token`, `wstoken`, `sesskey`…). Aula URLs also go through `userFacingUrl`.
 
 ## Code conventions
 
