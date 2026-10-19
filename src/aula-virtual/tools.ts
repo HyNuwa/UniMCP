@@ -88,9 +88,11 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "No hace falta armar la dirección: cada respuesta trae las direcciones de lo que hay adentro " +
                 "(`direccion`) y la de un nivel más arriba (`padre`), así que se navega pasando de vuelta una " +
                 "de esas. Para empezar, usar aula_list_courses o la dirección \"/\".\n\n" +
-                "Buscar algo que puede estar en cualquier parte (una fecha de parcial, un aviso) se hace " +
-                "entrando al curso y abriendo lo que corresponda: el índice de un foro muestra los asuntos sin " +
-                "volcar los mensajes enteros, y archivos como un cronograma se leen con aula_read_file.\n\n" +
+                "Cuando la pregunta nombra la materia, lo habitual es entrar al curso y abrir lo que " +
+                "corresponda: la sección donde está el tema, el índice de un foro (muestra los asuntos sin " +
+                "volcar los mensajes enteros) o un archivo como el cronograma con aula_read_file. Si no se " +
+                "sabe en qué materia está algo, o se busca el texto de un aviso, aula_search lo encuentra con " +
+                "una llamada.\n\n" +
                 "Los archivos vienen con una `url`, que sirve para leerlos con aula_read_file y también para " +
                 "dársela al usuario si quiere bajarlo: se abre con su sesión del aula.",
             inputSchema: z.object({
@@ -125,9 +127,18 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         "aula_search",
         {
             description:
-                "Busca palabras en el aula virtual cuando no se sabe en qué curso o sección está algo, o la " +
-                "pregunta cruza materias (\"¿en qué materia se ve memoria virtual?\", \"¿dónde avisaron que " +
-                "se suspendía la consulta?\"). Si ya se sabe el curso, navegarlo con aula_open suele alcanzar.\n\n" +
+                "Busca palabras en el aula virtual. Sirve en dos casos:\n" +
+                "- La pregunta no dice en qué materia está algo, o cruza materias (\"¿en qué materia se ve " +
+                "memoria virtual?\").\n" +
+                "- El dato está en el texto de un aviso o de una discusión de foro (\"¿quién avisó que la " +
+                "clase sería virtual?\", \"¿por qué se suspendió la consulta?\"). El `fragmento` suele traer " +
+                "la respuesta sin abrir nada.\n\n" +
+                "Si la pregunta nombra la materia y lo que busca es material, una tarea, un cuestionario o " +
+                "una fecha del cronograma, conviene navegar: aula_open del curso muestra sus secciones y " +
+                "actividades, y abrir la sección que corresponde suele alcanzar. Buscar ahí suele costar " +
+                "más llamadas: un resultado trae el nombre pero no los detalles (duración, vencimiento, " +
+                "archivos), y hay que abrirlo igual. No conviene repetir la búsqueda con otras palabras " +
+                "cuando ya se sabe el curso: es mejor abrirlo.\n\n" +
                 "Busca en los nombres y textos de secciones y módulos (incluidas las etiquetas), en los " +
                 "nombres de los archivos y en las discusiones de los foros (las 50 más recientes de cada " +
                 "foro, con asunto y primer mensaje). No busca dentro de los archivos: para eso, leerlos con " +
