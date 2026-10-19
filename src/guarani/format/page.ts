@@ -1,3 +1,4 @@
+import { load } from "cheerio";
 import { htmlToText } from "../../shared/html.js";
 import { getPage, pageUrl, toAddress } from "../client/g3w.js";
 import type { GuaraniSession } from "../client/session.js";
@@ -9,6 +10,14 @@ const BUDGET_CHARS = 30_000;
 const MAX_LINKS = 80;
 /** Las partes que son el menú o la barra de arriba, por su id; varía entre versiones de G3W. */
 const MENU_PAGELET = /menu|barra|navbar|encabezado|header/i;
+/**
+ * Lo que no es contenido en una página de G3W: controles de formulario, botones de Bootstrap ("Imprimir",
+ * "Ver"), modales ("×", "Confirmar") y los avisos, que ya van aparte en `avisos`. Los `<form>` quedan:
+ * la historia académica viene adentro de uno.
+ */
+const NOISE = "select, option, button, input, textarea, .btn, .modal, .alert";
+/** Los avisos de G3W: inscripción confirmada, períodos abiertos, errores. */
+const NOTICE = ".alert";
 
 interface Link {
     texto: string;
@@ -27,7 +36,7 @@ export async function openPage(session: GuaraniSession, address = "") {
     let spent = 0;
     let truncated = false;
     for (const p of content) {
-        const text = tableAwareText(p.content);
+        const text = pageletText(p.content);
         if (!text) continue;
         const room = BUDGET_CHARS - spent;
         if (room <= 0) {
@@ -40,7 +49,8 @@ export async function openPage(session: GuaraniSession, address = "") {
         spent += cut.length;
     }
 
-    const links = collectLinks(session, page.url, content.map((p) => p.content));
+    // Sin el ruido: los botones con href son acciones ("Enviar por mail" manda el comprobante), no páginas.
+    const links = collectLinks(session, page.url, content.map((p) => p.content), NOISE);
     return {
         direccion: toAddress(session.site, page.url),
         operacion: page.op || undefined,
@@ -59,7 +69,7 @@ export async function openMenu(session: GuaraniSession) {
     const menu = page.pagelets.filter((p) => MENU_PAGELET.test(p.id));
     // Algunas versiones mandan el menú como una parte; UNJu lo manda en el HTML de la página.
     const links = collectLinks(session, page.url, menu.length ? menu.map((p) => p.content) : [page.shell]);
-    const header = menu.map((p) => tableAwareText(p.content)).filter(Boolean).join("\n");
+    const header = menu.map((p) => pageletText(p.content)).filter(Boolean).join("\n");
     return {
         inicio: toAddress(session.site, page.url),
         encabezado: header ? header.slice(0, 2_000) : undefined,
@@ -73,11 +83,14 @@ export async function openMenu(session: GuaraniSession) {
  * activa. Las otras traen la dirección que la activa, que es la misma que usa el selector.
  */
 function careers(shell: string, op: string | null) {
-    const found = [...shell.matchAll(/<a\b([^>]*\bjs-select-carreras\b[^>]*)>([\s\S]*?)<\/a>/gi)].map((m) => ({
-        nombre: htmlToText(m[2]),
-        id: m[1].match(/data-carrera-id=['"](\d+)['"]/)?.[1],
-        activa: /class=['"][^'"]*\bselected\b/.test(m[1]),
-    }));
+    const $ = load(shell);
+    const found = $(".js-select-carreras")
+        .map((_, a) => ({
+            nombre: $(a).text().replace(/\s+/g, " ").trim(),
+            id: $(a).attr("data-carrera-id"),
+            activa: $(a).hasClass("selected"),
+        }))
+        .get();
     const others = found.filter((c) => !c.activa && c.id);
     return {
         propuesta: found.find((c) => c.activa)?.nombre,
@@ -96,60 +109,65 @@ function careers(shell: string, op: string | null) {
  */
 async function withAllFilters(session: GuaraniSession, page: G3wPage): Promise<G3wPage> {
     if (new URL(page.url).search) return page;
-    const form = page.pagelets.find((p) => p.content.includes('id="form_filtros"'));
-    if (!form) return page;
-    const checks = [...form.content.matchAll(/<input\b[^>]*type=['"]checkbox['"][^>]*value=['"]([^'"]+)['"]/gi)];
+    const checks = page.pagelets.flatMap((p) => {
+        const $ = load(p.content, null, false);
+        return $('#form_filtros input[type="checkbox"]')
+            .map((_, input) => $(input).attr("value"))
+            .get();
+    });
     if (!checks.length) return page;
-    const query = new URLSearchParams({ checks: checks.map((m) => m[1]).join(",") });
+    const query = new URLSearchParams({ checks: checks.join(",") });
     return getPage(session, `${toAddress(session.site, page.url)}?${query}`);
 }
 
 /**
- * Texto de una parte con las tablas fila por fila y las celdas separadas por " | ": así se leen la
- * historia académica, las mesas y las inscripciones sin perder las columnas.
+ * Texto de una parte sin lo que no es contenido, con las tablas fila por fila y las celdas separadas por
+ * " | ": así se leen la historia académica, las mesas y las inscripciones sin perder las columnas.
  */
-function tableAwareText(html: string): string {
-    return htmlToText(
-        html
-            .replace(/<(select|option)[\s\S]*?<\/\1>/gi, "")
-            .replace(/<\/t[dh]>/gi, " | ")
-            .replace(/<\/tr>/gi, "</tr>\n"),
-    )
-        .replace(/\s*\|\s*$/gm, "")
-        .replace(/\n{3,}/g, "\n\n");
+function pageletText(html: string): string {
+    return htmlToText(html, { drop: NOISE, tableCells: true });
 }
 
-/** Los avisos que muestra G3W (`alert-*`): inscripción confirmada, períodos abiertos, errores. */
 function notices(pagelets: Pagelet[]): string[] | undefined {
     const found = new Set<string>();
     for (const p of pagelets) {
-        for (const m of p.content.matchAll(/<div[^>]*class=['"][^'"]*\balert\b[^'"]*['"][^>]*>([\s\S]*?)<\/div>/gi)) {
-            const text = htmlToText(m[1]);
+        const $ = load(p.content, null, false);
+        $(NOTICE).each((_, el) => {
+            const text = htmlToText($(el).html() ?? "", { drop: "button" });
             if (text) found.add(text);
-        }
+        });
     }
     return found.size ? [...found] : undefined;
 }
 
 /** Los enlaces a otras páginas de la autogestión, sin repetir y sin los de acceso (login, logout). */
-function collectLinks(session: GuaraniSession, from: string, htmls: string[]): Link[] {
+function collectLinks(session: GuaraniSession, from: string, htmls: string[], drop?: string): Link[] {
     const seen = new Set<string>();
     const links: Link[] = [];
     for (const html of htmls) {
-        for (const m of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
-            const href = m[1].match(/href=['"]([^'"]+)['"]/i)?.[1];
-            if (!href || href.startsWith("#") || /^(javascript|mailto):/i.test(href)) continue;
+        const $ = load(html, null, false);
+        if (drop) $(drop).remove();
+        $("a[href]").each((_, a) => {
+            const href = $(a).attr("href") ?? "";
+            if (href.startsWith("#") || /^(javascript|mailto):/i.test(href)) return;
             let address: string;
             try {
-                address = toAddress(session.site, pageUrl(session.site, new URL(href.replaceAll("&amp;", "&"), from).href));
+                address = toAddress(session.site, pageUrl(session.site, new URL(href, from).href));
             } catch {
-                continue; // externo o de acceso
+                return; // externo o de acceso
             }
-            const text = htmlToText(m[2]) || m[1].match(/title=['"]([^'"]+)['"]/i)?.[1] || "";
-            if (!text || seen.has(address)) continue;
+            const text = linkText($(a).text().replace(/\s+/g, " ").trim() || $(a).attr("title") || "", address);
+            if (!text || seen.has(address)) return;
             seen.add(address);
-            links.push({ texto: text.replace(/\s+/g, " "), direccion: address });
-        }
+            links.push({ texto: text, direccion: address });
+        });
     }
     return links;
+}
+
+/** Un enlace que es solo un ícono con un contador (el sobre de mensajes) se nombra por su dirección: "Mensajes (0)". */
+function linkText(text: string, address: string): string {
+    if (!/^\d+$/.test(text)) return text;
+    const name = address.split(/[/?]/)[0].replaceAll("_", " ");
+    return `${name.charAt(0).toUpperCase()}${name.slice(1)} (${text})`;
 }
