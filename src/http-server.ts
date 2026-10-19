@@ -99,7 +99,7 @@ export function startHttpServer(factory: McpServerFactory, options: HttpOptions,
     // Defensa contra DNS rebinding: solo pasan los hosts locales y el de la URL pública.
     const allowed = publicUrl ? [...LOOPBACK, new URL(publicUrl).hostname] : LOOPBACK;
     if (!publicUrl && !LOOPBACK.includes(host)) {
-        logger.warn(`Escuchando en ${host} sin MCP_UNI_PUBLIC_URL: se rechazan los requests que no lleguen como localhost.`);
+        logger.warn(`Escuchando en ${host} sin UNIMCP_PUBLIC_URL: se rechazan los requests que no lleguen como localhost.`);
     }
     app.use(asMiddleware(hostHeaderValidation(allowed)));
     // Origin se controla donde un navegador ajeno no debería llegar; los endpoints de OAuth tienen CORS

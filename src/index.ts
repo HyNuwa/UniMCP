@@ -18,10 +18,10 @@ import { SqliteStore } from "./shared/store/sqlite-store.js";
 import { UploadInbox } from "./shared/uploads.js";
 
 const USAGE = `Uso:
-  mcp-uni-arg                 servidor MCP por STDIO (lo lanza el cliente)
-  mcp-uni-arg --http [--host H] [--port N]  servidor MCP por HTTP (por defecto 127.0.0.1:3000)
-  mcp-uni-arg login           elegir tu campus y guardar las credenciales del aula y de SIU Guaraní
-  mcp-uni-arg login --http    lo mismo, para el modo HTTP: guarda la sesión del aula y emite el token del cliente
+  unimcp                               servidor MCP por STDIO (lo lanza el cliente)
+  unimcp --http [--host H] [--port N]  servidor MCP por HTTP (por defecto 127.0.0.1:3000)
+  unimcp login                         elegir tu campus y guardar las credenciales del aula y de SIU Guaraní
+  unimcp login --http                  lo mismo, para el modo HTTP: guarda la sesión del aula y emite el token del cliente
 
 Si hay un .env en la carpeta actual, se lee al arrancar (ver .env.example).`;
 
@@ -52,11 +52,11 @@ async function main() {
         // archivos entran por links de subida, porque el servidor puede no estar en la compu de quien
         // entrega.
         const port = Number(values.port);
-        const publicUrl = process.env.MCP_UNI_PUBLIC_URL?.replace(/\/+$/, "") || undefined;
+        const publicUrl = process.env.UNIMCP_PUBLIC_URL?.replace(/\/+$/, "") || undefined;
         const baseUrl = publicUrl ?? `http://127.0.0.1:${port}`;
         // Por defecto, el `/login` de este mismo servidor, salvo que quien lo hostea configure otra
         // página.
-        const loginUrl = process.env.MCP_UNI_LOGIN_URL || `${baseUrl}/login`;
+        const loginUrl = process.env.UNIMCP_LOGIN_URL || `${baseUrl}/login`;
         const store = await SqliteStore.open();
         const inbox = new UploadInbox(baseUrl);
         const factory = (ctx: { authInfo?: AuthInfo }) => {
@@ -73,13 +73,13 @@ async function main() {
             publicUrl,
             access: accessPolicyFromEnv(),
             redirects: redirectAllowlistFromEnv(),
-            adminSecret: process.env.MCP_UNI_ADMIN_SECRET || undefined,
+            adminSecret: process.env.UNIMCP_ADMIN_SECRET || undefined,
         };
         startHttpServer(factory, options, store, inbox);
     } else {
         // STDIO: un único usuario, el dueño de la compu, con una sola sesión para todas las conexiones.
         const campus = localCampus();
-        if (!campus) throw new Error("Todavía no elegiste tu campus: corré `mcp-uni-arg login`.");
+        if (!campus) throw new Error("Todavía no elegiste tu campus: corré `unimcp login`.");
         const platforms = {
             aula: campus.aula && new LocalSession(campus.aula),
             guarani: campus.guarani && new LocalGuaraniSession(campus.guarani),

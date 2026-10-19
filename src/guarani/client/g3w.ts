@@ -6,7 +6,7 @@ import type { GuaraniSession } from "./session.js";
 import type { G3wPage, Pagelet } from "./types.js";
 
 export class GuaraniLoginRequiredError extends Error {
-    constructor(message = "Hace falta iniciar sesión en SIU Guaraní: corré `mcp-uni-arg login`.") {
+    constructor(message = "Hace falta iniciar sesión en SIU Guaraní: corré `unimcp login`.") {
         super(message);
         this.name = "GuaraniLoginRequiredError";
     }
@@ -14,7 +14,7 @@ export class GuaraniLoginRequiredError extends Error {
 
 export class InvalidGuaraniCredentialsError extends Error {
     constructor(reason?: string) {
-        const base = "Guaraní rechazó usuario o contraseña. Corré `mcp-uni-arg login` para actualizarlos.";
+        const base = "Guaraní rechazó usuario o contraseña. Corré `unimcp login` para actualizarlos.";
         super(reason ? `${base} Motivo de Guaraní: ${reason}` : base);
         this.name = "InvalidGuaraniCredentialsError";
     }

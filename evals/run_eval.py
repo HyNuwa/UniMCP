@@ -1,4 +1,4 @@
-"""Corre la evaluación de mcp-builder contra mcp-uni-arg.
+"""Corre la evaluación de mcp-builder contra unimcp.
 
 Usa el harness de .agents/skills/mcp-builder/scripts y le cambia agent_loop: el original solo
 contesta el primer tool_use de cada turno, y cuando el modelo pide varias tools en paralelo la API

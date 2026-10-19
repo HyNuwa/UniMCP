@@ -29,11 +29,11 @@ const DEFAULT_SCHEMES = ["cursor:", "vscode:", "vscode-insiders:", "windsurf:"];
 const LOOPBACK = ["localhost", "127.0.0.1", "[::1]"];
 
 /**
- * Los destinos conocidos más los de MCP_UNI_REDIRECT_ALLOW, separados por coma: hosts
+ * Los destinos conocidos más los de UNIMCP_REDIRECT_ALLOW, separados por coma: hosts
  * (`app.ejemplo.com`) o esquemas con dos puntos al final (`miapp:`).
  */
 export function redirectAllowlistFromEnv(env: NodeJS.ProcessEnv = process.env): RedirectAllowlist {
-    const extra = (env.MCP_UNI_REDIRECT_ALLOW ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const extra = (env.UNIMCP_REDIRECT_ALLOW ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
     return {
         hosts: new Set([...DEFAULT_HOSTS, ...extra.filter((e) => !e.endsWith(":"))]),
         schemes: new Set([...DEFAULT_SCHEMES, ...extra.filter((e) => e.endsWith(":"))]),

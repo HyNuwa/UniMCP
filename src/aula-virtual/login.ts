@@ -7,7 +7,7 @@ import { linkAulaAccount } from "./client/link-account.js";
 import { LocalSession } from "./client/local-session.js";
 
 /**
- * Parte del aula en `mcp-uni-arg login`: pide usuario y contraseña una sola vez, los deja en el
+ * Parte del aula en `unimcp login`: pide usuario y contraseña una sola vez, los deja en el
  * keychain y saca el primer token. De ahí en más el servidor renueva por su cuenta.
  * Con `http`, guarda la sesión en el store y devuelve el token que va a usar el cliente MCP.
  */

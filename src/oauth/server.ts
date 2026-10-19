@@ -88,7 +88,7 @@ export function mountOAuth(app: Express, { issuer, store, access, sameOrigin, re
     const resourceMetadata = buildOAuthProtectedResourceMetadata({
         oauthMetadata: metadata,
         resourceServerUrl: new URL(resource),
-        resourceName: "mcp-uni-arg",
+        resourceName: "UniMCP",
     });
 
     const pending = new Expiring<PendingAuthorization>(PENDING_TTL_MS);
@@ -112,14 +112,14 @@ export function mountOAuth(app: Express, { issuer, store, access, sameOrigin, re
         const uris = Array.isArray(body.redirect_uris) ? body.redirect_uris : [];
         if (!uris.length || uris.some((u) => redirectTrust(u, redirects) === "rejected")) {
             // Se loguea para que se pueda habilitar el esquema de una app nueva con
-            // MCP_UNI_REDIRECT_ALLOW.
+            // UNIMCP_REDIRECT_ALLOW.
             logger.warn(`OAuth /register rechazado: ${JSON.stringify(uris).slice(0, 300)}`);
             return void oauthError(
                 res,
                 400,
                 "invalid_redirect_uri",
                 "Las redirect_uri tienen que ser HTTPS, de loopback o de una app habilitada en este servidor " +
-                    "(MCP_UNI_REDIRECT_ALLOW), y sin fragmento.",
+                    "(UNIMCP_REDIRECT_ALLOW), y sin fragmento.",
             );
         }
         const client = {
@@ -384,7 +384,7 @@ function loginPage(o: {
           `${where} haga con mi aula ni con mi sesión.</span></label>`
         : "";
     const intro = o.pendingId
-        ? `<p>${escapeHtml(o.clientName ?? "Una app")} quiere usar mcp-uni-arg con tu aula virtual. Elegí tu campus y entrá con tu usuario del aula para conectarla.${destination}</p>`
+        ? `<p>${escapeHtml(o.clientName ?? "Una app")} quiere usar UniMCP con tu aula virtual. Elegí tu campus y entrá con tu usuario del aula para conectarla.${destination}</p>`
         : "<p>Tu sesión del aula venció. Elegí tu campus y entrá con tu usuario del aula para renovarla.</p>";
     const error = o.error ? `<p class=error>${escapeHtml(o.error)}</p>` : "";
     const hidden = o.pendingId ? `<input type="hidden" name="pedido" value="${escapeHtml(o.pendingId)}">` : "";

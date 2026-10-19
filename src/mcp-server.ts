@@ -17,7 +17,7 @@ export interface Platforms {
  */
 export function createServer({ aula, guarani }: Platforms, files: FileSource): McpServer {
     const server = new McpServer({
-        name: "mcp-uni-arg",
+        name: "unimcp",
         version: "0.1.0",
     });
 

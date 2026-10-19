@@ -221,7 +221,7 @@ export class SqliteStore implements SessionStore {
         try {
             return Buffer.concat([decipher.update(buf.subarray(IV_BYTES + TAG_BYTES)), decipher.final()]).toString("utf8");
         } catch {
-            throw new Error("No se pudo descifrar la sesión: la clave (MCP_UNI_KEY o store.key) no es la que la cifró.");
+            throw new Error("No se pudo descifrar la sesión: la clave (UNIMCP_KEY o store.key) no es la que la cifró.");
         }
     }
 }
@@ -231,14 +231,14 @@ export class SqliteStore implements SessionStore {
 type UserRow = StoredUser;
 
 /**
- * Hosteado, viene en MCP_UNI_KEY (32 bytes en base64) para que la clave no esté en el mismo disco que
+ * Hosteado, viene en UNIMCP_KEY (32 bytes en base64) para que la clave no esté en el mismo disco que
  * la base. En local, si falta, se genera una en la carpeta de configuración.
  */
 async function loadKey(): Promise<Buffer> {
-    const fromEnv = process.env.MCP_UNI_KEY;
+    const fromEnv = process.env.UNIMCP_KEY;
     if (fromEnv) {
         const key = Buffer.from(fromEnv, "base64");
-        if (key.length !== KEY_BYTES) throw new Error(`MCP_UNI_KEY tiene que ser de ${KEY_BYTES} bytes en base64.`);
+        if (key.length !== KEY_BYTES) throw new Error(`UNIMCP_KEY tiene que ser de ${KEY_BYTES} bytes en base64.`);
         return key;
     }
 

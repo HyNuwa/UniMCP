@@ -57,12 +57,12 @@ const MARK =
  * indispensable.
  * `kicker` es el rótulo chico sobre el título.
  */
-export function page(title: string, body: string, kicker = "mcp-uni-arg"): string {
+export function page(title: string, body: string, kicker = "UniMCP"): string {
     return (
         `<!doctype html><html lang="es"><head><meta charset="utf-8">` +
-        `<meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)} · mcp-uni-arg</title>` +
+        `<meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)} · UniMCP</title>` +
         `<style>${STYLE}</style></head><body>` +
-        `<header>${MARK}uni·arg·mcp</header>` +
+        `<header>${MARK}uni·mcp</header>` +
         `<main><div class="card"><p class="kicker">${escapeHtml(kicker)}</p><h1>${escapeHtml(title)}</h1>${body}</div></main>` +
         `</body></html>`
     );

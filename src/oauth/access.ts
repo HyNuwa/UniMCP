@@ -5,10 +5,10 @@ export type AccessDecision = { allowed: true } | { allowed: false; reason: strin
 /** Decide quién puede usar el servidor, a partir del usuario que acaba de entrar al aula. */
 export type AccessPolicy = (user: { campus: string; username: string; email: string | null }) => Promise<AccessDecision>;
 
-/** Tiempo máximo de espera de MCP_UNI_ACCESS_URL, en milisegundos. */
+/** Tiempo máximo de espera de UNIMCP_ACCESS_URL, en milisegundos. */
 const ACCESS_TIMEOUT_MS = 5_000;
 
-/** Respuesta de MCP_UNI_ACCESS_URL. */
+/** Respuesta de UNIMCP_ACCESS_URL. */
 interface RemoteDecision {
     permitido?: boolean;
     motivo?: string;
@@ -16,14 +16,14 @@ interface RemoteDecision {
 }
 
 /**
- * La política se configura por entorno: MCP_UNI_ACCESS_URL delega en otro servicio,
- * MCP_UNI_ALLOWED_EMAILS usa una lista, y sin ninguna entra cualquiera que tenga usuario en un aula del
+ * La política se configura por entorno: UNIMCP_ACCESS_URL delega en otro servicio,
+ * UNIMCP_ALLOWED_EMAILS usa una lista, y sin ninguna entra cualquiera que tenga usuario en un aula del
  * registro.
  */
 export function accessPolicyFromEnv(env: NodeJS.ProcessEnv = process.env): AccessPolicy {
-    if (env.MCP_UNI_ACCESS_URL) return remotePolicy(env.MCP_UNI_ACCESS_URL, env.MCP_UNI_ACCESS_SECRET);
-    if (env.MCP_UNI_ALLOWED_EMAILS) return listPolicy(env.MCP_UNI_ALLOWED_EMAILS);
-    logger.warn("Sin MCP_UNI_ACCESS_URL ni MCP_UNI_ALLOWED_EMAILS: puede entrar cualquiera con usuario de un aula del registro.");
+    if (env.UNIMCP_ACCESS_URL) return remotePolicy(env.UNIMCP_ACCESS_URL, env.UNIMCP_ACCESS_SECRET);
+    if (env.UNIMCP_ALLOWED_EMAILS) return listPolicy(env.UNIMCP_ALLOWED_EMAILS);
+    logger.warn("Sin UNIMCP_ACCESS_URL ni UNIMCP_ALLOWED_EMAILS: puede entrar cualquiera con usuario de un aula del registro.");
     return async () => ({ allowed: true });
 }
 
@@ -39,7 +39,7 @@ function listPolicy(raw: string): AccessPolicy {
 
 /** `POST url` con `{ email, usuario, campus }`; la respuesta es `{ permitido, motivo?, url? }`. */
 function remotePolicy(url: string, secret: string | undefined): AccessPolicy {
-    if (!secret) logger.warn("MCP_UNI_ACCESS_URL sin MCP_UNI_ACCESS_SECRET: el pedido de acceso va sin autenticar.");
+    if (!secret) logger.warn("UNIMCP_ACCESS_URL sin UNIMCP_ACCESS_SECRET: el pedido de acceso va sin autenticar.");
     return async ({ campus, username, email }) => {
         if (!email) return { allowed: false, reason: "El aula no devolvió tu email, y sin él no podemos verificar tu acceso." };
         try {

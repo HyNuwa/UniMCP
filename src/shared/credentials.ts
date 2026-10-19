@@ -10,7 +10,7 @@ export interface Credentials {
  */
 export type CredentialAccount = "aula" | "guarani";
 
-const SERVICE = "mcp-uni-arg";
+const SERVICE = "unimcp";
 
 /** Cuenta del keychain y variables de entorno que corresponden a cada plataforma. */
 const ACCOUNTS: Record<CredentialAccount, { keychain: string; user: string; pass: string }> = {

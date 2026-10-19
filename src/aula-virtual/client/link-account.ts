@@ -17,7 +17,7 @@ export interface LinkedAccount {
 /**
  * Inicia sesión en el aula del campus, da de alta al usuario en el store si hace falta y le deja
  * guardada la sesión (token y cookies del SSO). La contraseña solo pasa por esta función y no queda
- * guardada. La llaman `mcp-uni-arg login --http` y el login OAuth del modo hosteado.
+ * guardada. La llaman `unimcp login --http` y el login OAuth del modo hosteado.
  */
 export async function linkAulaAccount(store: SessionStore, campus: Campus, credentials: Credentials): Promise<LinkedAccount> {
     const site = campus.aula;

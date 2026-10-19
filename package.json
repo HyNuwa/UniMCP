@@ -1,10 +1,10 @@
 {
-  "name": "mcp-uni-arg",
+  "name": "unimcp",
   "version": "0.1.0",
   "description": "Model Context Protocol server NO OFICIAL para universidades argentinas: aula virtual (Moodle) y SIU Guaraní.",
   "main": "build/index.js",
   "bin": {
-    "mcp-uni-arg": "build/index.js"
+    "unimcp": "build/index.js"
   },
   "files": [
     "build",

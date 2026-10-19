@@ -1,4 +1,4 @@
-# mcp-uni-arg: el puente entre tu agente y los sistemas de tu universidad
+# UniMCP: el puente entre tu agente y los sistemas de tu universidad
 Este es un Model Context Protocol server **NO OFICIAL** para universidades argentinas. Con él podés pedirle a tu agente (Claude, ChatGPT, etc.) que lea los apuntes del **aula virtual (Moodle)** y consulte tu **SIU Guaraní** y, con tu confirmación, que publique en los foros o entregue tareas. Corre en tu computadora o como servidor HTTP con OAuth.
 
 ## Qué podés pedirle
@@ -72,54 +72,54 @@ Necesitás [Node.js](https://nodejs.org) 20 o superior.
 
 ### 1. Iniciar sesión
 ```bash
-npx -y mcp-uni-arg login
+npx -y unimcp login
 ```
 Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
 ### 2. Agregarlo a tu cliente
 **Claude Code**
 ```bash
-claude mcp add uni -- npx -y mcp-uni-arg
+claude mcp add uni -- npx -y unimcp
 ```
 
 **Claude Desktop**: en *Settings → Developer → Edit Config*, dentro de `mcpServers`:
 ```json
 "uni": {
   "command": "npx",
-  "args": ["-y", "mcp-uni-arg"]
+  "args": ["-y", "unimcp"]
 }
 ```
-En Windows, si no arranca, usá `"command": "cmd"` y `"args": ["/c", "npx", "-y", "mcp-uni-arg"]`.
+En Windows, si no arranca, usá `"command": "cmd"` y `"args": ["/c", "npx", "-y", "unimcp"]`.
 
-**Codex**: `codex mcp add uni -- npx -y mcp-uni-arg` · **Gemini CLI**: `gemini mcp add uni npx -y mcp-uni-arg`
+**Codex**: `codex mcp add uni -- npx -y unimcp` · **Gemini CLI**: `gemini mcp add uni npx -y unimcp`
 
-**Cursor** (`~/.cursor/mcp.json`) y **VS Code** (`.vscode/mcp.json`): un servidor STDIO con `"command": "npx"` y `"args": ["-y", "mcp-uni-arg"]`.
+**Cursor** (`~/.cursor/mcp.json`) y **VS Code** (`.vscode/mcp.json`): un servidor STDIO con `"command": "npx"` y `"args": ["-y", "unimcp"]`.
 
-Cualquier cliente MCP que lance servidores por STDIO sirve con `npx -y mcp-uni-arg`.
+Cualquier cliente MCP que lance servidores por STDIO sirve con `npx -y unimcp`.
 
 ### Modo HTTP (opcional)
 Necesita Node 22.13 o más nuevo:
 ```bash
-npx -y mcp-uni-arg login --http   # una vez: te muestra el token para el header Authorization
-npx -y mcp-uni-arg --http --port 3000
+npx -y unimcp login --http   # una vez: te muestra el token para el header Authorization
+npx -y unimcp --http --port 3000
 ```
-Hosteado, el servidor también hace de servidor de autorización OAuth: el cliente MCP abre una página donde el alumno **elige su campus** y entra con su usuario del aula. La contraseña se usa una sola vez y **no se guarda**. La configuración (quién puede entrar, URL pública, clave de cifrado) está en [`.env.example`](.env.example), con las variables `MCP_UNI_*`.
+Hosteado, el servidor también hace de servidor de autorización OAuth: el cliente MCP abre una página donde el alumno **elige su campus** y entra con su usuario del aula. La contraseña se usa una sola vez y **no se guarda**. La configuración (quién puede entrar, URL pública, clave de cifrado) está en [`.env.example`](.env.example), con las variables `UNIMCP_*`.
 
 En modo HTTP **SIU Guaraní todavía no está disponible**: su sesión vence en minutos y renovarla necesita la contraseña, que el servidor hosteado no guarda.
 
 Con Docker:
 ```bash
-docker build -t mcp-uni-arg .
-docker run -d --name mcp-uni-arg --network host --restart unless-stopped \
-  -e HOST=127.0.0.1 -e PORT=8100 -e MCP_UNI_PUBLIC_URL=https://mcp.tu-dominio.com \
-  -e MCP_UNI_KEY=$(openssl rand -base64 32) -v mcp-uni-arg-data:/data mcp-uni-arg
+docker build -t unimcp .
+docker run -d --name unimcp --network host --restart unless-stopped \
+  -e HOST=127.0.0.1 -e PORT=8100 -e UNIMCP_PUBLIC_URL=https://mcp.tu-dominio.com \
+  -e UNIMCP_KEY=$(openssl rand -base64 32) -v unimcp-data:/data unimcp
 ```
 
 ## Dónde se guardan tus datos
 Instalado en tu computadora, todo queda ahí:
 - **Usuarios y contraseñas** (aula y Guaraní): en el gestor de credenciales del sistema (Windows Credential Manager, Keychain en macOS, Secret Service en Linux). Sin gestor, por variables de entorno: `UNI_USER`/`UNI_PASS` y `UNI_GUARANI_USER`/`UNI_GUARANI_PASS`.
-- **Campus elegido, token del aula y cookies de sesión**: en `%APPDATA%\mcp-uni-arg\` (Windows) o `~/.config/mcp-uni-arg/` (Linux y macOS).
-- **En modo HTTP**: la contraseña no se guarda; la sesión va cifrada en `mcp-uni-arg.db`, con la clave de `store.key` (o la de `MCP_UNI_KEY`). Del token del cliente solo se guarda el hash.
+- **Campus elegido, token del aula y cookies de sesión**: en `%APPDATA%\unimcp\` (Windows) o `~/.config/unimcp/` (Linux y macOS).
+- **En modo HTTP**: la contraseña no se guarda; la sesión va cifrada en `unimcp.db`, con la clave de `store.key` (o la de `UNIMCP_KEY`). Del token del cliente solo se guarda el hash.
 
 Los links que el agente te pasa abren con la sesión de tu navegador y **nunca incluyen tu token**.
 

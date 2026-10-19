@@ -1,7 +1,7 @@
 /**
  * Almacén del modo HTTP: usuarios, sus tokens y su sesión en cada plataforma. El servidor MCP lo lee (y
  * escribe la sesión al renovarla); los usuarios y tokens los crea otro proceso, que es el login OAuth
- * del modo hosteado o `mcp-uni-arg login --http` en local.
+ * del modo hosteado o `unimcp login --http` en local.
  */
 export interface SessionStore {
     /**
@@ -48,7 +48,7 @@ export interface SessionStore {
 
 export interface ConnectedClient {
     clientId: string;
-    /** Nombre que mandó la app al registrarse; null en el token fijo de `mcp-uni-arg login --http`. */
+    /** Nombre que mandó la app al registrarse; null en el token fijo de `unimcp login --http`. */
     clientName: string | null;
     /** Emisión de su token más reciente, en segundos desde epoch (los refresh rotan al usarse). */
     lastTokenAt: number;

@@ -5,7 +5,7 @@ import { logger } from "../shared/logger.js";
 import { LocalGuaraniSession } from "./client/local-session.js";
 
 /**
- * Guaraní en `mcp-uni-arg login`: su usuario suele ser el DNI, distinto del del aula. Comprueba que
+ * Guaraní en `unimcp login`: su usuario suele ser el DNI, distinto del del aula. Comprueba que
  * entra y guarda las credenciales en el keychain: sin ellas no hay cómo renovar la sesión, que vence
  * en minutos.
  */

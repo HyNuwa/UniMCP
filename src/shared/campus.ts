@@ -119,7 +119,7 @@ export function requireCampus(id: string): Campus {
 }
 
 /**
- * El campus del modo local: `UNI_CAMPUS`; si no, el que se eligió en `mcp-uni-arg login`; si no, uno
+ * El campus del modo local: `UNI_CAMPUS`; si no, el que se eligió en `unimcp login`; si no, uno
  * armado con `UNI_AULA_BASE_URL` / `UNI_GUARANI_URL`. Sin ninguno, null.
  */
 export function localCampus(): Campus | null {

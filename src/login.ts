@@ -8,7 +8,7 @@ import { logger } from "./shared/logger.js";
 import { campusFile } from "./shared/paths.js";
 
 /**
- * `mcp-uni-arg login`: elige el campus y entra a cada plataforma que tenga. Con `--http` solo el
+ * `unimcp login`: elige el campus y entra a cada plataforma que tenga. Con `--http` solo el
  * aula, porque el modo HTTP no guarda contraseñas y la sesión de Guaraní no se renueva sin ellas.
  */
 export async function runLogin(http: boolean): Promise<void> {

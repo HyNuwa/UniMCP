@@ -5,7 +5,7 @@ import type { SessionStore } from "../shared/store/session-store.js";
 
 /**
  * API para que otro servicio de quien hostea (por ejemplo un panel de cuenta) liste y desconecte las
- * apps de un usuario. Solo se monta con MCP_UNI_ADMIN_SECRET, que se manda como `Authorization:
+ * apps de un usuario. Solo se monta con UNIMCP_ADMIN_SECRET, que se manda como `Authorization:
  * Bearer`. Los usuarios se buscan por su email institucional.
  */
 export function mountAdmin(app: Express, store: SessionStore, secret: string) {
@@ -34,7 +34,7 @@ export function mountAdmin(app: Express, store: SessionStore, secret: string) {
             sesionAula: aulaAt ? new Date(aulaAt * 1000).toISOString() : undefined,
             clientes: clients.map((c) => ({
                 id: c.clientId,
-                nombre: c.clientName ?? (c.clientId === "local" ? "Token de mcp-uni-arg login" : "App sin nombre"),
+                nombre: c.clientName ?? (c.clientId === "local" ? "Token de unimcp login" : "App sin nombre"),
                 ultimoUso: new Date(c.lastTokenAt * 1000).toISOString(),
             })),
         });
