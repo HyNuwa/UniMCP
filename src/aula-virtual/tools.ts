@@ -14,6 +14,7 @@ import {
 import { ROOT } from "./format/address.js";
 import { readAulaFile } from "./format/files.js";
 import { open } from "./format/navigation.js";
+import { search } from "./format/search.js";
 import { createUploadLink, submitAssignment } from "./format/submission.js";
 
 // JSON compacto: con indentación estas respuestas ocupan alrededor de 25% más de contexto sin leerse
@@ -114,6 +115,45 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         async ({ direccion, pagina }) => {
             try {
                 return json(await open(session, direccion, pagina));
+            } catch (e) {
+                return failure(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        "aula_search",
+        {
+            description:
+                "Busca palabras en el aula virtual cuando no se sabe en qué curso o sección está algo, o la " +
+                "pregunta cruza materias (\"¿en qué materia se ve memoria virtual?\", \"¿dónde avisaron que " +
+                "se suspendía la consulta?\"). Si ya se sabe el curso, navegarlo con aula_open suele alcanzar.\n\n" +
+                "Busca en los nombres y textos de secciones y módulos (incluidas las etiquetas), en los " +
+                "nombres de los archivos y en las discusiones de los foros (las 50 más recientes de cada " +
+                "foro, con asunto y primer mensaje). No busca dentro de los archivos: para eso, leerlos con " +
+                "aula_read_file. Tienen que aparecer todas las palabras; no importan mayúsculas ni tildes.\n\n" +
+                "Cada resultado trae su `direccion` para abrirlo con aula_open, el `curso`, la `seccion` o el " +
+                "`foro` donde está y un `fragmento` del texto alrededor de la coincidencia (no viene cuando " +
+                "la coincidencia es en el nombre). Si no hay resultados, probar con menos palabras o con " +
+                "sinónimos: los docentes nombran las cosas a su manera. Buscar en todos los cursos tarda " +
+                "varios segundos.",
+            inputSchema: z.object({
+                consulta: z
+                    .string()
+                    .describe('Palabras a buscar, todas deben aparecer. Ej: "parcial recuperatorio", "memoria virtual".'),
+                curso: z
+                    .string()
+                    .optional()
+                    .describe(
+                        "Dirección de un curso para buscar solo ahí, sacada de aula_list_courses. Ej: " +
+                            '"/curso/3082". Sin este parámetro se buscan todos los cursos.',
+                    ),
+            }),
+            annotations: READ_ONLY,
+        },
+        async ({ consulta, curso }) => {
+            try {
+                return json(await search(session, consulta, curso));
             } catch (e) {
                 return failure(e);
             }
