@@ -23,7 +23,8 @@ const USAGE = `Uso:
   unimcp login                         elegir tu campus y guardar las credenciales del aula y de SIU Guaraní
   unimcp login --http                  lo mismo, para el modo HTTP: guarda la sesión del aula y emite el token del cliente
 
-Si hay un .env en la carpeta actual, se lee al arrancar (ver .env.example).`;
+Si hay un .env en la carpeta actual, se lee al arrancar. Las variables están en
+https://github.com/HyNuwa/UniMCP/blob/master/.env.example`;
 
 async function main() {
     const { values, positionals } = parseArgs({

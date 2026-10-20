@@ -11,11 +11,12 @@
     "vendor"
   ],
   "scripts": {
-    "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true})\"",
+    "vendor": "node scripts/vendor-pdfjs.mjs",
+    "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true})\" && npm run vendor",
     "build": "tsc",
-    "prepublishOnly": "npm run build",
-    "prepare": "node scripts/vendor-pdfjs.mjs",
+    "prepack": "npm run build",
     "start": "node build/index.js",
+    "predev": "npm run vendor",
     "dev": "tsx src/index.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "login": "tsx src/index.ts login"
@@ -28,12 +29,21 @@
     "siu-guarani",
     "universidad",
     "argentina",
+    "siu",
     "unju",
     "unsa",
     "unt",
     "uba"
   ],
   "author": "MaxiFG",
+  "homepage": "https://github.com/HyNuwa/UniMCP#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HyNuwa/UniMCP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HyNuwa/UniMCP/issues"
+  },
   "license": "MIT",
   "type": "module",
   "dependencies": {

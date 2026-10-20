@@ -107,6 +107,7 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 ## Verify and publish
 
 - Verify with `npx tsc --noEmit` and `npm test`, and try it against a real campus with `npm run dev` (requires `npm run login` once). Tests (`test/*.test.ts`, `node:test` through tsx) use made-up Moodle and G3W responses with a mocked `fetch`, never real student data.
+- CI (`.github/workflows/ci.yml`) runs `tsc --noEmit` and `npm test` on every push to master and every PR. `vendor/` is generated before `build` and `dev`, never in `prepare` or `postinstall`, which would also run on the user's machine.
 - The regression evaluation for the aula's rich text and search is `evals/unju-links-tablas.xml` (untracked): run it after touching `htmlToText`, `richText`, `safeUrl` or `aula_search`.
 - When you add or change a tool, update the tools table in `README.md`; when you add a campus, its table too.
 - The version lives in two places: `package.json` and the `version` in `src/mcp-server.ts`. They are bumped together.

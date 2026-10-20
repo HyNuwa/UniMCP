@@ -26,7 +26,7 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 | `utn-frba` | UTN | Regional Buenos Aires | `aulasvirtuales.frba.utn.edu.ar` (SSO) | — |
 | `utn-frt` | UTN | Regional Tucumán | `frt.cvg.utn.edu.ar` | — |
 
-Cada aula se verificó con `tool_mobile_get_public_config` (el servicio móvil de Moodle tiene que estar habilitado) y cada Guaraní con su página de login de autogestión. **Falta probarlos con usuarios reales**: si probás el tuyo, contanos cómo te fue.
+Cada aula se verificó con `tool_mobile_get_public_config` (el servicio móvil de Moodle tiene que estar habilitado) y cada Guaraní con su página de login de autogestión. Probado a fondo solo en **UNJu**; los demás **faltan probarlos con usuarios reales**. Si sos de otra universidad, probalo y contanos cómo te fue con la plantilla [Probé mi universidad](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien. Más formas de colaborar en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Sumar tu campus
 Si el tuyo no está, podés usarlo igual con variables de entorno (o un `.env`, ver [`.env.example`](.env.example)):
@@ -129,8 +129,10 @@ Los links que el agente te pasa abren con la sesión de tu navegador y **nunca i
 npm install
 npm run login   # una vez
 npm run dev     # servidor por STDIO desde src/, con tsx
+npm test        # tests, con respuestas inventadas de Moodle y G3W
 npm run build   # compila a build/
 ```
+La arquitectura y las convenciones están en [`AGENTS.md`](AGENTS.md), y lo que sigue en el [roadmap](docs/roadmap.md).
 
 ## Aviso
 Este proyecto no está afiliado ni avalado por ninguna universidad ni por el SIU. Usalo bajo tu responsabilidad.

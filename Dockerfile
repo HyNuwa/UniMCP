@@ -3,10 +3,10 @@ FROM node:22-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY scripts ./scripts
-# `prepare` copia pdf.js a vendor/ desde pdfjs-dist, que es devDependency.
 RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
+# `prebuild` copia pdf.js a vendor/ desde pdfjs-dist, que es devDependency.
 RUN npm run build && npm prune --omit=dev
 
 FROM node:22-slim

@@ -1,7 +1,8 @@
 // Copia de pdfjs-dist solo lo que usa el servidor a vendor/pdfjs, que se publica con el paquete.
 // pdfjs-dist queda como devDependency: quien instala unimcp no baja pdf.js entero ni su
 // dependencia opcional de canvas nativo (~37 MB), que no usamos.
-// Corre en `prepare`: con cada `npm install` dentro del repo y antes de publicar.
+// Corre antes de `build` (y por lo tanto antes de publicar) y de `dev`. No va en `prepare` ni en
+// `postinstall`: correría también en la compu de quien instala, donde pdfjs-dist no está.
 import { copyFileSync, mkdirSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";

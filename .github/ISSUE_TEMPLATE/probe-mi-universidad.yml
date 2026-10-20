@@ -1,0 +1,67 @@
+name: Probé mi universidad
+description: Contanos cómo anduvo UniMCP con tu campus, aunque haya andado todo bien.
+title: "[Campus] "
+labels: ["needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por probarlo. **Este issue es público: no pegues tu nombre, DNI, legajo, notas, mails ni capturas de tu historia o de los foros.** Describí qué pasó y, si querés mostrar una respuesta, cambiá los datos por otros inventados.
+  - type: input
+    id: campus
+    attributes:
+      label: Universidad y facultad
+      placeholder: "UNSa, Facultad de Ciencias Exactas"
+    validations:
+      required: true
+  - type: input
+    id: id
+    attributes:
+      label: Campus que elegiste en el login
+      description: El id de la tabla del README, o `personalizado`.
+      placeholder: unsa-exactas
+    validations:
+      required: true
+  - type: textarea
+    id: urls
+    attributes:
+      label: URLs (solo si usaste `personalizado`)
+      description: La del aula (Moodle) y la de la autogestión de Guaraní.
+      placeholder: |
+        UNI_AULA_BASE_URL=https://...
+        UNI_GUARANI_URL=https://.../autogestion
+  - type: dropdown
+    id: aula
+    attributes:
+      label: Aula virtual (Moodle)
+      options:
+        - Anduvo bien
+        - Anduvo con problemas (contalos abajo)
+        - No pude iniciar sesión
+        - Mi campus no tiene aula / no la probé
+    validations:
+      required: true
+  - type: dropdown
+    id: guarani
+    attributes:
+      label: SIU Guaraní
+      options:
+        - Anduvo bien
+        - Anduvo con problemas (contalos abajo)
+        - No pude iniciar sesión
+        - Mi campus no tiene Guaraní / no lo probé
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Qué probaste y qué pasó
+      description: Qué le pediste al agente, qué esperabas y qué contestó o qué error salió. Sin datos personales.
+      placeholder: |
+        - "¿Qué materias estoy cursando?": la historia académica salió vacía.
+        - Abrir un PDF del aula: anduvo.
+  - type: input
+    id: client
+    attributes:
+      label: Cliente y sistema
+      placeholder: "Claude Desktop en Windows 11, unimcp 0.1.0"
