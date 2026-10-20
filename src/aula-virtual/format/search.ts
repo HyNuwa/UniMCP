@@ -21,26 +21,34 @@ interface Candidate {
  * bajarlos todos.
  */
 export async function search(session: AulaSession, query: string, courseAddress?: string) {
-    const words = normalize(query).split(/\s+/).filter(Boolean);
-    if (!words.length) {
-        throw new Error('La búsqueda está vacía: pasá una o más palabras en `consulta`, por ejemplo "parcial".');
+    const all = [...new Set(words(query))];
+    const terms = all.filter(isSearchable);
+    if (!terms.length) {
+        throw new Error(
+            all.length
+                ? `Las palabras de menos de ${MIN_LETTERS} letras no se buscan (aparecen en casi todo): sumá una más larga, por ejemplo "parcial".`
+                : 'La búsqueda está vacía: pasá una o más palabras en `consulta`, por ejemplo "parcial".',
+        );
     }
+    const ignored = all.filter((w) => !isSearchable(w));
 
     const courses = await coursesToSearch(session, courseAddress);
     const candidates = (await Promise.all(courses.map((c) => courseCandidates(session, c)))).flat();
     const matches = candidates.filter((c) => {
-        const haystack = normalize(`${c.result.nombre ?? ""}
-${c.text}`);
-        return words.every((w) => haystack.includes(w));
+        const found = new Set([...words(c.result.nombre ?? ""), ...words(c.text)]);
+        return terms.every((w) => found.has(w));
     });
     // Primero lo que coincide en el nombre; el orden estable deja el resto como aparece en el aula.
-    const inName = (c: Candidate) => words.every((w) => normalize(c.result.nombre ?? "").includes(w));
+    const inName = (c: Candidate) => {
+        const found = new Set(words(c.result.nombre ?? ""));
+        return terms.every((w) => found.has(w));
+    };
     matches.sort((a, b) => Number(inName(b)) - Number(inName(a)));
 
     const resultados = [];
     let spent = 0;
     for (const m of matches) {
-        const result = { ...m.result, fragmento: inName(m) ? undefined : fragment(m.text, words) };
+        const result = { ...m.result, fragmento: inName(m) ? undefined : fragment(m.text, terms) };
         spent += JSON.stringify(result).length + 1;
         if (spent > BUDGET_CHARS) break;
         resultados.push(result);
@@ -48,6 +56,7 @@ ${c.text}`);
     const omitted = matches.length - resultados.length;
     return {
         consulta: query,
+        palabrasIgnoradas: ignored.length ? ignored : undefined,
         cursosRevisados: courses.length,
         total: matches.length,
         resultados,
@@ -55,8 +64,9 @@ ${c.text}`);
         resultadosOmitidos: omitted || undefined,
         sugerencia: matches.length
             ? undefined
-            : "No hubo coincidencias. Probá con menos palabras o con sinónimos: los docentes nombran las " +
-              'cosas a su manera (por ejemplo, el foro de avisos puede llamarse "Novedades").',
+            : "No hubo coincidencias. Se buscan palabras completas: probá con menos palabras, en singular o " +
+              'plural, o con sinónimos. Los docentes nombran las cosas a su manera (por ejemplo, el foro de ' +
+              'avisos puede llamarse "Novedades").',
     };
 }
 
@@ -129,18 +139,58 @@ async function forumCandidates(
     }));
 }
 
+/**
+ * Las palabras de menos letras ("a", "de", "la") aparecen en casi todo: no filtran resultados y movían el
+ * fragmento al principio del texto. Los números se buscan aunque sean cortos: horas, días y aulas ("19").
+ */
+const MIN_LETTERS = 3;
+const isSearchable = (w: string) => w.length >= MIN_LETTERS || /^\d+$/.test(w);
+
 /** Minúsculas y sin tildes, para que "Estadística" coincida con "estadistica". */
-function normalize(text: string): string {
-    return text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+const foldChar = (ch: string) => ch.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/** Las palabras de un texto, normalizadas: se compara palabra entera, "parcial" no encuentra "parciales". */
+function words(text: string): string[] {
+    return [...text].map(foldChar).join("").match(/[\p{L}\p{N}]+/gu) ?? [];
 }
 
-/** Texto alrededor de la primera palabra encontrada, para decidir si abrir el resultado. */
-function fragment(text: string, words: string[]): string | undefined {
-    const normalized = normalize(text);
-    const at = Math.min(...words.map((w) => normalized.indexOf(w)).filter((i) => i >= 0));
-    if (!Number.isFinite(at)) return undefined;
-    const start = Math.max(0, at - CONTEXT_CHARS);
-    const end = Math.min(text.length, at + CONTEXT_CHARS);
-    const piece = text.slice(start, end).replace(/\s+/g, " ").trim();
-    return `${start > 0 ? "…" : ""}${piece}${end < text.length ? "…" : ""}`;
+/**
+ * Texto alrededor de la zona con más palabras distintas de la búsqueda, para decidir si abrir el
+ * resultado. Se recorre carácter por carácter para que las posiciones sigan valiendo en el texto original.
+ */
+function fragment(text: string, terms: string[]): string | undefined {
+    const chars = [...text];
+    const folded = chars.map(foldChar);
+    // Dónde empieza y termina (en caracteres del original) cada palabra de la búsqueda que aparece.
+    const hits: { word: string; start: number; end: number }[] = [];
+    let i = 0;
+    while (i < chars.length) {
+        if (!/[\p{L}\p{N}]/u.test(folded[i])) {
+            i++;
+            continue;
+        }
+        let j = i;
+        while (j < chars.length && /[\p{L}\p{N}]/u.test(folded[j])) j++;
+        const word = folded.slice(i, j).join("");
+        if (terms.includes(word)) hits.push({ word, start: i, end: j });
+        i = j;
+    }
+    if (!hits.length) return undefined;
+
+    // La ventana de 2 × CONTEXT_CHARS con más palabras distintas; si empatan, la que tiene más apariciones.
+    const width = 2 * CONTEXT_CHARS;
+    let best = { from: 0, to: 0, distinct: 0 };
+    for (let from = 0, to = 0; from < hits.length; from++) {
+        while (to + 1 < hits.length && hits[to + 1].end - hits[from].start <= width) to++;
+        const distinct = new Set(hits.slice(from, to + 1).map((h) => h.word)).size;
+        if (distinct > best.distinct || (distinct === best.distinct && to - from > best.to - best.from)) {
+            best = { from, to, distinct };
+        }
+    }
+    const zoneStart = hits[best.from].start;
+    const zoneEnd = hits[best.to].end;
+    const start = Math.max(0, Math.min(zoneStart - Math.floor((width - (zoneEnd - zoneStart)) / 2), chars.length - width));
+    const end = Math.min(chars.length, start + width);
+    const piece = chars.slice(start, end).join("").replace(/\s+/g, " ").trim();
+    return `${start > 0 ? "…" : ""}${piece}${end < chars.length ? "…" : ""}`;
 }

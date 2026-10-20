@@ -1,5 +1,5 @@
 import { load } from "cheerio";
-import { htmlToText } from "../../shared/html.js";
+import { htmlToText, withoutCredentials } from "../../shared/html.js";
 import { getPage, pageUrl, toAddress } from "../client/g3w.js";
 import type { GuaraniSession } from "../client/session.js";
 import type { G3wPage, Pagelet } from "../client/types.js";
@@ -55,7 +55,7 @@ export async function openPage(session: GuaraniSession, address = "") {
         direccion: toAddress(session.site, page.url),
         operacion: page.op || undefined,
         propuesta: careers(page.shell, page.op).propuesta,
-        urlParaUsuario: page.url,
+        urlParaUsuario: withoutCredentials(page.url),
         avisos: notices(page.pagelets),
         secciones: sections,
         recortado: truncated || undefined,

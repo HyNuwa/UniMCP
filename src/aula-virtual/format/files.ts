@@ -1,5 +1,6 @@
 import { openDocument, UnsupportedFormat, type Part } from "../../shared/documents/index.js";
 import type { AulaSite } from "../../shared/campus.js";
+import { withoutCredentials } from "../../shared/html.js";
 import { fetchFile } from "../client/web-service.js";
 import type { AulaSession } from "../client/session.js";
 
@@ -25,7 +26,8 @@ function moodleRoot(site: AulaSite): { origin: string; base: string } {
  * queda en el servidor. Como las genera Moodle, no hace falta saber de qué campus son.
  */
 export function userFacingUrl(fileurl: string): string {
-    return fileurl.replace(WS_PATH, WEB_PATH);
+    // Moodle no suele mandar el token en la URL, pero si alguna versión lo hace, no tiene que salir.
+    return withoutCredentials(fileurl.replace(WS_PATH, WEB_PATH));
 }
 
 /**

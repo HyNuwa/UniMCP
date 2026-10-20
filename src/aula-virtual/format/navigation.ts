@@ -86,31 +86,77 @@ async function viewCourse(session: AulaSession, courseId: number) {
             resumen: richText(session.site, s.summary) || undefined,
             modulos: visibleModules(s).map((m) => toModule(m, courseId, session.site, { labelsInFull })),
         }));
-        if (fits(secciones)) return { secciones };
+        if (!fits(secciones)) continue;
+        if (labelsInFull) return { secciones };
+        return {
+            secciones,
+            recortado: true,
+            aviso:
+                "Para que el curso entre en una respuesta, las etiquetas vinieron resumidas (las cortadas " +
+                "terminan en …). Abrí la sección con su `direccion` para leerlas enteras.",
+        };
     }
 
+    const index = sections.map((s) => {
+        const modules = visibleModules(s);
+        const activities = modules.filter((m) => !CONTENT_TYPES.has(m.modname));
+        return {
+            ...sectionHeader(s, courseId),
+            resumen: htmlToSnippet(s.summary) || undefined,
+            modulos: modules.length,
+            tipos: modules.length ? countTypes(modules) : undefined,
+            actividades: activities.length
+                ? activities.map((m) => ({
+                      direccion: moduleAddr(courseId, m.id),
+                      nombre: cleanName(m.name),
+                      tipo: m.modname,
+                  }))
+                : undefined,
+        };
+    });
+    if (fits(index)) {
+        return {
+            indice:
+                "El curso entero no entra en una respuesta, así que vino como índice. Abrí la sección que " +
+                "necesites con su `direccion`.",
+            secciones: index,
+        };
+    }
+    const kept = withinBudget(index, OMITTED_RESERVE_CHARS);
+    // Ni el índice entra: de las secciones que faltan va solo la dirección, que alcanza para abrirlas.
+    const omitted = listOmitted(sections.slice(kept.length).map((s) => sectionAddr(courseId, s.section)));
     return {
         indice:
-            "El curso entero no entra en una respuesta, así que vino como índice. Abrí la sección que " +
-            "necesites con su `direccion`.",
-        secciones: sections.map((s) => {
-            const modules = visibleModules(s);
-            const activities = modules.filter((m) => !CONTENT_TYPES.has(m.modname));
-            return {
-                ...sectionHeader(s, courseId),
-                resumen: htmlToSnippet(s.summary) || undefined,
-                modulos: modules.length,
-                tipos: modules.length ? countTypes(modules) : undefined,
-                actividades: activities.length
-                    ? activities.map((m) => ({
-                          direccion: moduleAddr(courseId, m.id),
-                          nombre: cleanName(m.name),
-                          tipo: m.modname,
-                      }))
-                    : undefined,
-            };
-        }),
+            "El curso entero no entra en una respuesta, así que vino como índice, y ni así entra: faltan las " +
+            `últimas ${omitted.total} secciones. Las primeras están en \`seccionesOmitidas\`; ` +
+            "para el resto, buscá con aula_search en este curso.",
+        secciones: kept,
+        recortado: true,
+        seccionesOmitidas: omitted.listed,
+        otrasOmitidas: omitted.rest,
     };
+}
+
+/** Cuántos de los omitidos se nombran: la lista no puede volver a pasarse del presupuesto. */
+const MAX_OMITTED_LISTED = 20;
+/** Lo que se aparta del presupuesto para esa lista: unos 90 caracteres por módulo. */
+const OMITTED_RESERVE_CHARS = 2_000;
+
+/** Los primeros omitidos y cuántos más hay ("y X más"), para la respuesta. */
+function listOmitted<T>(items: T[]) {
+    const rest = items.length - MAX_OMITTED_LISTED;
+    return { total: items.length, listed: items.slice(0, MAX_OMITTED_LISTED), rest: rest > 0 ? rest : undefined };
+}
+
+/** Los primeros elementos que entran en el presupuesto, contando lo que ya se gastó en la respuesta. */
+function withinBudget<T>(items: T[], spent = 0): T[] {
+    let kept = 0;
+    for (const item of items) {
+        spent += JSON.stringify(item).length + 1;
+        if (spent > BUDGET_CHARS) break;
+        kept++;
+    }
+    return items.slice(0, kept);
 }
 
 /**
@@ -140,19 +186,36 @@ async function viewSection(session: AulaSession, courseId: number, sectionNumber
     if (fits({ seccion, modulos: withFullLabels })) return { seccion, modulos: withFullLabels };
 
     const modules = map(false);
-    let spent = JSON.stringify(seccion).length;
-    let kept = 0;
-    for (const m of modules) {
-        spent += JSON.stringify(m).length + 1;
-        if (spent > BUDGET_CHARS) break;
-        kept++;
+    if (fits({ seccion, modulos: modules })) {
+        return {
+            seccion,
+            modulos: modules,
+            recortado: true,
+            aviso:
+                "Para que la sección entre en una respuesta, las etiquetas vinieron resumidas (las cortadas " +
+                "terminan en …). Abrí la etiqueta con su `direccion` para leerla entera.",
+        };
     }
-    const omitted = modules.length - kept;
+    const kept = withinBudget(modules, JSON.stringify(seccion).length + OMITTED_RESERVE_CHARS);
+    const omitted = listOmitted(
+        visibleModules(section)
+            .slice(kept.length)
+            .map((m) => ({
+                direccion: moduleAddr(courseId, m.id),
+                nombre: m.modname === "label" ? undefined : cleanName(m.name),
+                tipo: m.modname,
+            })),
+    );
     return {
         seccion,
-        modulos: modules.slice(0, kept),
-        recortado: omitted > 0 || undefined,
-        modulosOmitidos: omitted || undefined,
+        modulos: kept,
+        recortado: true,
+        aviso:
+            "La sección no entra en una respuesta: las etiquetas vinieron resumidas (terminan en …) y faltan " +
+            `los últimos ${omitted.total} módulos. Los primeros están en \`modulosOmitidos\`, para abrir ` +
+            `con su \`direccion\`${omitted.rest ? `; para los otros ${omitted.rest}, buscá con aula_search en este curso` : ""}.`,
+        modulosOmitidos: omitted.listed,
+        otrosOmitidos: omitted.rest,
     };
 }
 
@@ -276,7 +339,7 @@ function toModule(m: CourseModule, courseId: number, site: AulaSite, map?: { lab
         id: map ? undefined : m.id,
         nombre: map && isLabel ? undefined : cleanName(m.name),
         tipo: m.modname,
-        url: map ? undefined : m.url,
+        url: map || !m.url ? undefined : safeLink(site, m.url),
         descripcion: (fullDescription ? richText(site, m.description) : htmlToSnippet(m.description)) || undefined,
         restriccion: htmlToText(m.availabilityinfo) || undefined,
         fechas: m.dates?.length

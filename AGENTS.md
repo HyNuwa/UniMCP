@@ -59,10 +59,10 @@ The user's token never leaves the server. The model and the user get URLs that o
 - **Descriptions**: in Spanish and written for the model. They say when to use the tool, where each parameter comes from (another response, another tool) and which response fields are useful to continue. Every zod `.describe()` includes a concrete example.
 - **Stateless navigation**: each response carries the `direccion` of what's inside (and the `padre` in the aula). The model navigates by passing addresses back; it never has to build them.
 - **Summarized indexes, detail on open**: a listing shows just enough to decide whether to go in (`htmlToSnippet`) and the full content is shown when the item is opened.
-- **Per-response budget**: anything that can be long is cut with a budget and says how to continue (`siguiente`, `hayMasDiscusiones`, `recortado`).
+- **Per-response budget**: anything that can be long is cut with a budget and says how to continue (`siguiente`, `hayMasDiscusiones`, `recortado`). Whenever something was cut, the response says so with `recortado: true` and, where it isn't obvious, an `aviso` saying what's missing and how to reach it. An aula course over 30,000 characters (`BUDGET_CHARS`) goes through three modes: labels in full, labels summarized (with `aviso`), then an index of sections, cut by sections into `seccionesOmitidas` if even that doesn't fit. A section goes labels in full, labels summarized, then its last modules into `modulosOmitidos`, each with its `direccion`. Omitted lists name the first 20 and count the rest (`otrosOmitidos`, `otrasOmitidas`), with room reserved in the budget so the list never pushes the response over it.
 - **Responses**: compact JSON via `json()` and errors via `failure()`. Every handler is `try { return json(...) } catch (e) { return failure(e) }`.
 - **Rich text**: `htmlToText` writes headings as `#`, list items as `- ` and tables row by row with " | ", header included. In the aula, full texts (summaries, labels, posts, feedback) go through `richText`, which also shows each link as "texto (url)" and each iframe as its URL: teachers write "LINK" and the class address is in the `href`. Snippets for indexes stay plain.
-- **URLs shown to the model** go through `safeUrl` (`shared/html.ts`): absolute, http(s) or mailto only, with credential parameters removed (`token`, `wstoken`, `sesskey`…). Aula URLs also go through `userFacingUrl`.
+- **URLs shown to the model** go through `safeUrl` (`shared/html.ts`): absolute, http(s) or mailto only, with credential parameters removed (`token`, `wstoken`, `sesskey`…), and YouTube videos shortened to `https://youtu.be/ID`. Aula URLs also go through `userFacingUrl`. URLs that aren't links (file URLs, Guaraní addresses, URLs pasted as text) go through `withoutCredentials`. `test/credentials.test.ts` fails if any output carries a credential: when you add a response that shows a URL, add it there.
 
 ## Code conventions
 
@@ -104,7 +104,8 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 
 ## Verify and publish
 
-- There are no tests. Verify with `npx tsc --noEmit` and try it against a real campus with `npm run dev` (requires `npm run login` once).
+- Verify with `npx tsc --noEmit` and `npm test`, and try it against a real campus with `npm run dev` (requires `npm run login` once). Tests (`test/*.test.ts`, `node:test` through tsx) use made-up Moodle and G3W responses with a mocked `fetch`, never real student data.
+- The regression evaluation for the aula's rich text and search is `evals/unju-links-tablas.xml` (untracked): run it after touching `htmlToText`, `richText`, `safeUrl` or `aula_search`.
 - When you add or change a tool, update the tools table in `README.md`; when you add a campus, its table too.
 - The version lives in two places: `package.json` and the `version` in `src/mcp-server.ts`. They are bumped together.
 - The project is MIT. `LICENSE` also keeps the ISC notice of utn-mcp, the code it derives from: its license requires it in every copy, so never remove it.

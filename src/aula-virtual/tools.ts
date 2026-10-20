@@ -75,10 +75,13 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "Un curso grande no entra en una respuesta: viene con `indice` y cada sección trae solo su " +
                 "nombre, un resumen, cuántos `modulos` tiene y de qué `tipos`, y sus `actividades` (foros, " +
                 "tareas, cuestionarios) con nombre y `direccion` para entrar directo. Para ver el resto de sus " +
-                "módulos se abre la sección con su `direccion`. Si una sección sola tampoco entra, viene " +
-                "`recortado` con la cantidad de `modulosOmitidos`.\n\n" +
+                "módulos se abre la sección con su `direccion`.\n\n" +
                 "En los mapas de curso y de sección los módulos vienen resumidos: las etiquetas traen su texto " +
-                "entero cuando entra, y el resto una descripción corta. Al abrir un módulo aparecen su `url` " +
+                "entero cuando entra, y el resto una descripción corta. Cuando algo se cortó para que entre, " +
+                "viene `recortado` y un `aviso` que dice qué falta y cómo verlo: etiquetas resumidas, " +
+                "`modulosOmitidos` al final de una sección o `seccionesOmitidas` del índice, con su `direccion` " +
+                "(los primeros 20; `otrosOmitidos` u `otrasOmitidas` dicen cuántos más hay). Al abrir un " +
+                "módulo aparecen su `url` " +
                 "web, la descripción entera y todos los datos de sus archivos.\n\n" +
                 "Según el tipo de módulo trae además: en una tarea (assign), `entrega` con el estado, el " +
                 "vencimiento, lo que se subió y la devolución con la nota; en una elección (choice) o " +

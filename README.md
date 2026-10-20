@@ -47,8 +47,8 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | Tool | Qué hace |
 |---|---|
 | `aula_list_courses` | Lista tus cursos. Es el punto de partida. |
-| `aula_open` | Entra a un curso, una sección, un módulo, un foro o una discusión. Cada respuesta trae las direcciones de lo que hay adentro y de un nivel más arriba, así el agente navega sin perderse. Un curso grande llega como índice de secciones con sus actividades, y cada sección se abre aparte. |
-| `aula_search` | Busca palabras en uno o en todos tus cursos: secciones, módulos, nombres de archivo y discusiones de los foros. Sirve cuando no sabés en qué materia está algo. |
+| `aula_open` | Entra a un curso, una sección, un módulo, un foro o una discusión. Cada respuesta trae las direcciones de lo que hay adentro y de un nivel más arriba, así el agente navega sin perderse. Un curso grande llega como índice de secciones con sus actividades, y cada sección se abre aparte. Si algo se recortó para que entre, la respuesta lo avisa y dice cómo verlo. |
+| `aula_search` | Busca palabras en uno o en todos tus cursos: secciones, módulos, nombres de archivo y discusiones de los foros. Compara palabras enteras e ignora las de menos de 3 letras, salvo los números. Sirve cuando no sabés en qué materia está algo. |
 | `aula_read_file` | Lee un archivo del aula, por partes cuando es largo. |
 | `aula_get_site_info` | Datos de tu usuario en el aula virtual. |
 | `aula_forum_post` | Abre un hilo en un foro o responde en una discusión. |

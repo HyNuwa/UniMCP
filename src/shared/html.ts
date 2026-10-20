@@ -52,8 +52,8 @@ export function htmlToText(html: string | undefined, options: TextOptions = {}):
     const $ = load(html, null, false);
     $(NOT_TEXT).remove();
     if (options.drop) $(options.drop).remove();
-    const text = render($.root()[0].children as unknown as Node[], options);
-    return normalize(options.links ? placeLinks(cleanUrls(text, options.links)) : text);
+    const text = cleanUrls(render($.root()[0].children as unknown as Node[], options), options.links);
+    return normalize(options.links ? placeLinks(text) : text);
 }
 
 /** Marcas de dónde va la URL de un link con texto; placeLinks la ubica al final de la palabra. */
@@ -63,8 +63,12 @@ const LINK_END = "\u0002";
 /** Una URL escrita en el texto, sin la puntuación que la cierra ("…/clase."). */
 const URL_IN_TEXT = /https?:\/\/[^\s<>"'()[\]\u0001\u0002]+[^\s<>"'()[\]\u0001\u0002.,;:!?]/g;
 
-/** Las URLs del texto también, no solo las de los links: un docente puede pegar una con `token=`. */
-const cleanUrls = (text: string, links: LinkOptions) => text.replace(URL_IN_TEXT, (u) => safeUrl(u, links) ?? u);
+/**
+ * Las URLs del texto también, no solo las de los links: un docente puede pegar una con `token=`. Se limpian
+ * siempre, aunque no se muestren los links; sin `links` quedan como están, solo sin credenciales.
+ */
+const cleanUrls = (text: string, links?: LinkOptions) =>
+    text.replace(URL_IN_TEXT, (u) => (links ? safeUrl(u, links) : withoutCredentials(u)) ?? u);
 
 /**
  * La URL de un link va después de la palabra donde termina el link: si el docente enlazó solo la "G" de
@@ -91,12 +95,49 @@ export function safeUrl(raw: string, { base, rewrite }: LinkOptions): string | u
         return undefined;
     }
     if (!/^(https?|mailto):$/.test(u.protocol)) return undefined;
+    stripCredentials(u);
+    const href = youtubeShort(u) ?? u.href;
+    return rewrite ? rewrite(href) : href;
+}
+
+/**
+ * Una URL absoluta sin usuario, contraseña ni parámetros de credencial. Si no tenía ninguno vuelve tal cual:
+ * `URL` la reescribiría ("https://x.com" → "https://x.com/") y es texto del docente.
+ */
+export function withoutCredentials(url: string): string {
+    let u: URL;
+    try {
+        u = new URL(url);
+    } catch {
+        return url;
+    }
+    const hasCredentials = u.username || u.password || [...u.searchParams.keys()].some((k) => CREDENTIAL_PARAMS.test(k));
+    return hasCredentials ? stripCredentials(u).href : url;
+}
+
+function stripCredentials(u: URL): URL {
     u.username = "";
     u.password = "";
     for (const key of [...u.searchParams.keys()]) {
         if (CREDENTIAL_PARAMS.test(key)) u.searchParams.delete(key);
     }
-    return rewrite ? rewrite(u.href) : u.href;
+    return u;
+}
+
+/** Los hosts de YouTube que usan los docentes: el embed, el sitio, el móvil y el de privacidad. */
+const YOUTUBE_HOST = /^(www\.|m\.)?youtube(-nocookie)?\.com$/;
+
+/**
+ * Un video de YouTube como `https://youtu.be/ID`: el embed trae parámetros de reproducción (`autoplay`,
+ * `si`, `rel`) que al modelo no le sirven, y un curso con 73 videos los paga en cada respuesta. Solo se
+ * conserva desde qué segundo empieza.
+ */
+function youtubeShort(u: URL): string | undefined {
+    if (!YOUTUBE_HOST.test(u.hostname)) return undefined;
+    const id = /^\/(embed|shorts|live)\/([\w-]{6,})/.exec(u.pathname)?.[2] ?? (u.pathname === "/watch" ? u.searchParams.get("v") : null);
+    if (!id || !/^[\w-]+$/.test(id)) return undefined;
+    const start = u.searchParams.get("start") ?? u.searchParams.get("t");
+    return `https://youtu.be/${id}${start && /^\d+s?$/.test(start) ? `?t=${start.replace(/s$/, "")}` : ""}`;
 }
 
 function render(nodes: Node[], options: TextOptions): string {

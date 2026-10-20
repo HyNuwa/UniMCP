@@ -1,6 +1,7 @@
 import type { CookieJar } from "tough-cookie";
 import type { GuaraniSite } from "../../shared/campus.js";
 import type { Credentials } from "../../shared/credentials.js";
+import { withoutCredentials } from "../../shared/html.js";
 import { fetchWithCookies } from "../../shared/http.js";
 import type { GuaraniSession } from "./session.js";
 import type { G3wPage, Pagelet } from "./types.js";
@@ -99,9 +100,12 @@ export function pageUrl(site: GuaraniSite, address: string): URL {
     return u;
 }
 
-/** Lo inverso de pageUrl: la ruta relativa, que es lo que ve el modelo. */
+/**
+ * Lo inverso de pageUrl: la ruta relativa, que es lo que ve el modelo. Sin parámetros de credencial: con
+ * ellos la dirección abriría la sesión del usuario fuera del servidor.
+ */
 export function toAddress(site: GuaraniSite, url: URL | string): string {
-    const u = new URL(url);
+    const u = new URL(withoutCredentials(new URL(url).href));
     const base = new URL(`${site.baseUrl}/`);
     return u.pathname.slice(base.pathname.length) + u.search;
 }
