@@ -42,6 +42,11 @@ export interface TextOptions {
     links?: LinkOptions;
 }
 
+/** Opciones del recorrido: además de las de afuera, si se está adentro de una celda (tablas anidadas). */
+interface RenderOptions extends TextOptions {
+    inCell?: boolean;
+}
+
 /**
  * HTML a texto para el modelo. Lo parsea cheerio con parse5, el algoritmo del estándar, que corrige el
  * HTML mal formado (G3W deja etiquetas sin cerrar) y decodifica todas las entidades. Los títulos van con
@@ -140,7 +145,7 @@ function youtubeShort(u: URL): string | undefined {
     return `https://youtu.be/${id}${start && /^\d+s?$/.test(start) ? `?t=${start.replace(/s$/, "")}` : ""}`;
 }
 
-function render(nodes: Node[], options: TextOptions): string {
+function render(nodes: Node[], options: RenderOptions): string {
     let text = "";
     for (const node of nodes) {
         if (node.type === "text") text += node.data ?? "";
@@ -150,22 +155,22 @@ function render(nodes: Node[], options: TextOptions): string {
 }
 
 /** El texto de un elemento en una sola línea: para celdas, títulos e ítems de lista. */
-const oneLine = (el: Node, options: TextOptions) => render(el.children ?? [], options).replace(/\s+/g, " ").trim();
+const oneLine = (el: Node, options: RenderOptions) => render(el.children ?? [], options).replace(/\s+/g, " ").trim();
 
-function renderElement(el: Node, options: TextOptions): string {
+function renderElement(el: Node, options: RenderOptions): string {
     const name = el.name ?? "";
     if (name === "br") return "\n";
-    if (name === "tr") {
-        // Las celdas van en una línea, si no la fila se parte y se pierden las columnas. Las filas de
-        // encabezado (`th`) quedan como una fila más, así el modelo sabe qué es cada columna.
-        const cells = (el.children ?? []).filter((c) => c.name === "td" || c.name === "th").map((c) => oneLine(c, options));
-        // Una fila que solo tenía botones queda vacía y no aporta nada.
-        return cells.some(Boolean) ? `\n${cells.join(" | ")}\n` : "\n";
+    if (name === "table") {
+        const rows = tableRows(el, options);
+        // Una tabla adentro de una celda queda en la línea de la fila de afuera.
+        return options.inCell ? ` ${rows.join(" / ")} ` : `\n${rows.join("\n")}\n`;
     }
     const heading = /^h([1-6])$/.exec(name);
     if (heading) {
         const title = oneLine(el, options);
-        return title ? `\n${"#".repeat(Number(heading[1]))} ${title}\n` : "\n";
+        // Adentro de una celda los `#` no marcan nada: G3W pone cada comisión en un `h5`.
+        if (options.inCell) return ` ${title} `;
+        return title ?`\n${"#".repeat(Number(heading[1]))} ${title}\n` : "\n";
     }
     if (name === "li") {
         // Una lista adentro de otra sigue en sus propias líneas, después del ítem.
@@ -199,6 +204,108 @@ function linkText(inner: string, href: string | undefined, links: LinkOptions): 
 }
 
 const attr = (el: Node, name: string) => el.attribs?.[name];
+
+/** Una celda ubicada en la grilla: la misma celda ocupa todos los lugares que cubren su colspan y rowspan. */
+interface Slot {
+    cell: Node;
+    text: string;
+    /** Es el primer lugar de la celda en su fila: los demás son el colspan. */
+    colStart: boolean;
+    /** La celda empieza en esta fila: si no, viene de un rowspan de más arriba. */
+    rowStart: boolean;
+}
+
+/** Tope de colspan y rowspan, por si el HTML trae un número absurdo. */
+const MAX_SPAN = 50;
+
+const span = (el: Node, name: "colspan" | "rowspan") => {
+    const n = Number.parseInt(attr(el, name) ?? "1", 10);
+    return n >= 1 ? Math.min(n, MAX_SPAN) : 1;
+};
+
+const cellsOf = (row: Node) => (row.children ?? []).filter((n) => n.name === "td" || n.name === "th");
+
+/** Las filas de la tabla, sin las de las tablas anidadas. */
+function directRows(table: Node): { row: Node; inHead: boolean }[] {
+    const rows: { row: Node; inHead: boolean }[] = [];
+    for (const child of table.children ?? []) {
+        if (child.name === "tr") rows.push({ row: child, inHead: false });
+        else if (child.name === "thead" || child.name === "tbody" || child.name === "tfoot") {
+            for (const tr of child.children ?? []) if (tr.name === "tr") rows.push({ row: tr, inHead: child.name === "thead" });
+        }
+    }
+    return rows;
+}
+
+/**
+ * Una tabla fila por fila, con las celdas separadas por " | ". Primero se arma la grilla entera con los
+ * colspan y rowspan, así cada valor queda en su columna. Un encabezado de varias filas ("2da Clase" sobre
+ * "Día y horario | Lugar") se combina en una sola fila con un nombre por columna: "2da Clase · Lugar".
+ * En los datos, una celda con rowspan se repite en cada fila (así cada fila se lee sola) y una con colspan
+ * va una vez.
+ */
+function tableRows(table: Node, options: RenderOptions): string[] {
+    const rows = directRows(table);
+    const cellOptions = { ...options, inCell: true };
+    const grid: (Slot | undefined)[][] = rows.map(() => []);
+    rows.forEach(({ row }, r) => {
+        let c = 0;
+        for (const cell of cellsOf(row)) {
+            while (grid[r][c]) c++;
+            const text = oneLine(cell, cellOptions);
+            const colspan = span(cell, "colspan");
+            const rowspan = Math.min(span(cell, "rowspan"), rows.length - r);
+            for (let dr = 0; dr < rowspan; dr++) {
+                for (let dc = 0; dc < colspan; dc++) {
+                    grid[r + dr][c + dc] = { cell, text, colStart: dc === 0, rowStart: dr === 0 };
+                }
+            }
+            c += colspan;
+        }
+    });
+
+    const head = headerRows(rows);
+    const lines: string[] = [];
+    if (head > 1) {
+        const width = Math.max(...grid.slice(0, head).map((g) => g.length));
+        const names = Array.from({ length: width }, (_, c) => {
+            const parts: Slot[] = [];
+            for (let r = 0; r < head; r++) {
+                const slot = grid[r][c];
+                // La misma celda bajando por un rowspan, o un nombre vacío, no se repite.
+                if (slot?.text && !parts.some((p) => p.cell === slot.cell)) parts.push(slot);
+            }
+            return parts.map((p) => p.text).join(" · ");
+        });
+        if (names.some(Boolean)) lines.push(names.join(" | "));
+    }
+    for (let r = head > 1 ? head : 0; r < rows.length; r++) {
+        const slots = grid[r].filter((slot): slot is Slot => !!slot && slot.colStart);
+        // Una fila que solo tenía botones queda vacía y no aporta nada, aunque le llegue un rowspan de arriba.
+        if (slots.some((slot) => slot.rowStart && slot.text)) lines.push(slots.map((slot) => slot.text).join(" | "));
+    }
+    return lines;
+}
+
+/**
+ * Cuántas filas de arriba son encabezado: las de `thead`, las que son todas `th`, o una primera fila que
+ * agrupa columnas (colspan) con celdas que bajan (rowspan), como arman los docentes con `td`.
+ */
+function headerRows(rows: { row: Node; inHead: boolean }[]): number {
+    let head = 0;
+    while (head < rows.length && (rows[head].inHead || isAllTh(rows[head].row))) head++;
+    const first = rows.length ? cellsOf(rows[0].row) : [];
+    if (first.some((c) => span(c, "colspan") > 1) && first.some((c) => span(c, "rowspan") > 1)) {
+        head = Math.max(head, ...first.map((c) => Math.min(span(c, "rowspan"), rows.length)));
+    }
+    // Sin datos abajo no es un encabezado: es una tabla de puros `th`, como los filtros de G3W.
+    return head < rows.length ? head : 0;
+}
+
+const isAllTh = (row: Node) => {
+    const cells = cellsOf(row);
+    return cells.length > 0 && cells.every((c) => c.name === "th");
+};
 
 function normalize(text: string): string {
     return text
