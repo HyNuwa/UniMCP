@@ -58,6 +58,13 @@ export function registerGuaraniTools(server: McpServer, session: GuaraniSession)
                 "pasó a la `fechaConsulta`. Los registros van del más reciente al más viejo y, con la misma " +
                 "fecha, el resultado final antes que la regularidad: el primero es el estado actual de la " +
                 "materia. Si viene `registrosSinParsear`, esos registros traen solo su `texto`.\n\n" +
+                "La oferta de comisiones viene en `oferta`, por período y materia, con cada comisión: `turno`, " +
+                "`cupo`, `inscriptos`, `instancias`, `ubicacion`, `docentes`, `observaciones` y `horarios` en " +
+                "el orden de `columnasHorarios`. Lo que Guaraní todavía no definió no viene. Si la oferta entera " +
+                "no entra, viene `indice` con las materias y cuántas comisiones tiene cada una: se abre la " +
+                "misma dirección con `materia` para ver las de una. Si la pregunta es sobre una materia, pasá " +
+                "`materia` de entrada: la respuesta es mucho más corta. Una materia puede ofrecerse en más de un " +
+                "período.\n\n" +
                 "No hace falta armar la dirección: sale de guarani_menu o de los `enlaces` de otra respuesta. Si " +
                 "viene `recortado`, la página era más larga que lo que entra en una respuesta. `propuesta` dice de " +
                 "qué carrera son los datos.\n\n" +
@@ -70,12 +77,19 @@ export function registerGuaraniTools(server: McpServer, session: GuaraniSession)
                         'Dirección de una operación, tal como la devuelve guarani_menu o un enlace. Ej: "historia_academica". ' +
                             'Vacía ("") para la página de inicio.',
                     ),
+                materia: z
+                    .string()
+                    .optional()
+                    .describe(
+                        "Solo para la historia académica y la oferta de comisiones: deja las materias que coinciden " +
+                            'con el código o con palabras del nombre, sin importar tildes. Ej: "IF159" o "analisis ii".',
+                    ),
             },
             annotations: READ_ONLY,
         },
-        async ({ direccion }) => {
+        async ({ direccion, materia }) => {
             try {
-                return json(await openPage(session, direccion));
+                return json(await openPage(session, direccion, materia));
             } catch (e) {
                 return failure(e);
             }

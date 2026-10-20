@@ -4,6 +4,8 @@ import { getPage, pageUrl, toAddress } from "../client/g3w.js";
 import type { GuaraniSession } from "../client/session.js";
 import type { G3wPage, Pagelet } from "../client/types.js";
 import { academicHistory } from "./history.js";
+import { commissionOffer } from "./offer.js";
+import { matchesSubject } from "./subjects.js";
 
 /** Cuánto texto de las secciones se devuelve por página, en caracteres. */
 const BUDGET_CHARS = 30_000;
@@ -27,22 +29,23 @@ interface Link {
 
 /**
  * Abre una página de la autogestión y devuelve su texto por sección, los avisos y los enlaces a
- * otras páginas. La dirección vacía es la página de inicio del alumno.
+ * otras páginas. La dirección vacía es la página de inicio del alumno. `materia` filtra la historia
+ * académica y la oferta de comisiones.
  */
-export async function openPage(session: GuaraniSession, address = "") {
+export async function openPage(session: GuaraniSession, address = "", materia?: string) {
     const page = await withAllFilters(session, await getPage(session, address));
     const content = page.pagelets.filter((p) => !MENU_PAGELET.test(p.id));
 
     const sections: { id: string; texto: string }[] = [];
     let spent = 0;
     let truncated = false;
-    let history: ReturnType<typeof academicHistory>;
+    let data: Structured | undefined;
     for (const p of content) {
-        // La historia académica va por materia en `historia`, en vez de como texto. Si no entra, va el texto,
+        // La historia y la oferta van estructuradas, en vez de como texto. Si ni así entran, va el texto,
         // que se puede cortar.
-        const found = history ? undefined : academicHistory(p.content);
-        if (found && JSON.stringify(found).length <= BUDGET_CHARS - spent) {
-            history = found;
+        const found = data ? undefined : structured(p.content, materia, BUDGET_CHARS - spent);
+        if (found) {
+            data = found;
             spent += JSON.stringify(found).length;
             continue;
         }
@@ -67,11 +70,53 @@ export async function openPage(session: GuaraniSession, address = "") {
         propuesta: careers(page.shell, page.op).propuesta,
         urlParaUsuario: withoutCredentials(page.url),
         avisos: notices(page.pagelets),
-        ...history,
+        ...data,
+        aviso:
+            !data && materia?.trim()
+                ? "`materia` solo filtra la historia académica y la oferta de comisiones: esta página vino entera."
+                : data?.aviso,
         secciones: sections.length ? sections : undefined,
-        recortado: truncated || undefined,
+        recortado: truncated || data?.recortado || undefined,
         enlaces: links.length ? links.slice(0, MAX_LINKS) : undefined,
     };
+}
+
+type Structured = Record<string, unknown> & { aviso?: string; recortado?: true };
+
+/**
+ * La historia académica o la oferta de comisiones como datos, filtradas por `materia`, si la parte es una de
+ * esas y entra en `room` caracteres. Una oferta que no entra entera va como índice de materias, para pedir
+ * una con `materia`.
+ */
+function structured(html: string, materia: string | undefined, room: number): Structured | undefined {
+    const fits = (value: unknown) => JSON.stringify(value).length <= room;
+    const noMatch = `Ninguna materia coincide con "${materia}". Probá con otra parte del nombre o con el código.`;
+
+    const history = academicHistory(html);
+    if (history) {
+        const historia = history.historia.filter((s) => matchesSubject(materia, s));
+        const result = { ...history, historia, aviso: historia.length ? undefined : noMatch };
+        return fits(result) ? result : undefined;
+    }
+
+    const offer = commissionOffer(html);
+    if (!offer) return undefined;
+    const oferta = offer.oferta
+        .map((p) => ({ ...p, materias: p.materias.filter((s) => matchesSubject(materia, s)) }))
+        .filter((p) => p.materias.length);
+    const result = { ...offer, oferta, aviso: oferta.length ? undefined : noMatch };
+    if (fits(result)) return result;
+    const index = {
+        indice: oferta.map((p) => ({
+            periodo: p.periodo,
+            materias: p.materias.map((s) => ({ materia: s.materia, codigo: s.codigo, comisiones: s.comisiones.length })),
+        })),
+        recortado: true as const,
+        aviso:
+            "La oferta entera no entra en una respuesta, así que vino como índice de materias. Para ver las " +
+            'comisiones de una, abrí la misma dirección con `materia` (el nombre o el código, por ejemplo "IF159").',
+    };
+    return fits(index) ? index : undefined;
 }
 
 /** El menú de la autogestión: las operaciones que habilitó la universidad para este alumno. */
