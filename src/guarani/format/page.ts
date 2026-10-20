@@ -3,6 +3,7 @@ import { htmlToText, withoutCredentials } from "../../shared/html.js";
 import { getPage, pageUrl, toAddress } from "../client/g3w.js";
 import type { GuaraniSession } from "../client/session.js";
 import type { G3wPage, Pagelet } from "../client/types.js";
+import { academicHistory } from "./history.js";
 
 /** Cuánto texto de las secciones se devuelve por página, en caracteres. */
 const BUDGET_CHARS = 30_000;
@@ -35,7 +36,16 @@ export async function openPage(session: GuaraniSession, address = "") {
     const sections: { id: string; texto: string }[] = [];
     let spent = 0;
     let truncated = false;
+    let history: ReturnType<typeof academicHistory>;
     for (const p of content) {
+        // La historia académica va por materia en `historia`, en vez de como texto. Si no entra, va el texto,
+        // que se puede cortar.
+        const found = history ? undefined : academicHistory(p.content);
+        if (found && JSON.stringify(found).length <= BUDGET_CHARS - spent) {
+            history = found;
+            spent += JSON.stringify(found).length;
+            continue;
+        }
         const text = pageletText(p.content);
         if (!text) continue;
         const room = BUDGET_CHARS - spent;
@@ -57,7 +67,8 @@ export async function openPage(session: GuaraniSession, address = "") {
         propuesta: careers(page.shell, page.op).propuesta,
         urlParaUsuario: withoutCredentials(page.url),
         avisos: notices(page.pagelets),
-        secciones: sections,
+        ...history,
+        secciones: sections.length ? sections : undefined,
         recortado: truncated || undefined,
         enlaces: links.length ? links.slice(0, MAX_LINKS) : undefined,
     };

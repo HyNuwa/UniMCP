@@ -50,6 +50,14 @@ export function registerGuaraniTools(server: McpServer, session: GuaraniSession)
                 "Abre una página de SIU Guaraní y devuelve su contenido como texto por sección, con las tablas " +
                 "fila por fila y las celdas separadas por \" | \" (materia | fecha | nota | resultado, por ejemplo), " +
                 "los `avisos` que muestra Guaraní y los `enlaces` a otras páginas, cada uno con su `direccion`.\n\n" +
+                "La historia académica viene en `historia`, una entrada por materia con su `codigo` y sus " +
+                "`registros` (regularidad, promoción, examen, equivalencia, en curso), cada uno con `tipo`, " +
+                "`nota` (un número, o una palabra como \"Acreditado\"; falta si fue ausente o es una " +
+                "regularidad), `resultado`, `fecha` (aaaa-mm-dd; en una cursada en curso, el inicio de dictado) " +
+                "y el `vencimiento` de la regularidad mientras la materia no esté aprobada, con `vencida` si ya " +
+                "pasó a la `fechaConsulta`. Los registros van del más reciente al más viejo y, con la misma " +
+                "fecha, el resultado final antes que la regularidad: el primero es el estado actual de la " +
+                "materia. Si viene `registrosSinParsear`, esos registros traen solo su `texto`.\n\n" +
                 "No hace falta armar la dirección: sale de guarani_menu o de los `enlaces` de otra respuesta. Si " +
                 "viene `recortado`, la página era más larga que lo que entra en una respuesta. `propuesta` dice de " +
                 "qué carrera son los datos.\n\n" +

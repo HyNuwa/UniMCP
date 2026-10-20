@@ -1,7 +1,11 @@
 import type { AulaSite } from "../../shared/campus.js";
+import { isoDate } from "../../shared/dates.js";
 import { htmlToText, safeUrl } from "../../shared/html.js";
 import type { MoodleFile } from "../client/types.js";
 import { userFacingUrl } from "./files.js";
+
+/** Lo usan todos los formatos del aula; vive en shared porque Guaraní también fecha en hora argentina. */
+export { isoDate };
 
 /**
  * Texto rico del aula (resúmenes, etiquetas, mensajes, devoluciones) con la URL de cada link e iframe: el
@@ -15,21 +19,6 @@ export const richText = (site: AulaSite, html: string | undefined) =>
 export const safeLink = (site: AulaSite, url: string) => safeUrl(url, linkOptions(site));
 
 const linkOptions = (site: AulaSite) => ({ base: site.baseUrl, rewrite: userFacingUrl });
-
-/**
- * Hora argentina, en minutos respecto de UTC. Es fija: Argentina no usa horario de verano desde 2009. No se
- * toma de la máquina porque el servidor hosteado no corre en hora argentina.
- */
-const ARGENTINA_OFFSET_MINUTES = -180;
-
-/**
- * Timestamp de Moodle (en segundos) a ISO 8601 en hora argentina, por ejemplo "2026-10-15T22:30:00-03:00":
- * en UTC una publicación de la noche figura como del día siguiente. 0 o vacío significa sin fecha.
- */
-export const isoDate = (seconds: number | null | undefined) =>
-    seconds
-        ? new Date((seconds + ARGENTINA_OFFSET_MINUTES * 60) * 1000).toISOString().slice(0, 19) + "-03:00"
-        : null;
 
 /** Moodle guarda nombres con saltos de línea y espacios de más, sobre todo en las etiquetas. */
 export const cleanName = (name: string) => name.replace(/\s+/g, " ").trim();
