@@ -1,0 +1,88 @@
+{
+  "manifest_version": "0.3",
+  "name": "unimcp",
+  "display_name": "UniMCP",
+  "version": "se completa al empaquetar, desde package.json",
+  "description": "Tu aula virtual (Moodle) y tu SIU Guaraní desde Claude. NO OFICIAL, para universidades argentinas.",
+  "long_description": "UniMCP le da a Claude acceso a los sistemas de tu universidad: lee los apuntes, avisos, foros y vencimientos del aula virtual (Moodle), consulta tu historia académica y la oferta de comisiones en SIU Guaraní y, con tu confirmación, publica en foros o entrega tareas. Corre en tu computadora: Claude Desktop guarda tu contraseña de forma segura y solo viaja a tu universidad. No está afiliado ni avalado por ninguna universidad ni por el SIU.",
+  "author": {
+    "name": "MaxiFG",
+    "url": "https://github.com/HyNuwa"
+  },
+  "homepage": "https://github.com/HyNuwa/UniMCP",
+  "documentation": "https://github.com/HyNuwa/UniMCP#readme",
+  "support": "https://github.com/HyNuwa/UniMCP/issues",
+  "license": "MIT",
+  "keywords": ["moodle", "siu-guarani", "universidad", "argentina", "aula-virtual"],
+  "server": {
+    "type": "node",
+    "entry_point": "build/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/build/index.js"],
+      "env": {
+        "UNIMCP_MCPB": "1",
+        "UNI_CAMPUS": "${user_config.campus}",
+        "UNI_USER": "${user_config.aula_usuario}",
+        "UNI_PASS": "${user_config.aula_contrasena}",
+        "UNI_GUARANI_USER": "${user_config.guarani_usuario}",
+        "UNI_GUARANI_PASS": "${user_config.guarani_contrasena}",
+        "UNI_AULA_BASE_URL": "${user_config.aula_url}",
+        "UNI_GUARANI_URL": "${user_config.guarani_url}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "user_config": {
+    "campus": {
+      "type": "string",
+      "title": "Campus",
+      "description": "se completa al empaquetar, con la lista de campus",
+      "required": true
+    },
+    "aula_usuario": {
+      "type": "string",
+      "title": "Usuario del aula virtual",
+      "description": "El usuario con el que entrás al aula (Moodle). Dejalo vacío si tu campus no tiene aula.",
+      "required": false
+    },
+    "aula_contrasena": {
+      "type": "string",
+      "title": "Contraseña del aula virtual",
+      "description": "Claude Desktop la guarda de forma segura y solo se manda al aula de tu universidad.",
+      "sensitive": true,
+      "required": false
+    },
+    "guarani_usuario": {
+      "type": "string",
+      "title": "Usuario de SIU Guaraní",
+      "description": "Suele ser tu DNI. Dejalo vacío si no querés usar Guaraní.",
+      "required": false
+    },
+    "guarani_contrasena": {
+      "type": "string",
+      "title": "Contraseña de SIU Guaraní",
+      "description": "Claude Desktop la guarda de forma segura y solo se manda al Guaraní de tu universidad.",
+      "sensitive": true,
+      "required": false
+    },
+    "aula_url": {
+      "type": "string",
+      "title": "URL del aula (solo campus personalizado)",
+      "description": "Solo si elegiste el campus \"personalizado\". Ej: https://virtual.tu-universidad.edu.ar",
+      "required": false
+    },
+    "guarani_url": {
+      "type": "string",
+      "title": "URL de Guaraní (solo campus personalizado)",
+      "description": "Solo si elegiste el campus \"personalizado\". Ej: https://autogestion.tu-universidad.edu.ar/autogestion",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  }
+}

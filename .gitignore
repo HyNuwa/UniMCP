@@ -1,6 +1,9 @@
 /node_modules
 /build
 /vendor
+# Extensión de Claude Desktop: se arma con `npm run mcpb` y se adjunta a cada release
+/build-mcpb
+/*.mcpb
 .env
 # Links locales a .agents/skills (junction/symlink): no se versionan
 /.claude/skills

@@ -15,6 +15,7 @@
     "prebuild": "node -e \"require('fs').rmSync('build',{recursive:true,force:true})\" && npm run vendor",
     "build": "tsc",
     "prepack": "npm run build",
+    "mcpb": "npm run build && node scripts/pack-mcpb.mjs",
     "start": "node build/index.js",
     "predev": "npm run vendor",
     "dev": "tsx src/index.ts",

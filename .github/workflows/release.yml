@@ -1,0 +1,26 @@
+name: Extensión de Claude Desktop
+
+# Al publicar un release, arma unimcp-<versión>.mcpb y lo adjunta para que se baje desde la página del
+# release. Las credenciales llegan a la extensión por variables de entorno, así que da igual que se arme
+# en Linux: el binario del keychain no hace falta.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  mcpb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run mcpb
+      - run: gh release upload "${{ github.event.release.tag_name }}" unimcp-*.mcpb --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -1,11 +1,11 @@
 import { randomInt } from "node:crypto";
 import type { CookieJar } from "tough-cookie";
 import type { AulaSite } from "../../shared/campus.js";
-import type { Credentials } from "../../shared/credentials.js";
+import { loginHint, type Credentials } from "../../shared/credentials.js";
 import { MoodleError } from "./web-service.js";
 
 export class LoginRequiredError extends Error {
-    constructor(message = "Hace falta iniciar sesión: corré `unimcp login`.") {
+    constructor(message = `Hace falta iniciar sesión en el aula. ${loginHint()}`) {
         super(message);
         this.name = "LoginRequiredError";
     }
@@ -13,7 +13,7 @@ export class LoginRequiredError extends Error {
 
 export class InvalidCredentialsError extends Error {
     constructor(reason?: string) {
-        const base = "El aula rechazó usuario o contraseña. Corré `unimcp login` para actualizarlos.";
+        const base = `El aula rechazó usuario o contraseña. ${loginHint()}`;
         super(reason ? `${base} Motivo del aula: ${reason}` : base);
         this.name = "InvalidCredentialsError";
     }

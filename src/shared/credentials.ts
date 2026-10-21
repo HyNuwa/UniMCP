@@ -57,5 +57,14 @@ export async function saveCredentials(account: CredentialAccount, creds: Credent
     }
 }
 
+/**
+ * Qué hacer cuando faltan las credenciales o fueron rechazadas. En la extensión de Claude Desktop
+ * (UNIMCP_MCPB) no hay terminal: se cargan en su configuración.
+ */
+export const loginHint = (what = "tu usuario y contraseña") =>
+    process.env.UNIMCP_MCPB
+        ? `Revisá ${what} en la configuración de la extensión UniMCP de Claude Desktop (Configuración → Extensiones).`
+        : "Corré `unimcp login`.";
+
 /** Variables de entorno que sustituyen al keychain, para nombrarlas en los errores. */
 export const credentialEnvVars = (account: CredentialAccount) => `${ACCOUNTS[account].user} y ${ACCOUNTS[account].pass}`;

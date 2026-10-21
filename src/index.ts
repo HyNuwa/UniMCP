@@ -13,6 +13,7 @@ import { accessPolicyFromEnv } from "./oauth/access.js";
 import { redirectAllowlistFromEnv } from "./oauth/redirects.js";
 import { createServer } from "./mcp-server.js";
 import { localCampus, requireCampus } from "./shared/campus.js";
+import { loginHint } from "./shared/credentials.js";
 import { logger } from "./shared/logger.js";
 import { SqliteStore } from "./shared/store/sqlite-store.js";
 import { UploadInbox } from "./shared/uploads.js";
@@ -80,7 +81,7 @@ async function main() {
     } else {
         // STDIO: un único usuario, el dueño de la compu, con una sola sesión para todas las conexiones.
         const campus = localCampus();
-        if (!campus) throw new Error("Todavía no elegiste tu campus: corré `unimcp login`.");
+        if (!campus) throw new Error(`Todavía no elegiste tu campus. ${loginHint("el campus")}`);
         const platforms = {
             aula: campus.aula && new LocalSession(campus.aula),
             guarani: campus.guarani && new LocalGuaraniSession(campus.guarani),

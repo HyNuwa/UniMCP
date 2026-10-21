@@ -71,15 +71,23 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 Guaraní no tiene API: el servidor entra con tu usuario y lee las páginas como lo harías vos. Por ahora **solo lee**: para inscribirte, el agente te pasa el link. Las tools solo aparecen si tu campus tiene esa plataforma.
 
 ## Cómo instalar
+### Instalación fácil: Claude Desktop
+1. Bajá `unimcp-<versión>.mcpb` del [último release](https://github.com/HyNuwa/UniMCP/releases/latest).
+2. Hacele doble click (o arrastralo a *Configuración → Extensiones* de Claude Desktop) e instalalo.
+3. Completá tu campus (el id de la tabla de arriba, por ejemplo `unju`) y tus usuarios y contraseñas del aula y de Guaraní. Claude Desktop guarda las contraseñas de forma segura y solo viajan a tu universidad.
+
+No hace falta instalar nada más: Claude Desktop trae su propio Node.
+
+### Con la terminal (cualquier cliente)
 Necesitás [Node.js](https://nodejs.org) 20 o superior.
 
-### 1. Iniciar sesión
+#### 1. Iniciar sesión
 ```bash
 npx -y unimcp login
 ```
 Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
-### 2. Agregarlo a tu cliente
+#### 2. Agregarlo a tu cliente
 **Claude Code**
 ```bash
 claude mcp add uni -- npx -y unimcp
@@ -122,6 +130,7 @@ docker run -d --name unimcp --network host --restart unless-stopped \
 Instalado en tu computadora, todo queda ahí:
 - **Usuarios y contraseñas** (aula y Guaraní): en el gestor de credenciales del sistema (Windows Credential Manager, Keychain en macOS, Secret Service en Linux). Sin gestor, por variables de entorno: `UNI_USER`/`UNI_PASS` y `UNI_GUARANI_USER`/`UNI_GUARANI_PASS`.
 - **Campus elegido, token del aula y cookies de sesión**: en `%APPDATA%\unimcp\` (Windows) o `~/.config/unimcp/` (Linux y macOS).
+- **Con la extensión de Claude Desktop**: las contraseñas las guarda Claude Desktop (en los campos marcados como sensibles de la extensión), y el token y las cookies van a la misma carpeta.
 - **En modo HTTP**: la contraseña no se guarda; la sesión va cifrada en `unimcp.db`, con la clave de `store.key` (o la de `UNIMCP_KEY`). Del token del cliente solo se guarda el hash.
 
 Los links que el agente te pasa abren con la sesión de tu navegador y **nunca incluyen tu token**.
@@ -133,6 +142,7 @@ npm run login   # una vez
 npm run dev     # servidor por STDIO desde src/, con tsx
 npm test        # tests, con respuestas inventadas de Moodle y G3W
 npm run build   # compila a build/
+npm run mcpb    # arma la extensión de Claude Desktop (unimcp-<versión>.mcpb)
 ```
 La arquitectura y las convenciones están en [`AGENTS.md`](AGENTS.md), y lo que sigue en el [roadmap](docs/roadmap.md).
 
