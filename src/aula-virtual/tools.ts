@@ -12,6 +12,7 @@ import {
     sendMessage,
 } from "./format/writes.js";
 import { ROOT } from "./format/address.js";
+import { DEFAULT_DAYS, MAX_DAYS, upcoming } from "./format/agenda.js";
 import { readAulaFile } from "./format/files.js";
 import { open } from "./format/navigation.js";
 import { search } from "./format/search.js";
@@ -168,6 +169,53 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         async ({ consulta, curso }) => {
             try {
                 return json(await search(session, consulta, curso));
+            } catch (e) {
+                return failure(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        "aula_list_upcoming",
+        {
+            description:
+                "Lo que viene en el aula virtual, de todas las materias en una llamada: qué hay que entregar " +
+                "o resolver y cuándo. Es la tool para \"¿qué tengo que entregar esta semana?\", \"¿cuándo " +
+                "cierra el cuestionario?\" o \"¿qué tengo pendiente?\".\n\n" +
+                "`pendientes` es la línea de tiempo de Moodle: tareas sin entregar, cuestionarios por cerrar, " +
+                "elecciones sin responder; lo que el usuario ya completó no aparece. Cada uno trae `curso`, " +
+                "`tipo` (assign, quiz…), `fecha` (el vencimiento o el cierre), `accion` (lo que hay que hacer) y " +
+                "su `direccion` para abrirlo con aula_open y ver los detalles. Incluye lo vencido en las " +
+                "últimas dos semanas que todavía figura como pendiente, con `vencida`. `disponible: false` " +
+                "quiere decir que todavía no se puede hacer, por ejemplo un cuestionario que no abrió.\n\n" +
+                "`eventos` es el resto del calendario en el rango: aperturas de cuestionarios, clases, eventos " +
+                "que cargó el docente para el curso (con su `detalle`) y recordatorios personales. Un cierre o " +
+                "vencimiento que está en `eventos` y no en `pendientes` es de algo que el usuario ya hizo o que " +
+                "Moodle no le pide.\n\n" +
+                "Solo ve lo que los docentes cargaron con fecha en el aula. Una fecha que está únicamente en " +
+                "el texto de una etiqueta o en un cronograma en PDF no aparece: para eso, aula_search o abrir " +
+                "el curso.",
+            inputSchema: z.object({
+                dias: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .max(MAX_DAYS)
+                    .optional()
+                    .describe(`Cuántos días hacia adelante mirar. Por defecto, ${DEFAULT_DAYS}. Ej: 7 para esta semana.`),
+                curso: z
+                    .string()
+                    .optional()
+                    .describe(
+                        'Dirección de un curso para ver solo ese, de aula_list_courses. Ej: "/curso/3082". Sin ' +
+                            "este parámetro, todos los cursos.",
+                    ),
+            }),
+            annotations: READ_ONLY,
+        },
+        async ({ dias, curso }) => {
+            try {
+                return json(await upcoming(session, { days: dias, course: curso }));
             } catch (e) {
                 return failure(e);
             }

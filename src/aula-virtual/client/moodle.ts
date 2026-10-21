@@ -1,8 +1,10 @@
 import { callWs, MoodleError } from "./web-service.js";
 import type { AulaSession } from "./session.js";
 import type {
+    ActionEvent,
     Assignment,
     AssignSubmissionStatus,
+    CalendarEvent,
     Choice,
     ChoiceOption,
     Course,
@@ -316,4 +318,48 @@ export async function createUserEvent(
     );
     if (!events[0]) throw new MoodleError("Moodle no creó el evento.");
     return events[0].id;
+}
+
+/** Tope de `limitnum` de la línea de tiempo: Moodle no devuelve más de 50 por pedido. */
+export const TIMELINE_PAGE_SIZE = 50;
+
+/**
+ * Pendientes de la línea de tiempo entre dos fechas (en segundos), de los cursos en los que el usuario
+ * sigue activo. Moodle ya saca lo que el usuario completó. Para la página siguiente se pasa el último id.
+ */
+export function getActionEvents(
+    session: AulaSession,
+    from: number,
+    to: number,
+    afterEventId?: number,
+): Promise<{ events: ActionEvent[] }> {
+    const params: Record<string, number> = {
+        timesortfrom: from,
+        timesortto: to,
+        limitnum: TIMELINE_PAGE_SIZE,
+        limittononsuspendedevents: 1,
+    };
+    if (afterEventId !== undefined) params.aftereventid = afterEventId;
+    return callWs(session, "core_calendar_get_action_events_by_timesort", params);
+}
+
+/**
+ * Eventos del calendario entre dos fechas (en segundos) de esos cursos, más los personales y los del
+ * sitio. Sin cursos, Moodle no devuelve los de ningún curso.
+ */
+export async function getCalendarEvents(
+    session: AulaSession,
+    courseIds: number[],
+    from: number,
+    to: number,
+): Promise<CalendarEvent[]> {
+    const params: Record<string, number> = {
+        "options[timestart]": from,
+        "options[timeend]": to,
+        "options[userevents]": 1,
+        "options[siteevents]": 1,
+    };
+    courseIds.forEach((id, i) => (params[`events[courseids][${i}]`] = id));
+    const { events } = await callWs<{ events: CalendarEvent[] }>(session, "core_calendar_get_calendar_events", params);
+    return events;
 }

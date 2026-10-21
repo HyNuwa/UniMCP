@@ -159,3 +159,34 @@ export interface ChoiceOption {
     checked?: boolean;
     disabled?: boolean;
 }
+
+/** Un pendiente de la línea de tiempo: algo que el usuario todavía tiene que hacer. */
+export interface ActionEvent {
+    id: number;
+    name: string;
+    modulename: string;
+    /** `due`, `close`, etc.: qué momento de la actividad marca. */
+    eventtype: string;
+    /** Fecha por la que se ordena la línea de tiempo, en segundos. */
+    timesort: number;
+    course: { id: number; fullname: string };
+    /** `actionable: false` cuando todavía no se puede hacer, por ejemplo un cuestionario sin abrir. */
+    action?: { name: string; actionable: boolean };
+    /** La página de la actividad, `.../mod/<tipo>/view.php?id=<cmid>`. */
+    url?: string;
+}
+
+/** Un evento del calendario: de una actividad, del curso, de un grupo, del sitio o personal. */
+export interface CalendarEvent {
+    id: number;
+    name: string;
+    description: string;
+    courseid: number;
+    /** Vacío en los eventos que no son de una actividad. */
+    modulename: string;
+    instance: number;
+    eventtype: string;
+    timestart: number;
+    /** En segundos. */
+    timeduration: number;
+}
