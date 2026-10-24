@@ -570,13 +570,19 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         {
             description:
                 "Manda un mensaje privado por la mensajería del aula virtual a otro usuario, docente o " +
-                "compañero. El `usuarioId` sale del `autorId` de un foro o una discusión abiertos con " +
-                "aula_open: no lo inventes ni lo deduzcas del nombre. La respuesta trae el nombre del " +
-                "destinatario." +
+                "compañero. El `usuarioId` sale del `autorId` de una discusión abierta con aula_open, o del " +
+                "`usuarioId` de una conversación de aula_list_messages para responderle: no lo inventes ni lo " +
+                "deduzcas del nombre. La respuesta trae el nombre del destinatario." +
                 CONFIRM_FIRST +
                 " Incluí a quién va dirigido.",
             inputSchema: z.object({
-                usuarioId: z.number().int().describe("Id del destinatario, del `autorId` de aula_open. Ej: 1066."),
+                usuarioId: z
+                    .number()
+                    .int()
+                    .describe(
+                        "Id del destinatario, del `autorId` de aula_open o del `usuarioId` de aula_list_messages. " +
+                            "Ej: 1066.",
+                    ),
                 mensaje: z
                     .string()
                     .min(1)

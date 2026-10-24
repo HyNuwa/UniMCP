@@ -3,7 +3,10 @@
  * ejemplo el modelo adivina el formato (una `direccion`, una fecha, una página).
  */
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import type { GuaraniSession } from "../src/guarani/client/session.js";
@@ -20,7 +23,19 @@ interface Property {
 }
 interface ListedTool {
     name: string;
+    description: string;
     inputSchema: { properties?: Record<string, Property> };
+}
+
+/** El código que arma las respuestas, sin las descripciones de las tools. */
+function responseCode(dir = fileURLToPath(new URL("../src", import.meta.url))): string {
+    return readdirSync(dir, { withFileTypes: true })
+        .map((entry) => {
+            const path = join(dir, entry.name);
+            if (entry.isDirectory()) return responseCode(path);
+            return entry.name.endsWith(".ts") && entry.name !== "tools.ts" ? readFileSync(path, "utf8") : "";
+        })
+        .join("\n");
 }
 
 /** Las tools que ve un cliente, por STDIO o por HTTP. */
@@ -73,4 +88,18 @@ describe("descripciones de los parámetros", () => {
             assert.deepEqual(missing, [], "Parámetros sin `.describe()` con «Ej: …»");
         });
     }
+});
+
+describe("lo que prometen las descripciones", () => {
+    test("cada campo entre backticks existe en el código que arma las respuestas", async () => {
+        // Un campo que se renombró o se sacó deja a la descripción prometiendo algo que no llega.
+        const code = responseCode();
+        const texts = (await listTools(true)).flatMap((tool) => [
+            tool.description,
+            ...[...parameters(tool.inputSchema.properties)].map(([, p]) => p.description ?? ""),
+        ]);
+        const fields = new Set(texts.flatMap((t) => [...t.matchAll(/`([a-zA-Z]\w*)`/g)].map((m) => m[1])));
+        const missing = [...fields].filter((field) => !new RegExp(`\\b${field}\\b`).test(code));
+        assert.deepEqual(missing, []);
+    });
 });
