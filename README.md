@@ -116,6 +116,8 @@ npx -y unimcp --http --port 3000
 ```
 Hosteado, el servidor también hace de servidor de autorización OAuth: el cliente MCP abre una página donde el alumno **elige su campus** y entra con su usuario del aula. La contraseña se usa una sola vez y **no se guarda**. La configuración (quién puede entrar, URL pública, clave de cifrado) está en [`.env.example`](.env.example), con las variables `UNIMCP_*`.
 
+En modo HTTP, **por defecto no hay tools que escriben** (publicar, mandar mensajes, entregar): así, un post que intente darle órdenes al modelo no puede hacer que publique en nombre del alumno. Quien hostea las habilita con `UNIMCP_WRITE_TOOLS` (`all` o una lista de nombres). Instalado en tu compu están todas, y `UNIMCP_WRITE_TOOLS=none` las saca.
+
 En modo HTTP **SIU Guaraní todavía no está disponible**: su sesión vence en minutos y renovarla necesita la contraseña, que el servidor hosteado no guarda.
 
 Con Docker:

@@ -17,6 +17,7 @@ import { loginHint } from "./shared/credentials.js";
 import { logger } from "./shared/logger.js";
 import { SqliteStore } from "./shared/store/sqlite-store.js";
 import { UploadInbox } from "./shared/uploads.js";
+import { writePolicyFromEnv } from "./shared/write-policy.js";
 
 const USAGE = `Uso:
   unimcp                               servidor MCP por STDIO (lo lanza el cliente)
@@ -59,6 +60,10 @@ async function main() {
         // Por defecto, el `/login` de este mismo servidor, salvo que quien lo hostea configure otra
         // página.
         const loginUrl = process.env.UNIMCP_LOGIN_URL || `${baseUrl}/login`;
+        const writePolicy = writePolicyFromEnv(false);
+        logger.info(
+            `Tools que escriben: ${writePolicy === "all" ? "todas" : [...writePolicy].join(", ") || "ninguna"} (UNIMCP_WRITE_TOOLS)`,
+        );
         const store = await SqliteStore.open();
         const inbox = new UploadInbox(baseUrl);
         const factory = (ctx: { authInfo?: AuthInfo }) => {
@@ -67,7 +72,7 @@ async function main() {
             const userId = userIdOf(ctx.authInfo);
             const campus = requireCampus(campusOf(ctx.authInfo));
             const aula = campus.aula && new StoredAulaSession(campus.aula, store, userId, loginUrl);
-            return createServer({ aula }, { local: false, inbox, owner: String(userId) });
+            return createServer({ aula }, { local: false, inbox, owner: String(userId) }, writePolicy);
         };
         const options = {
             host: values.host,
@@ -86,7 +91,8 @@ async function main() {
             aula: campus.aula && new LocalSession(campus.aula),
             guarani: campus.guarani && new LocalGuaraniSession(campus.guarani),
         };
-        serveStdio(() => createServer(platforms, { local: true }), { onerror: (e) => logger.error(e.message) });
+        const writePolicy = writePolicyFromEnv(true);
+        serveStdio(() => createServer(platforms, { local: true }, writePolicy), { onerror: (e) => logger.error(e.message) });
         logger.info(`Servidor MCP iniciado en STDIO (${campus.universidad} · ${campus.nombre})`);
     }
 }

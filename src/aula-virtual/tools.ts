@@ -460,40 +460,6 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         : "Los archivos nuevos no van en la llamada: primero pedí un link con aula_assign_upload_link, " +
           "subilos ahí y después pasá su id en `subida`.";
 
-    if (!files.local) {
-        const { inbox, owner } = files;
-        server.registerTool(
-            "aula_assign_upload_link",
-            {
-                description:
-                    "Genera un link de un solo uso para subir los archivos de una entrega, que después se " +
-                    "entregan con aula_assign_submit pasando el `subida` que devuelve. Vence en 30 minutos.\n\n" +
-                    "Cómo subirlos:\n" +
-                    "- Si podés ejecutar comandos y tenés el archivo (por ejemplo, uno que el usuario adjuntó o " +
-                    "que está en su compu), subilo vos con el comando de `conTerminal`, cambiando la ruta. Va un " +
-                    '`-F "archivos=@..."` por archivo, todos en el mismo comando. Responde JSON con lo recibido.\n' +
-                    "- Si no, pasale el `url` al usuario: se abre en el navegador, también en el celu, y elige " +
-                    "los archivos ahí. Esperá a que te diga que los subió.\n\n" +
-                    "Subir al link no entrega nada. Cada link acepta una sola subida: si hay que cambiar los " +
-                    "archivos, pedí otro link. " +
-                    "`acepta` trae los límites de la tarea.",
-                inputSchema: z.object({
-                    direccion: z
-                        .string()
-                        .describe('Dirección de la tarea, de aula_open. Ej: "/curso/29487/mod/1729138".'),
-                }),
-                annotations: { readOnlyHint: true, openWorldHint: false },
-            },
-            async ({ direccion }) => {
-                try {
-                    return json(await createUploadLink(session, direccion, inbox, owner));
-                } catch (e) {
-                    return failure(e);
-                }
-            },
-        );
-    }
-
     const submitSchema = z.object({
         direccion: z.string().describe('Dirección de la tarea, de aula_open. Ej: "/curso/29487/mod/1729138".'),
         archivos: z
@@ -539,7 +505,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             ),
     });
 
-    server.registerTool(
+    const submit = server.registerTool(
         "aula_assign_submit",
         {
             description:
@@ -581,6 +547,41 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             }
         },
     );
+
+    // Sin aula_assign_submit (no está en UNIMCP_WRITE_TOOLS), el link no sirve para nada.
+    if (submit && !files.local) {
+        const { inbox, owner } = files;
+        server.registerTool(
+            "aula_assign_upload_link",
+            {
+                description:
+                    "Genera un link de un solo uso para subir los archivos de una entrega, que después se " +
+                    "entregan con aula_assign_submit pasando el `subida` que devuelve. Vence en 30 minutos.\n\n" +
+                    "Cómo subirlos:\n" +
+                    "- Si podés ejecutar comandos y tenés el archivo (por ejemplo, uno que el usuario adjuntó o " +
+                    "que está en su compu), subilo vos con el comando de `conTerminal`, cambiando la ruta. Va un " +
+                    '`-F "archivos=@..."` por archivo, todos en el mismo comando. Responde JSON con lo recibido.\n' +
+                    "- Si no, pasale el `url` al usuario: se abre en el navegador, también en el celu, y elige " +
+                    "los archivos ahí. Esperá a que te diga que los subió.\n\n" +
+                    "Subir al link no entrega nada. Cada link acepta una sola subida: si hay que cambiar los " +
+                    "archivos, pedí otro link. " +
+                    "`acepta` trae los límites de la tarea.",
+                inputSchema: z.object({
+                    direccion: z
+                        .string()
+                        .describe('Dirección de la tarea, de aula_open. Ej: "/curso/29487/mod/1729138".'),
+                }),
+                annotations: { readOnlyHint: true, openWorldHint: false },
+            },
+            async ({ direccion }) => {
+                try {
+                    return json(await createUploadLink(session, direccion, inbox, owner));
+                } catch (e) {
+                    return failure(e);
+                }
+            },
+        );
+    }
 
     server.registerTool(
         "aula_calendar_add_event",

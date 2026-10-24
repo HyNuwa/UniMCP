@@ -3,7 +3,9 @@ import type { AulaSession } from "./aula-virtual/client/session.js";
 import { registerAulaVirtualTools } from "./aula-virtual/tools.js";
 import type { GuaraniSession } from "./guarani/client/session.js";
 import { registerGuaraniTools } from "./guarani/tools.js";
+import { logger } from "./shared/logger.js";
 import type { FileSource } from "./shared/uploads.js";
+import { type WritePolicy, writePolicyFromEnv, writes } from "./shared/write-policy.js";
 
 /**
  * Lo que el cliente le pasa al modelo al conectarse. Las respuestas traen texto que escribe cualquiera
@@ -26,13 +28,49 @@ export interface Platforms {
 
 /**
  * Crea un servidor MCP para un usuario; STDIO lo crea por conexión y HTTP por request.
- * `files`: el origen de los archivos que el usuario sube a una plataforma.
+ * `files`: el origen de los archivos que el usuario sube a una plataforma. `writePolicy`: las tools que
+ * escriben que existen (`UNIMCP_WRITE_TOOLS`).
  */
-export function createServer({ aula, guarani }: Platforms, files: FileSource): McpServer {
+export function createServer(
+    { aula, guarani }: Platforms,
+    files: FileSource,
+    writePolicy: WritePolicy = writePolicyFromEnv(files.local),
+): McpServer {
     const server = new McpServer({ name: "unimcp", version: "0.1.0" }, { instructions: INSTRUCTIONS });
+    const { tools, writeTools } = withWritePolicy(server, writePolicy);
 
-    if (aula) registerAulaVirtualTools(server, aula, files);
-    if (guarani) registerGuaraniTools(server, guarani);
+    if (aula) registerAulaVirtualTools(tools, aula, files);
+    if (guarani) registerGuaraniTools(tools, guarani);
 
+    if (writePolicy !== "all") warnUnknown(writePolicy, writeTools);
     return server;
+}
+
+/**
+ * Las plataformas registran a través de `tools`, que deja afuera las que escriben y no están permitidas.
+ * `writeTools` junta los nombres de todas las que escriben, permitidas o no.
+ */
+function withWritePolicy(server: McpServer, policy: WritePolicy) {
+    const writeTools = new Set<string>();
+    const tools = {
+        registerTool(name: string, config: { annotations?: { readOnlyHint?: boolean } }, callback: unknown) {
+            if (writes(config.annotations)) {
+                writeTools.add(name);
+                if (policy !== "all" && !policy.has(name)) return undefined;
+            }
+            return (server.registerTool as (...args: unknown[]) => unknown).call(server, name, config, callback);
+        },
+    } as unknown as McpServer;
+    return { tools, writeTools };
+}
+
+/** Nombres de `UNIMCP_WRITE_TOOLS` que ya se avisaron: en HTTP se crea un servidor por request. */
+const warned = new Set<string>();
+
+function warnUnknown(policy: ReadonlySet<string>, writeTools: Set<string>) {
+    for (const name of policy) {
+        if (writeTools.has(name) || warned.has(name)) continue;
+        warned.add(name);
+        logger.warn(`UNIMCP_WRITE_TOOLS nombra "${name}", que no es una tool que escribe del campus.`);
+    }
 }
