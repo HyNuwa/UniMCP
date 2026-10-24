@@ -17,13 +17,16 @@ import {
     saveSubmission,
     submitForGrading,
 } from "../client/moodle.js";
-import { fetchFile, uploadDraftFiles } from "../client/web-service.js";
+import { fetchFile, MoodleError, uploadDraftFiles } from "../client/web-service.js";
 import type { AulaSession } from "../client/session.js";
 import type { AssignSubmission, MoodleFile } from "../client/types.js";
 import { viewSubmission } from "./activities.js";
 import { parseAddress } from "./address.js";
 import { userFacingUrl } from "./files.js";
 import { findModule } from "./navigation.js";
+
+/** Lo que contesta Moodle cuando una función no existe en su versión o no está en el servicio de la app. */
+const NOT_ENABLED = new Set(["invalidrecord", "accessexception", "servicenotavailable"]);
 
 /** Tope por archivo del aula (`usermaxuploadfilesize` del sitio, 20 MB). */
 const SITE_MAX_BYTES = 20 * 1024 * 1024;
@@ -150,7 +153,15 @@ export async function submitAssignment(
             : null;
 
         if (!files.length && !htmlToText(text?.html)) {
-            await removeSubmission(session, assignment.id);
+            await removeSubmission(session, assignment.id).catch((e) => {
+                // Algunas aulas no habilitan la función en el servicio de la app (UNJu).
+                if (!(e instanceof MoodleError) || !NOT_ENABLED.has(e.errorcode ?? "")) throw e;
+                const where = module.url ? `: ${userFacingUrl(module.url)}` : "";
+                throw new Error(
+                    "Esta aula no deja borrar la entrega entera desde UniMCP. El usuario la puede borrar " +
+                        `desde el navegador${where}.`,
+                );
+            });
         } else {
             await saveSubmission(session, assignment.id, {
                 filesItemId: acceptsFiles

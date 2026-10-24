@@ -7,7 +7,7 @@ const CHOICEGROUP = "elecciones de grupo, un plugin que no todas las aulas tiene
 
 /**
  * Las funciones del web service que usa cada tool del aula. Sin una de `needs` la tool no anda; sin una de
- * `partial`, anda salvo en el caso que dice (UNJu no tiene las de vaciar o borrar una entrega).
+ * `partial`, anda salvo en el caso que dice (UNJu no tiene la de borrar una entrega).
  */
 export const TOOL_FUNCTIONS: Record<string, { needs: string[]; partial?: Record<string, string> }> = {
     aula_get_site_info: { needs: ["core_webservice_get_site_info"] },
@@ -83,10 +83,8 @@ export const TOOL_FUNCTIONS: Record<string, { needs: string[]; partial?: Record<
             "mod_assign_save_submission",
             "mod_assign_submit_for_grading",
         ],
-        partial: {
-            core_files_get_unused_draft_itemid: "entregas de texto, y sacar todos los archivos de una entrega",
-            mod_assign_remove_submission: "borrar la entrega entera",
-        },
+        // Sin `core_files_get_unused_draft_itemid` (Moodle < 3.11) el borrador se elige al azar.
+        partial: { mod_assign_remove_submission: "borrar la entrega entera" },
     },
     aula_assign_upload_link: { needs: [] },
     aula_calendar_add_event: { needs: ["core_calendar_create_calendar_events"] },

@@ -41,6 +41,7 @@ const NOT_TOOLS: Record<string, string> = {
     core_webservice_get_site_info: "La usan todas para el userid; sin ella no hay login.",
     core_user_get_users_by_field: "El email del usuario, al vincular la cuenta en el modo HTTP.",
     tool_mobile_get_public_config: "La usa el propio check, sin token.",
+    core_files_get_unused_draft_itemid: "Opcional: sin ella (Moodle < 3.11), el borrador se elige al azar.",
 };
 
 describe("unimcp check", () => {

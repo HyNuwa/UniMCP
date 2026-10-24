@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import type { AulaSite } from "../../shared/campus.js";
 import { USER_AGENT } from "../../shared/http.js";
 import { callWs, MoodleError, WRITE } from "./web-service.js";
@@ -219,8 +220,14 @@ export function getSubmissionStatus(session: AulaSession, assignid: number): Pro
     return callWs(session, "mod_assign_get_submission_status", { assignid });
 }
 
-/** `itemid` de un borrador sin archivos, para vaciar un área. */
+/**
+ * `itemid` de un borrador sin archivos, para vaciar un área. `core_files_get_unused_draft_itemid` existe
+ * desde Moodle 3.11 (UNJu tiene 3.9); sin ella se elige uno al azar, como hace el propio Moodle en
+ * `file_get_unused_draft_itemid`: los borradores son del usuario y uno sin usar está vacío.
+ */
 export async function getUnusedDraftItemId(session: AulaSession): Promise<number> {
+    const { functions } = await getSiteInfo(session);
+    if (!functions?.some((f) => f.name === "core_files_get_unused_draft_itemid")) return randomInt(1, 1_000_000_000);
     const { itemid } = await callWs<{ itemid: number }>(session, "core_files_get_unused_draft_itemid");
     return itemid;
 }

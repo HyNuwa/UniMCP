@@ -4,7 +4,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, test } from "node:test";
-import { deletePost, getSiteInfo, getUserCourses } from "../src/aula-virtual/client/moodle.js";
+import { deletePost, getSiteInfo, getUnusedDraftItemId, getUserCourses } from "../src/aula-virtual/client/moodle.js";
 import { callWs } from "../src/aula-virtual/client/web-service.js";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import { fetchWithCookies } from "../src/shared/http.js";
@@ -135,5 +135,25 @@ describe("cuidar el aula", () => {
         }) as typeof fetch;
         await assert.rejects(getUserCourses(sessionWith(() => "tok-espera")), /saturado/);
         assert.equal(asked, 1);
+    });
+});
+
+describe("aulas con Moodle viejo", () => {
+    test("sin core_files_get_unused_draft_itemid (Moodle < 3.11) el borrador sale al azar", async () => {
+        const calls = mockMoodle((f) =>
+            f === "core_webservice_get_site_info" ? { userid: 7, functions: [{ name: "mod_assign_save_submission" }] } : {},
+        );
+        const id = await getUnusedDraftItemId(sessionWith(() => "tok-viejo"));
+        assert.ok(Number.isInteger(id) && id >= 1 && id < 1_000_000_000);
+        assert.ok(!calls.includes("core_files_get_unused_draft_itemid"));
+    });
+
+    test("con la función, la usa", async () => {
+        mockMoodle((f) =>
+            f === "core_webservice_get_site_info"
+                ? { userid: 7, functions: [{ name: "core_files_get_unused_draft_itemid" }] }
+                : { itemid: 4242 },
+        );
+        assert.equal(await getUnusedDraftItemId(sessionWith(() => "tok-nuevo")), 4242);
     });
 });
