@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
+import { thirdPartyDataShown } from "../shared/privacy.js";
 import type { FileSource } from "../shared/uploads.js";
 import { getSiteInfo } from "./client/moodle.js";
 import type { AulaSession } from "./client/session.js";
@@ -17,6 +18,7 @@ import { readAulaFile } from "./format/files.js";
 import { grades } from "./format/grades.js";
 import { MESSAGES_PAGE, messages } from "./format/messages.js";
 import { open } from "./format/navigation.js";
+import { withoutOthersData } from "./format/privacy.js";
 import { search } from "./format/search.js";
 import { DEFAULT_UPDATE_DAYS, MAX_UPDATE_DAYS, updates } from "./format/updates.js";
 import { createUploadLink, submitAssignment } from "./format/submission.js";
@@ -45,6 +47,10 @@ export const ON_REQUEST =
     "un post, un archivo).";
 
 export function registerAulaVirtualTools(server: McpServer, session: AulaSession, files: FileSource) {
+    /** Lo que escriben otros llega sin datos personales de terceros, salvo que el usuario lo pida en local. */
+    const shown = thirdPartyDataShown(files.local);
+    const fromOthers = async <T>(value: T): Promise<T> => (shown ? value : withoutOthersData(session, value));
+
     server.registerTool(
         "aula_get_site_info",
         {
@@ -133,7 +139,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ direccion, pagina }) => {
             try {
-                return json(await open(session, direccion, pagina));
+                return json(await fromOthers(await open(session, direccion, pagina)));
             } catch (e) {
                 return failure(e);
             }
@@ -182,7 +188,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ consulta, curso }) => {
             try {
-                return json(await search(session, consulta, curso));
+                return json(await fromOthers(await search(session, consulta, curso)));
             } catch (e) {
                 return failure(e);
             }
@@ -230,7 +236,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ dias, curso }) => {
             try {
-                return json(await upcoming(session, { days: dias, course: curso }));
+                return json(await fromOthers(await upcoming(session, { days: dias, course: curso })));
             } catch (e) {
                 return failure(e);
             }
@@ -268,7 +274,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ curso }) => {
             try {
-                return json(await grades(session, { course: curso }));
+                return json(await fromOthers(await grades(session, { course: curso })));
             } catch (e) {
                 return failure(e);
             }
@@ -314,7 +320,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ dias, curso }) => {
             try {
-                return json(await updates(session, { days: dias, course: curso }));
+                return json(await fromOthers(await updates(session, { days: dias, course: curso })));
             } catch (e) {
                 return failure(e);
             }
@@ -353,7 +359,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ conversacion, pagina }) => {
             try {
-                return json(await messages(session, { conversation: conversacion, page: pagina }));
+                return json(await fromOthers(await messages(session, { conversation: conversacion, page: pagina })));
             } catch (e) {
                 return failure(e);
             }
@@ -393,7 +399,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         },
         async ({ url, desde }) => {
             try {
-                const { parts, ...fileRead } = await readAulaFile(session, url, desde);
+                const { parts, ...fileRead } = await fromOthers(await readAulaFile(session, url, desde));
                 const label = (n: number, title?: string) =>
                     `--- ${fileRead.unidad} ${n} de ${fileRead.total}${title ? ` (${title})` : ""} ---`;
                 return {

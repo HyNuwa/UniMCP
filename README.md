@@ -147,6 +147,8 @@ Instalado en tu computadora, todo queda ahí:
 
 Los links que el agente te pasa abren con la sesión de tu navegador y **nunca incluyen tu token**.
 
+Los datos de otras personas que aparecen en el aula (una lista de alumnos con DNI o legajo, el teléfono o el mail de un compañero) no le llegan al agente: las listas se resumen en si figurás o no, y los DNI, emails y teléfonos sueltos se tapan. Quedan los tuyos y los mails institucionales o de contacto de la cátedra. En tu compu podés verlos enteros con `UNI_SHOW_THIRD_PARTY_DATA=1`.
+
 Si encontrás una falla de seguridad, reportala en privado como explica [SECURITY.md](SECURITY.md).
 
 ## Desarrollo
