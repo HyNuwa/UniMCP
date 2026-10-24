@@ -1,4 +1,8 @@
 import type { CookieJar } from "tough-cookie";
+import { VERSION } from "./version.js";
+
+/** Con quién habla el aula o Guaraní: si un admin ve tráfico raro, sabe de dónde viene. */
+export const USER_AGENT = `unimcp/${VERSION} (+https://github.com/HyNuwa/UniMCP)`;
 
 export class HttpError extends Error {
     constructor(message: string, readonly status?: number) {
@@ -22,6 +26,7 @@ export async function postForm<T>(
         res = await fetch(url, {
             method: "POST",
             body,
+            headers: { "user-agent": USER_AGENT },
             signal: AbortSignal.timeout(timeoutMs),
         });
     } catch (e) {
@@ -57,7 +62,7 @@ export async function fetchWithCookies(
             res = await fetch(url, {
                 ...init,
                 redirect: "manual",
-                headers: cookie ? { cookie } : {},
+                headers: { "user-agent": USER_AGENT, ...(cookie && { cookie }) },
                 signal: AbortSignal.timeout(timeoutMs),
             });
         } catch (e) {

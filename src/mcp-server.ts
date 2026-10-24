@@ -6,6 +6,7 @@ import type { GuaraniSession } from "./guarani/client/session.js";
 import { registerGuaraniTools } from "./guarani/tools.js";
 import { logger } from "./shared/logger.js";
 import type { FileSource } from "./shared/uploads.js";
+import { VERSION } from "./shared/version.js";
 import { type WritePolicy, writePolicyFromEnv, writes } from "./shared/write-policy.js";
 
 /**
@@ -37,7 +38,7 @@ export function createServer(
     files: FileSource,
     writePolicy: WritePolicy = writePolicyFromEnv(files.local),
 ): McpServer {
-    const server = new McpServer({ name: "unimcp", version: "0.1.0" }, { instructions: INSTRUCTIONS });
+    const server = new McpServer({ name: "unimcp", version: VERSION }, { instructions: INSTRUCTIONS });
     const { tools, writeTools } = withWritePolicy(server, writePolicy);
 
     if (aula) {

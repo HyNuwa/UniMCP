@@ -1,4 +1,4 @@
-import { postForm } from "../../shared/http.js";
+import { postForm, USER_AGENT } from "../../shared/http.js";
 import type { AulaSession } from "./session.js";
 
 const TOKEN_ERRORS = new Set(["invalidtoken", "expiredtoken"]);
@@ -63,7 +63,10 @@ export async function fetchFile(
 
         let res: Response;
         try {
-            res = await fetch(withToken, { signal: AbortSignal.timeout(60_000) });
+            res = await fetch(withToken, {
+                headers: { "user-agent": USER_AGENT },
+                signal: AbortSignal.timeout(60_000),
+            });
         } catch (e) {
             throw new MoodleError(`No se pudo bajar el archivo: ${(e as Error).message}`);
         }
@@ -105,6 +108,7 @@ export async function uploadDraftFiles(
             res = await fetch(`${session.site.baseUrl}/webservice/upload.php`, {
                 method: "POST",
                 body: form,
+                headers: { "user-agent": USER_AGENT },
                 signal: AbortSignal.timeout(120_000),
             });
         } catch (e) {

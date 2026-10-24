@@ -113,5 +113,5 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 - The regression evaluation for the aula's rich text and search is `evals/unju-links-tablas.xml` (untracked): run it after touching `htmlToText`, `richText`, `safeUrl` or `aula_search`.
 - When you add or change a tool, update the tools table in `README.md`; when you add a campus, its table too.
 - The Claude Desktop extension (`.mcpb`) is built by `npm run mcpb` (`scripts/pack-mcpb.mjs`) from `mcpb/manifest.json`; its version, campus list and tools are filled in from `package.json` and the compiled code. The extension passes the user's settings as `UNI_*` env vars and sets `UNIMCP_MCPB`, so login hints point to the extension settings (`loginHint`). `.github/workflows/release.yml` attaches it to every GitHub release.
-- The version lives in two places: `package.json` and the `version` in `src/mcp-server.ts`. They are bumped together.
+- The version lives only in `package.json`: the server and the `User-Agent` read it through `shared/version.ts`.
 - The project is MIT. `LICENSE` also keeps the ISC notice of utn-mcp, the code it derives from: its license requires it in every copy, so never remove it.
