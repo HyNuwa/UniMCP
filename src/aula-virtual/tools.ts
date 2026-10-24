@@ -17,6 +17,7 @@ import { readAulaFile } from "./format/files.js";
 import { grades } from "./format/grades.js";
 import { open } from "./format/navigation.js";
 import { search } from "./format/search.js";
+import { DEFAULT_UPDATE_DAYS, MAX_UPDATE_DAYS, updates } from "./format/updates.js";
 import { createUploadLink, submitAssignment } from "./format/submission.js";
 
 // JSON compacto: con indentación estas respuestas ocupan alrededor de 25% más de contexto sin leerse
@@ -267,6 +268,52 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         async ({ curso }) => {
             try {
                 return json(await grades(session, { course: curso }));
+            } catch (e) {
+                return failure(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        "aula_list_updates",
+        {
+            description:
+                "Qué cambió en el aula virtual en los últimos días, en todas las materias en una llamada: " +
+                "material nuevo, actividades editadas, discusiones con mensajes nuevos, notas. Es la tool para " +
+                "\"¿hay algo nuevo en el aula?\" o \"¿subieron algo en Física esta semana?\".\n\n" +
+                "Cada curso trae sus `novedades`: el `nombre` y el `tipo` del módulo (resource, forum, assign, " +
+                "quiz…), qué `cambios` tuvo y su `direccion` para abrirlo con aula_open y ver el contenido. " +
+                "Los cambios: \"editada\" (le cambiaron el nombre, la descripción o las fechas; para una fecha, " +
+                "ver aula_list_upcoming), \"archivos (n)\" (archivos agregados o reemplazados), \"discusiones " +
+                "con novedades (n)\" (en un foro, hilos nuevos o con mensajes nuevos), \"nota\", \"entrega\" e " +
+                "\"intentos\" (los del usuario), entre otros. Un módulo nuevo aparece como editado. No dice " +
+                "quién hizo el cambio ni cuándo: eso está al abrir el módulo (en un foro, cada hilo con su " +
+                "fecha).\n\n" +
+                "`sinNovedades` cuenta los cursos sin cambios. " +
+                THIRD_PARTY_TEXT,
+            inputSchema: z.object({
+                dias: z
+                    .number()
+                    .int()
+                    .min(1)
+                    .max(MAX_UPDATE_DAYS)
+                    .optional()
+                    .describe(
+                        `Cuántos días hacia atrás mirar. Por defecto, ${DEFAULT_UPDATE_DAYS}. Ej: 1 para "desde ayer".`,
+                    ),
+                curso: z
+                    .string()
+                    .optional()
+                    .describe(
+                        'Dirección de un curso para ver solo ese, de aula_list_courses. Ej: "/curso/3082". Sin ' +
+                            "este parámetro, todos los cursos.",
+                    ),
+            }),
+            annotations: READ_ONLY,
+        },
+        async ({ dias, curso }) => {
+            try {
+                return json(await updates(session, { days: dias, course: curso }));
             } catch (e) {
                 return failure(e);
             }

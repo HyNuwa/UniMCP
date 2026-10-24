@@ -9,9 +9,11 @@ import type {
     ChoiceOption,
     Course,
     CourseSection,
+    CourseUpdates,
     ForumDiscussion,
     ForumPost,
     GradeItem,
+    ModuleInfo,
     SiteInfo,
 } from "./types.js";
 
@@ -46,6 +48,17 @@ export async function getGradeItems(session: AulaSession, courseid: number): Pro
         { courseid, userid },
     );
     return usergrades[0]?.gradeitems ?? [];
+}
+
+/** Lo que cambió en un curso desde `since` (segundos): solo lo que el usuario puede ver. */
+export function getUpdatesSince(session: AulaSession, courseid: number, since: number): Promise<CourseUpdates> {
+    return callWs<CourseUpdates>(session, "core_course_get_updates_since", { courseid, since });
+}
+
+/** Nombre y tipo de un módulo, sin cargar el contenido del curso (que puede pesar megas). */
+export async function getCourseModule(session: AulaSession, cmid: number): Promise<ModuleInfo> {
+    const { cm } = await callWs<{ cm: ModuleInfo }>(session, "core_course_get_course_module", { cmid });
+    return cm;
 }
 
 /**

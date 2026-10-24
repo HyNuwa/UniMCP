@@ -45,7 +45,14 @@ function registeredTools(local: boolean): Registered[] {
 }
 
 /** Las que devuelven texto que escriben docentes y compañeros. */
-const THIRD_PARTY_TOOLS = ["aula_open", "aula_search", "aula_read_file", "aula_list_upcoming", "aula_list_grades"];
+const THIRD_PARTY_TOOLS = [
+    "aula_open",
+    "aula_search",
+    "aula_read_file",
+    "aula_list_upcoming",
+    "aula_list_grades",
+    "aula_list_updates",
+];
 
 /** Las de lectura que no, con el motivo. Una tool de lectura nueva tiene que estar en una de las dos listas. */
 const OWN_TEXT_TOOLS: Record<string, string> = {

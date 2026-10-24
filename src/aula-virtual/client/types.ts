@@ -217,3 +217,21 @@ export interface GradeItem {
     gradeishidden?: boolean;
     gradedategraded?: number | null;
 }
+
+/** Qué cambió en un curso (`core_course_get_updates_since`). */
+export interface CourseUpdates {
+    instances: {
+        /** `module` para una actividad o recurso; `id` es entonces su cmid. */
+        contextlevel: string;
+        id: number;
+        updates: { name: string; timeupdated?: number; itemids?: number[] }[];
+    }[];
+}
+
+/** Un módulo sin su contenido (`core_course_get_course_module`). */
+export interface ModuleInfo {
+    id: number;
+    course: number;
+    name: string;
+    modname: string;
+}
