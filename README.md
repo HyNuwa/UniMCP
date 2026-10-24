@@ -8,6 +8,7 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 - *"¿Qué tengo que entregar esta semana?"*
 - *"¿Cómo voy en Física?"*
 - *"¿Hay algo nuevo en el aula esta semana?"*
+- *"¿Me contestó el profe de Álgebra?"*
 - *"¿Qué nota me pusieron en el TP1 y qué me corrigieron?"*
 - *"¿Qué finales tengo aprobados y cuál es mi promedio?"* (Guaraní)
 - *"¿En qué materias estoy inscripto este cuatrimestre?"* (Guaraní)
@@ -55,6 +56,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | `aula_list_upcoming` | Lo que viene en todas tus materias: qué tenés pendiente de entregar o resolver y para cuándo, y el resto del calendario (aperturas, clases, eventos del curso). |
 | `aula_list_grades` | Tus notas: un resumen de cada materia o, en una, cada ítem del libro de calificaciones con su nota, rango y la devolución del docente. Avisa si el docente oculta las notas. |
 | `aula_list_updates` | Qué cambió en tus materias en los últimos días: material nuevo, actividades editadas, foros con mensajes nuevos, notas. |
+| `aula_list_messages` | Tus mensajes privados del aula: las conversaciones con lo último de cada una y cuántas tenés sin leer, o los mensajes de una. No las marca como leídas. |
 | `aula_read_file` | Lee un archivo del aula, por partes cuando es largo. |
 | `aula_get_site_info` | Datos de tu usuario en el aula virtual. |
 | `aula_forum_post` | Abre un hilo en un foro o responde en una discusión. |

@@ -235,3 +235,31 @@ export interface ModuleInfo {
     name: string;
     modname: string;
 }
+
+export interface MessageMember {
+    id: number;
+    fullname: string;
+}
+
+export interface Message {
+    id: number;
+    useridfrom: number;
+    /** HTML. */
+    text: string;
+    timecreated: number;
+}
+
+/** Una conversación del usuario (`core_message_get_conversations`). */
+export interface Conversation {
+    id: number;
+    /** El nombre de un grupo; vacío en una conversación entre dos. */
+    name: string | null;
+    /** 1 entre dos personas, 2 de grupo, 3 con uno mismo. */
+    type: number;
+    isread: boolean;
+    unreadcount: number | null;
+    /** Los otros miembros, sin el usuario. */
+    members: MessageMember[];
+    /** Solo el último mensaje. */
+    messages: Message[];
+}

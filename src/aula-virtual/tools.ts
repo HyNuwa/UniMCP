@@ -15,6 +15,7 @@ import { ROOT } from "./format/address.js";
 import { DEFAULT_DAYS, MAX_DAYS, upcoming } from "./format/agenda.js";
 import { readAulaFile } from "./format/files.js";
 import { grades } from "./format/grades.js";
+import { MESSAGES_PAGE, messages } from "./format/messages.js";
 import { open } from "./format/navigation.js";
 import { search } from "./format/search.js";
 import { DEFAULT_UPDATE_DAYS, MAX_UPDATE_DAYS, updates } from "./format/updates.js";
@@ -314,6 +315,45 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         async ({ dias, curso }) => {
             try {
                 return json(await updates(session, { days: dias, course: curso }));
+            } catch (e) {
+                return failure(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        "aula_list_messages",
+        {
+            description:
+                "Los mensajes privados del usuario en la mensajería del aula virtual. Es la tool para \"¿me " +
+                "contestó el profe?\" o \"¿tengo mensajes sin leer?\". No marca nada como leído.\n\n" +
+                "Sin `conversacion`, las conversaciones más recientes: con quién es (`con`; \"vos\" en las " +
+                "notas personales), `tipo` (grupo o personal; vacío entre dos personas), `sinLeer` (mensajes " +
+                "sin leer; sin el campo, está todo leído) y el `ultimo` mensaje resumido, con `de` (\"vos\" si " +
+                "lo mandó el usuario). Arriba, `conversacionesSinLeer`. Entre dos personas trae el `usuarioId` " +
+                "del otro, que sirve para responderle con aula_send_message.\n\n" +
+                "Con `conversacion`, sus mensajes completos del más viejo al más nuevo, de a " +
+                `${MESSAGES_PAGE}. Si hay más viejos, viene \`hayMasViejos\` con la \`pagina\` siguiente; sin ` +
+                "ese campo, la conversación está completa. " +
+                THIRD_PARTY_TEXT,
+            inputSchema: z.object({
+                conversacion: z
+                    .number()
+                    .int()
+                    .optional()
+                    .describe("Id de una conversación, del campo `conversacion` de la lista. Ej: 48213."),
+                pagina: z
+                    .number()
+                    .int()
+                    .min(0)
+                    .optional()
+                    .describe("Página de mensajes, desde los más nuevos: 0 por defecto. Ej: 1 para los anteriores."),
+            }),
+            annotations: READ_ONLY,
+        },
+        async ({ conversacion, pagina }) => {
+            try {
+                return json(await messages(session, { conversation: conversacion, page: pagina }));
             } catch (e) {
                 return failure(e);
             }

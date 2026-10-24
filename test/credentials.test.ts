@@ -9,6 +9,7 @@ import { CookieJar } from "tough-cookie";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import { upcoming } from "../src/aula-virtual/format/agenda.js";
 import { grades } from "../src/aula-virtual/format/grades.js";
+import { messages } from "../src/aula-virtual/format/messages.js";
 import { open } from "../src/aula-virtual/format/navigation.js";
 import { search } from "../src/aula-virtual/format/search.js";
 import type { GuaraniSession } from "../src/guarani/client/session.js";
@@ -214,6 +215,29 @@ describe("aula", () => {
         const agenda = await upcoming(session);
         assertClean(agenda);
         assert.ok(agenda.eventos?.[0].detalle, "El evento tiene que traer su detalle");
+    });
+
+    test("aula_list_messages", async () => {
+        const msg = { id: 1, useridfrom: 50, text: teacherHtml, timecreated: 1_760_000_000 };
+        mockFetch((_, body) => {
+            switch (body.get("wsfunction")) {
+                case "core_message_get_conversations":
+                    return {
+                        conversations: [
+                            { id: 1, name: "", type: 1, isread: false, unreadcount: 1, members: [{ id: 50, fullname: "Prof" }], messages: [msg] },
+                        ],
+                    };
+                case "core_message_get_unread_conversations_count":
+                    return 1;
+                case "core_message_get_conversation_messages":
+                    return { id: 1, members: [{ id: 50, fullname: "Prof" }], messages: [msg] };
+            }
+            return moodle[body.get("wsfunction") ?? ""];
+        });
+        assertClean(await messages(session));
+        const thread = await messages(session, { conversation: 1 });
+        assertClean(thread);
+        assert.match(thread.mensajes[0].texto, /meet\.test/);
     });
 
     test("los errores de Moodle", async () => {

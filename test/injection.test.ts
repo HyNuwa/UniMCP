@@ -52,6 +52,7 @@ const THIRD_PARTY_TOOLS = [
     "aula_list_upcoming",
     "aula_list_grades",
     "aula_list_updates",
+    "aula_list_messages",
 ];
 
 /** Las de lectura que no, con el motivo. Una tool de lectura nueva tiene que estar en una de las dos listas. */

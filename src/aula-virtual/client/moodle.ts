@@ -7,6 +7,7 @@ import type {
     CalendarEvent,
     Choice,
     ChoiceOption,
+    Conversation,
     Course,
     CourseSection,
     CourseUpdates,
@@ -14,6 +15,8 @@ import type {
     ForumPost,
     GradeItem,
     ModuleInfo,
+    Message,
+    MessageMember,
     SiteInfo,
 } from "./types.js";
 
@@ -390,4 +393,43 @@ export async function getCalendarEvents(
     courseIds.forEach((id, i) => (params[`events[courseids][${i}]`] = id));
     const { events } = await callWs<{ events: CalendarEvent[] }>(session, "core_calendar_get_calendar_events", params);
     return events;
+}
+
+// --- Mensajes recibidos ---
+
+/** Las conversaciones del usuario, las más recientes primero, cada una con su último mensaje. */
+export async function getConversations(session: AulaSession, limitnum: number): Promise<Conversation[]> {
+    const { userid } = await getSiteInfo(session);
+    const { conversations } = await callWs<{ conversations: Conversation[] }>(
+        session,
+        "core_message_get_conversations",
+        { userid, limitnum },
+    );
+    return conversations;
+}
+
+/** Conversaciones con mensajes sin leer. */
+export async function getUnreadConversationsCount(session: AulaSession): Promise<number> {
+    const { userid } = await getSiteInfo(session);
+    return callWs<number>(session, "core_message_get_unread_conversations_count", { useridto: userid });
+}
+
+/**
+ * Los mensajes de una conversación, los más nuevos primero (`newest`), desde `limitfrom`. No los marca como
+ * leídos. Moodle rechaza una conversación de la que el usuario no es miembro.
+ */
+export async function getConversationMessages(
+    session: AulaSession,
+    convid: number,
+    limitnum: number,
+    limitfrom = 0,
+): Promise<{ members: MessageMember[]; messages: Message[] }> {
+    const { userid } = await getSiteInfo(session);
+    return callWs(session, "core_message_get_conversation_messages", {
+        currentuserid: userid,
+        convid,
+        limitnum,
+        limitfrom,
+        newest: 1,
+    });
 }
