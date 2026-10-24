@@ -8,7 +8,8 @@ No hace falta saber programar para lo primero.
 
 1. Instalalo como dice el [README](README.md#cómo-instalar): `npx -y unimcp login`, elegí tu campus (o `personalizado` si no está) y agregalo a tu cliente.
 2. Pedile a tu agente cosas de todos los días: que liste tus cursos, que abra una materia y lea un apunte, que busque algo en los foros, tu historia académica, tus inscripciones, las mesas de examen.
-3. Contanos cómo te fue con la plantilla [**Probé mi universidad**](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien.
+3. Corré `npx -y unimcp check`: prueba los logins y dice qué tools andan en tu aula. No muestra tu usuario, tu nombre ni tus cursos, así que lo podés pegar tal cual.
+4. Contanos cómo te fue con la plantilla [**Probé mi universidad**](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien.
 
 ### Sin datos personales
 

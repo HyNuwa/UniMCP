@@ -53,6 +53,12 @@ body:
     validations:
       required: true
   - type: textarea
+    id: check
+    attributes:
+      label: Salida de `npx -y unimcp check`
+      description: Prueba los logins y dice qué tools andan en tu aula. No muestra tu usuario, tu nombre ni tus cursos; igual revisala antes de enviar.
+      render: markdown
+  - type: textarea
     id: details
     attributes:
       label: Qué probaste y qué pasó

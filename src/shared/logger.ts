@@ -15,3 +15,6 @@ export function masked(value: string): string {
     const hidden = `${local.slice(0, Math.min(2, Math.floor(local.length / 3)))}…`;
     return at === -1 ? hidden : hidden + value.slice(at);
 }
+
+/** Un mensaje de error sin números de 7 u 8 dígitos, con o sin puntos: puede traer un DNI o un legajo. */
+export const withoutIds = (text: string) => text.replace(/\b\d{1,2}\.?\d{3}\.?\d{3}\b/g, "[número]");

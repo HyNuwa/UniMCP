@@ -95,6 +95,8 @@ npx -y unimcp login
 ```
 Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
+Para ver si anda todo, `npx -y unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales.
+
 #### 2. Agregarlo a tu cliente
 **Claude Code**
 ```bash

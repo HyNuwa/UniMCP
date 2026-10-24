@@ -8,6 +8,7 @@ import { LocalSession } from "./aula-virtual/client/local-session.js";
 import { StoredAulaSession } from "./aula-virtual/client/hosted-session.js";
 import { LocalGuaraniSession } from "./guarani/client/local-session.js";
 import { campusOf, startHttpServer, userIdOf } from "./http-server.js";
+import { runCheck } from "./check.js";
 import { runLogin } from "./login.js";
 import { accessPolicyFromEnv } from "./oauth/access.js";
 import { redirectAllowlistFromEnv } from "./oauth/redirects.js";
@@ -24,6 +25,7 @@ const USAGE = `Uso:
   unimcp --http [--host H] [--port N]  servidor MCP por HTTP (por defecto 127.0.0.1:3000)
   unimcp login                         elegir tu campus y guardar las credenciales del aula y de SIU Guaraní
   unimcp login --http                  lo mismo, para el modo HTTP: guarda la sesión del aula y emite el token del cliente
+  unimcp check                         prueba tu campus: un resumen sin datos personales para un issue
 
 Si hay un .env en la carpeta actual, se lee al arrancar. Las variables están en
 https://github.com/HyNuwa/UniMCP/blob/master/.env.example`;
@@ -43,6 +45,11 @@ async function main() {
 
     if (values.help) {
         console.error(USAGE);
+        return;
+    }
+    if (positionals[0] === "check") {
+        process.stdout.write(`${await runCheck()}
+`);
         return;
     }
     if (positionals[0] === "login") {

@@ -1,3 +1,5 @@
+import type { AulaSite } from "../../shared/campus.js";
+import { USER_AGENT } from "../../shared/http.js";
 import { callWs, MoodleError, WRITE } from "./web-service.js";
 import type { AulaSession } from "./session.js";
 import type {
@@ -15,10 +17,25 @@ import type {
     ForumPost,
     GradeItem,
     ModuleInfo,
+    PublicConfig,
     Message,
     MessageMember,
     SiteInfo,
 } from "./types.js";
+
+/** La configuración pública del aula, sin token: la que pide la app de Moodle antes de entrar. */
+export async function getPublicConfig(site: AulaSite): Promise<PublicConfig> {
+    const res = await fetch(`${site.baseUrl}/lib/ajax/service-nologin.php?info=tool_mobile_get_public_config`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "user-agent": USER_AGENT },
+        body: JSON.stringify([{ index: 0, methodname: "tool_mobile_get_public_config", args: {} }]),
+        signal: AbortSignal.timeout(30_000),
+    });
+    if (!res.ok) throw new MoodleError(`HTTP ${res.status}`);
+    const [result] = (await res.json()) as { error: boolean; data?: PublicConfig; exception?: { message: string } }[];
+    if (result?.error || !result?.data) throw new MoodleError(result?.exception?.message ?? "respuesta inesperada");
+    return result.data;
+}
 
 /**
  * site_info de cada sesión, con el token que lo pidió: casi todas las funciones necesitan el `userid` y

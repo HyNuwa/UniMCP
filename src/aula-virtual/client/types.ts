@@ -7,6 +7,18 @@ export interface SiteInfo {
     userid: number;
     release: string;
     functions: { name: string; version: string }[];
+    /** 0 si el sitio no deja bajar o subir archivos por el web service. */
+    downloadfiles?: number;
+    uploadfiles?: number;
+}
+
+/** `tool_mobile_get_public_config`: lo que el aula le muestra a la app antes del login. */
+export interface PublicConfig {
+    enablemobilewebservice?: number;
+    maintenanceenabled?: number;
+    /** 1 login en la app, 2 en el navegador, 3 en un navegador embebido. */
+    typeoflogin?: number;
+    identityproviders?: { name: string }[];
 }
 
 export interface Course {
