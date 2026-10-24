@@ -5,6 +5,10 @@ on:
     branches: [master]
   pull_request:
 
+# Solo lee el código: un paso comprometido no puede escribir en el repo.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

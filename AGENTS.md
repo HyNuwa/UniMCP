@@ -111,7 +111,7 @@ Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/ag
 ## Verify and publish
 
 - Verify with `npx tsc --noEmit` and `npm test`, and try it against a real campus with `npm run dev` (requires `npm run login` once). Tests (`test/*.test.ts`, `node:test` through tsx) use made-up Moodle and G3W responses with a mocked `fetch`, never real student data.
-- CI (`.github/workflows/ci.yml`) runs `tsc --noEmit` and `npm test` on every push to master and every PR. `vendor/` is generated before `build` and `dev`, never in `prepare` or `postinstall`, which would also run on the user's machine.
+- CI (`.github/workflows/ci.yml`) runs `tsc --noEmit` and `npm test` on every push to master and every PR. Every workflow declares its `permissions`, the least it needs (`test/workflows.test.ts`), and Dependabot (`.github/dependabot.yml`) opens a weekly PR per ecosystem. `vendor/` is generated before `build` and `dev`, never in `prepare` or `postinstall`, which would also run on the user's machine.
 - The regression evaluation for the aula's rich text and search is `evals/unju-links-tablas.xml` (untracked): run it after touching `htmlToText`, `richText`, `safeUrl` or `aula_search`.
 - When you add or change a tool, update the tools table in `README.md`; when you add a campus, its table too.
 - The Claude Desktop extension (`.mcpb`) is built by `npm run mcpb` (`scripts/pack-mcpb.mjs`) from `mcpb/manifest.json`; its version, campus list and tools are filled in from `package.json` and the compiled code. The extension passes the user's settings as `UNI_*` env vars and sets `UNIMCP_MCPB`, so login hints point to the extension settings (`loginHint`). `.github/workflows/release.yml` attaches it to every GitHub release.
