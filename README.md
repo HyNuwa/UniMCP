@@ -68,6 +68,8 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | `aula_send_message` | Manda un mensaje privado a un docente o compañero. |
 | `aula_calendar_add_event` | Agrega un recordatorio a tu calendario del aula. |
 
+También trae un **prompt**, `aula_plan_semana` (en Claude Desktop, en el menú "+"): arma el plan de la semana con lo que tenés que entregar, lo nuevo en el aula y cómo vas en cada materia.
+
 ### SIU Guaraní (autogestión, G3W)
 | Tool | Qué hace |
 |---|---|

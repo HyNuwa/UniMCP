@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import type { AulaSession } from "./aula-virtual/client/session.js";
+import { registerAulaPrompts } from "./aula-virtual/prompts.js";
 import { registerAulaVirtualTools } from "./aula-virtual/tools.js";
 import type { GuaraniSession } from "./guarani/client/session.js";
 import { registerGuaraniTools } from "./guarani/tools.js";
@@ -39,7 +40,10 @@ export function createServer(
     const server = new McpServer({ name: "unimcp", version: "0.1.0" }, { instructions: INSTRUCTIONS });
     const { tools, writeTools } = withWritePolicy(server, writePolicy);
 
-    if (aula) registerAulaVirtualTools(tools, aula, files);
+    if (aula) {
+        registerAulaVirtualTools(tools, aula, files);
+        registerAulaPrompts(server);
+    }
     if (guarani) registerGuaraniTools(tools, guarani);
 
     if (writePolicy !== "all") warnUnknown(writePolicy, writeTools);
