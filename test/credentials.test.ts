@@ -117,7 +117,14 @@ describe("aula", () => {
         parentid: null,
         isdeleted: false,
         capabilities: { reply: true, edit: false, delete: false },
-        attachments: [file("enunciado.pdf")],
+        // mod_forum_get_discussion_posts trae la URL en `url`, no en `fileurl`.
+        attachments: [
+            {
+                filename: "enunciado.pdf",
+                filesize: 10,
+                url: `${AULA}/webservice/pluginfile.php/4/mod_forum/attachment/100/enunciado.pdf?token=${TOKEN}`,
+            },
+        ],
     };
     const moodle: Record<string, unknown> = {
         core_webservice_get_site_info: { userid: 1, username: "alumno" },
@@ -134,6 +141,8 @@ describe("aula", () => {
             assertClean(await open(session, address));
         }
         // Las URLs siguen ahí, solo sin la credencial: el test no pasa por una respuesta vacía.
+        const thread = JSON.stringify(await open(session, "/curso/7/mod/13/disc/100"));
+        assert.match(thread, /pluginfile\.php\/4\/mod_forum\/attachment\/100\/enunciado\.pdf/);
         const course = JSON.stringify(await open(session, "/curso/7"));
         assert.match(course, /https:\/\/meet\.test\/sala\?x=1/);
         assert.match(course, /pluginfile\.php\/1\/mod_resource\/content\/0\/guia\.pdf\?forcedownload=1/);

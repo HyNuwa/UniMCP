@@ -19,7 +19,7 @@ import {
 } from "../client/moodle.js";
 import type { AulaSite } from "../../shared/campus.js";
 import type { AulaSession } from "../client/session.js";
-import type { CourseModule, CourseSection } from "../client/types.js";
+import type { CourseModule, CourseSection, ForumPost } from "../client/types.js";
 import { viewChoice, viewChoicegroup, viewSubmission } from "./activities.js";
 import { cleanName, isoDate, richText, safeLink, toFile, toFileSummary } from "./fields.js";
 import { BUDGET_CHARS } from "./files.js";
@@ -294,11 +294,20 @@ async function viewDiscussion(session: AulaSession, discussionId: number) {
             respuestaA: p.parentid ?? undefined,
             id: p.id,
             mensaje: richText(session.site, p.message),
-            adjuntos: p.attachments.length ? p.attachments.map(toFile) : undefined,
+            adjuntos: attachmentsOf(p),
             // Qué acciones permite cada publicación, para no intentar lo que Moodle rechazaría.
             acciones: allowedActions(p.capabilities),
         })),
     };
+}
+
+/** Los adjuntos de una publicación, con la URL donde la deja `mod_forum_get_discussion_posts`. */
+function attachmentsOf(p: ForumPost) {
+    const files = (p.attachments ?? []).flatMap((a) => {
+        const fileurl = a.fileurl ?? a.url;
+        return fileurl ? [toFile({ ...a, fileurl })] : [];
+    });
+    return files.length ? files : undefined;
 }
 
 function allowedActions(c: { reply: boolean; edit: boolean; delete: boolean }) {

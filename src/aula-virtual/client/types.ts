@@ -79,7 +79,17 @@ export interface ForumPost {
     parentid: number | null;
     isdeleted: boolean;
     capabilities: { reply: boolean; edit: boolean; delete: boolean };
-    attachments: { filename: string; fileurl: string; filesize: number; mimetype?: string }[];
+    /**
+     * `mod_forum_get_discussion_posts` trae la URL en `url`, no en `fileurl` como el resto del web service.
+     */
+    attachments?: {
+        filename: string;
+        url?: string;
+        fileurl?: string;
+        filesize: number;
+        mimetype?: string;
+        timemodified?: number;
+    }[];
 }
 
 export interface MoodleFile {
