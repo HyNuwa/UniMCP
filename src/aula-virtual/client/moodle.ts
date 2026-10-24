@@ -20,8 +20,24 @@ import type {
     SiteInfo,
 } from "./types.js";
 
-export function getSiteInfo(session: AulaSession): Promise<SiteInfo> {
-    return callWs<SiteInfo>(session, "core_webservice_get_site_info");
+/**
+ * site_info de cada sesión, con el token que lo pidió: casi todas las funciones necesitan el `userid` y
+ * no cambia mientras el token sea el mismo. Con otro token puede ser otro usuario, así que se vuelve a pedir.
+ */
+const siteInfos = new WeakMap<AulaSession, { token: string; info: Promise<SiteInfo> }>();
+
+export async function getSiteInfo(session: AulaSession): Promise<SiteInfo> {
+    const token = await session.getToken();
+    const cached = siteInfos.get(session);
+    if (cached?.token === token) return cached.info;
+
+    const info = callWs<SiteInfo>(session, "core_webservice_get_site_info");
+    siteInfos.set(session, { token, info });
+    // Un error no queda guardado: la próxima llamada lo vuelve a intentar.
+    info.catch(() => {
+        if (siteInfos.get(session)?.info === info) siteInfos.delete(session);
+    });
+    return info;
 }
 
 /** Dueño del token con su email institucional, que site_info no incluye. */
