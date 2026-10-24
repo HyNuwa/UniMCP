@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import * as z from "zod";
 import { thirdPartyDataShown } from "../shared/privacy.js";
+import { progressOf } from "../shared/progress.js";
 import type { FileSource } from "../shared/uploads.js";
 import { getSiteInfo } from "./client/moodle.js";
 import type { AulaSession } from "./client/session.js";
@@ -186,9 +187,9 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             }),
             annotations: READ_ONLY,
         },
-        async ({ consulta, curso }) => {
+        async ({ consulta, curso }, ctx) => {
             try {
-                return json(await fromOthers(await search(session, consulta, curso)));
+                return json(await fromOthers(await search(session, consulta, curso, progressOf(ctx))));
             } catch (e) {
                 return failure(e);
             }
@@ -272,9 +273,9 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             }),
             annotations: READ_ONLY,
         },
-        async ({ curso }) => {
+        async ({ curso }, ctx) => {
             try {
-                return json(await fromOthers(await grades(session, { course: curso })));
+                return json(await fromOthers(await grades(session, { course: curso }, progressOf(ctx))));
             } catch (e) {
                 return failure(e);
             }
@@ -318,9 +319,10 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             }),
             annotations: READ_ONLY,
         },
-        async ({ dias, curso }) => {
+        async ({ dias, curso }, ctx) => {
             try {
-                return json(await fromOthers(await updates(session, { days: dias, course: curso })));
+                const options = { days: dias, course: curso };
+                return json(await fromOthers(await updates(session, options, undefined, progressOf(ctx))));
             } catch (e) {
                 return failure(e);
             }

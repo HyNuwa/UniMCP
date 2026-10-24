@@ -1,3 +1,4 @@
+import { type Progress, tracked } from "../../shared/progress.js";
 import { getCourseModule, getUpdatesSince, getUserCourses } from "../client/moodle.js";
 import type { AulaSession } from "../client/session.js";
 import type { CourseUpdates, ModuleInfo } from "../client/types.js";
@@ -39,6 +40,7 @@ export async function updates(
     session: AulaSession,
     options: { days?: number; course?: string } = {},
     now = new Date(),
+    progress?: Progress,
 ) {
     const days = Math.min(Math.max(options.days ?? DEFAULT_UPDATE_DAYS, 1), MAX_UPDATE_DAYS);
     const courseId = options.course ? courseOf(options.course) : undefined;
@@ -50,8 +52,10 @@ export async function updates(
         throw new Error(`No estás inscripto en el curso ${courseId}. Las direcciones salen de aula_list_courses.`);
     }
 
-    const changed = await Promise.all(
+    const changed = await tracked(
         courses.map(async (c) => ({ course: c, modules: moduleUpdates(await getUpdatesSince(session, c.id, since)) })),
+        progress,
+        "cursos",
     );
     const withChanges = changed.filter((c) => c.modules.length);
     const total = withChanges.reduce((n, c) => n + c.modules.length, 0);
@@ -63,25 +67,30 @@ export async function updates(
         budget -= shown.length;
         return { course, modules, shown };
     });
-    const cursos = await Promise.all(
-        plan.map(async ({ course, modules, shown }) => {
-            const named = await Promise.all(shown.map(async (m) => ({ ...m, cm: await moduleOf(session, m.cmid) })));
-            return {
-                curso: cleanName(course.fullname),
-                direccion: courseAddr(course.id),
-                novedades: named
-                    // Uno que no se puede abrir (oculto, borrado) no le sirve al usuario.
-                    .filter((m) => m.cm)
-                    .map((m) => ({
-                        nombre: cleanName(m.cm!.name),
-                        tipo: m.cm!.modname,
-                        cambios: m.changes,
-                        direccion: moduleAddr(course.id, m.cmid),
-                    })),
-                otrasNovedades: modules.length - shown.length || undefined,
-            };
-        }),
+    // Después de los cursos, los nombres de los módulos: el progreso sigue contando desde ahí.
+    const steps = { start: courses.length, total: courses.length + plan.reduce((n, p) => n + p.shown.length, 0) };
+    const named = await tracked(
+        plan.flatMap(({ shown }) => shown.map(async (m) => ({ ...m, cm: await moduleOf(session, m.cmid) }))),
+        progress,
+        "módulos con novedades",
+        steps,
     );
+    let next = 0;
+    const cursos = plan.map(({ course, modules, shown }) => ({
+        curso: cleanName(course.fullname),
+        direccion: courseAddr(course.id),
+        novedades: named
+            .slice(next, (next += shown.length))
+            // Uno que no se puede abrir (oculto, borrado) no le sirve al usuario.
+            .filter((m) => m.cm)
+            .map((m) => ({
+                nombre: cleanName(m.cm!.name),
+                tipo: m.cm!.modname,
+                cambios: m.changes,
+                direccion: moduleAddr(course.id, m.cmid),
+            })),
+        otrasNovedades: modules.length - shown.length || undefined,
+    }));
 
     const cut = total > MAX_MODULES;
     return {

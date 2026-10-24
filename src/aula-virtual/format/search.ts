@@ -1,3 +1,4 @@
+import { type Progress, tracked } from "../../shared/progress.js";
 import { getCourseSections, getForumDiscussions, getUserCourses } from "../client/moodle.js";
 import type { AulaSession } from "../client/session.js";
 import type { Course, CourseModule } from "../client/types.js";
@@ -20,7 +21,7 @@ interface Candidate {
  * que se busca sobre lo mismo que descarga abrir un curso. Dentro de los archivos no se busca: habría que
  * bajarlos todos.
  */
-export async function search(session: AulaSession, query: string, courseAddress?: string) {
+export async function search(session: AulaSession, query: string, courseAddress?: string, progress?: Progress) {
     const all = [...new Set(words(query))];
     const terms = all.filter(isSearchable);
     if (!terms.length) {
@@ -33,7 +34,7 @@ export async function search(session: AulaSession, query: string, courseAddress?
     const ignored = all.filter((w) => !isSearchable(w));
 
     const courses = await coursesToSearch(session, courseAddress);
-    const candidates = (await Promise.all(courses.map((c) => courseCandidates(session, c)))).flat();
+    const candidates = (await tracked(courses.map((c) => courseCandidates(session, c)), progress, "cursos")).flat();
     const matches = candidates.filter((c) => {
         const found = new Set([...words(c.result.nombre ?? ""), ...words(c.text)]);
         return terms.every((w) => found.has(w));

@@ -1,3 +1,4 @@
+import { type Progress, tracked } from "../../shared/progress.js";
 import { htmlToText } from "../../shared/html.js";
 import { getGradeItems, getUserCourses } from "../client/moodle.js";
 import type { AulaSession } from "../client/session.js";
@@ -18,11 +19,11 @@ const HIDDEN = "El docente no muestra las notas de este curso en el aula.";
  * Las notas del usuario. Con `course`, cada ítem del libro de calificaciones de ese curso; sin él, un
  * resumen por curso.
  */
-export async function grades(session: AulaSession, options: { course?: string } = {}) {
+export async function grades(session: AulaSession, options: { course?: string } = {}, progress?: Progress) {
     const courseId = options.course ? courseOf(options.course) : undefined;
     const courses = await getUserCourses(session);
     if (courseId === undefined) {
-        const cursos = await Promise.all(courses.map((c) => courseSummary(session, c)));
+        const cursos = await tracked(courses.map((c) => courseSummary(session, c)), progress, "cursos");
         // La más reciente de todas, para "¿qué nota me pusieron?" sin comparar curso por curso.
         const latest = cursos
             .flatMap((c) => ("ultimaNota" in c && c.ultimaNota ? [{ curso: c.curso, ...c.ultimaNota }] : []))
