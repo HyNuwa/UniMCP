@@ -126,7 +126,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                     .optional()
                     .describe(
                         "Solo para foros: página del índice de discusiones, de 50 en 50. La respuesta avisa " +
-                            "con `hayMasDiscusiones` cuando hay otra.",
+                            "con `hayMasDiscusiones` cuando hay otra. Ej: 1 para la segunda página.",
                     ),
             }),
             annotations: READ_ONLY,
@@ -373,13 +373,21 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "para que el usuario lo baje. " +
                 THIRD_PARTY_TEXT,
             inputSchema: z.object({
-                url: z.string().describe("La `url` del archivo tal como la devuelve aula_open."),
+                url: z
+                    .string()
+                    .describe(
+                        "La `url` del archivo tal como la devuelve aula_open. " +
+                            'Ej: "https://aula.ejemplo.edu.ar/pluginfile.php/1234/mod_resource/content/1/apunte.pdf".',
+                    ),
                 desde: z
                     .number()
                     .int()
                     .min(1)
                     .optional()
-                    .describe("Número de página, diapositiva o fragmento desde el cual leer. Por defecto, 1."),
+                    .describe(
+                        "Número de página, diapositiva o fragmento desde el cual leer. Por defecto, 1. " +
+                            "Ej: 12, el `siguiente` de la respuesta anterior.",
+                    ),
             }),
             annotations: READ_ONLY,
         },
