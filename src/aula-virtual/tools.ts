@@ -14,6 +14,7 @@ import {
 import { ROOT } from "./format/address.js";
 import { DEFAULT_DAYS, MAX_DAYS, upcoming } from "./format/agenda.js";
 import { readAulaFile } from "./format/files.js";
+import { grades } from "./format/grades.js";
 import { open } from "./format/navigation.js";
 import { search } from "./format/search.js";
 import { createUploadLink, submitAssignment } from "./format/submission.js";
@@ -228,6 +229,44 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
         async ({ dias, curso }) => {
             try {
                 return json(await upcoming(session, { days: dias, course: curso }));
+            } catch (e) {
+                return failure(e);
+            }
+        },
+    );
+
+    server.registerTool(
+        "aula_list_grades",
+        {
+            description:
+                "Las notas del usuario en el aula virtual, del libro de calificaciones de Moodle. Es la tool " +
+                "para \"¿cómo voy en Física?\", \"¿ya me pusieron la nota del TP?\" o \"¿qué notas tengo?\".\n\n" +
+                "Sin `curso`, `ultimaNota` (la más reciente de todas, con su curso) y un resumen de cada curso: " +
+                "`total` (si Moodle lo calcula y lo muestra), `conNota` de `items` calificables y su " +
+                "`ultimaNota`. Con `curso`, cada ítem: `nombre`, `tipo` (assign, quiz, manual para lo que el " +
+                "docente cargó a mano como un parcial, categoria para el total de un grupo), `nota`, `rango`, " +
+                "`porcentaje`, `fecha` de la calificación, `devolucion` del docente y la `direccion` de la " +
+                "actividad para abrirla con aula_open. Dos ítems pueden llamarse igual: la `direccion` los " +
+                "distingue. Cada `rango` es el de su ítem, y el del `total` suele ser otro (0–100 contra 0–10).\n\n" +
+                "Un ítem sin `nota` todavía no se calificó, salvo que tenga `oculta`: el docente oculta ese " +
+                "ítem, que puede estar calificado o no. `notasOcultas` " +
+                "quiere decir que el docente no muestra las notas del curso en el aula: no es un error, " +
+                "pueden estar en otro lado (Guaraní, un PDF, un aviso). " +
+                THIRD_PARTY_TEXT,
+            inputSchema: z.object({
+                curso: z
+                    .string()
+                    .optional()
+                    .describe(
+                        'Dirección de un curso para ver cada nota, de aula_list_courses. Ej: "/curso/3082". Sin ' +
+                            "este parámetro, el resumen de todos los cursos.",
+                    ),
+            }),
+            annotations: READ_ONLY,
+        },
+        async ({ curso }) => {
+            try {
+                return json(await grades(session, { course: curso }));
             } catch (e) {
                 return failure(e);
             }

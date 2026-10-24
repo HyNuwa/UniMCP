@@ -11,6 +11,7 @@ import type {
     CourseSection,
     ForumDiscussion,
     ForumPost,
+    GradeItem,
     SiteInfo,
 } from "./types.js";
 
@@ -31,6 +32,20 @@ export async function getOwnUser(session: AulaSession): Promise<{ username: stri
 export async function getUserCourses(session: AulaSession): Promise<Course[]> {
     const { userid } = await getSiteInfo(session);
     return callWs<Course[]>(session, "core_enrol_get_users_courses", { userid });
+}
+
+/**
+ * El libro de calificaciones del usuario en un curso. Si el docente lo oculta, Moodle responde
+ * `nopermissiontoviewgrades`.
+ */
+export async function getGradeItems(session: AulaSession, courseid: number): Promise<GradeItem[]> {
+    const { userid } = await getSiteInfo(session);
+    const { usergrades } = await callWs<{ usergrades: { gradeitems: GradeItem[] }[] }>(
+        session,
+        "gradereport_user_get_grade_items",
+        { courseid, userid },
+    );
+    return usergrades[0]?.gradeitems ?? [];
 }
 
 /**

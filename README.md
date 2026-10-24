@@ -6,6 +6,7 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 - *"¿Qué avisó la profesora de Física esta semana?"*
 - *"Resumime la guía de la unidad 3 de Sistemas Operativos."*
 - *"¿Qué tengo que entregar esta semana?"*
+- *"¿Cómo voy en Física?"*
 - *"¿Qué nota me pusieron en el TP1 y qué me corrigieron?"*
 - *"¿Qué finales tengo aprobados y cuál es mi promedio?"* (Guaraní)
 - *"¿En qué materias estoy inscripto este cuatrimestre?"* (Guaraní)
@@ -51,6 +52,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | `aula_open` | Entra a un curso, una sección, un módulo, un foro o una discusión. Cada respuesta trae las direcciones de lo que hay adentro y de un nivel más arriba, así el agente navega sin perderse. Un curso grande llega como índice de secciones con sus actividades, y cada sección se abre aparte. Si algo se recortó para que entre, la respuesta lo avisa y dice cómo verlo. |
 | `aula_search` | Busca palabras en uno o en todos tus cursos: secciones, módulos, nombres de archivo y discusiones de los foros. Compara palabras enteras e ignora las de menos de 3 letras, salvo los números. Sirve cuando no sabés en qué materia está algo. |
 | `aula_list_upcoming` | Lo que viene en todas tus materias: qué tenés pendiente de entregar o resolver y para cuándo, y el resto del calendario (aperturas, clases, eventos del curso). |
+| `aula_list_grades` | Tus notas: un resumen de cada materia o, en una, cada ítem del libro de calificaciones con su nota, rango y la devolución del docente. Avisa si el docente oculta las notas. |
 | `aula_read_file` | Lee un archivo del aula, por partes cuando es largo. |
 | `aula_get_site_info` | Datos de tu usuario en el aula virtual. |
 | `aula_forum_post` | Abre un hilo en un foro o responde en una discusión. |

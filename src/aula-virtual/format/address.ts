@@ -74,3 +74,12 @@ export function parentOf(address: Address): string | null {
             return moduleAddr(address.courseId, address.cmid);
     }
 }
+
+/** El id del curso de `raw`, que viene de un parámetro `curso`: tiene que ser la dirección de un curso. */
+export function courseOf(raw: string): number {
+    const address = parseAddress(raw);
+    if (address.level !== "course") {
+        throw new Error(`\`curso\` tiene que ser la dirección de un curso, como "/curso/691", no "${raw}".`);
+    }
+    return address.courseId;
+}

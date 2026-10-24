@@ -1,7 +1,7 @@
 import { getActionEvents, getCalendarEvents, getUserCourses, TIMELINE_PAGE_SIZE } from "../client/moodle.js";
 import type { AulaSession } from "../client/session.js";
 import type { ActionEvent, CalendarEvent } from "../client/types.js";
-import { courseAddr, moduleAddr, parseAddress } from "./address.js";
+import { courseAddr, courseOf, moduleAddr } from "./address.js";
 import { cleanName, isoDate, richText } from "./fields.js";
 
 const DAY_SECONDS = 86_400;
@@ -119,12 +119,4 @@ function viewEvent(session: AulaSession, e: CalendarEvent, names: Map<number, st
 function cmidOf(url: string | undefined): number | undefined {
     const m = url?.match(/\/mod\/\w+\/view\.php\?id=(\d+)/);
     return m ? Number(m[1]) : undefined;
-}
-
-function courseOf(raw: string): number {
-    const address = parseAddress(raw);
-    if (address.level !== "course") {
-        throw new Error(`\`curso\` tiene que ser la dirección de un curso, como "/curso/691", no "${raw}".`);
-    }
-    return address.courseId;
 }

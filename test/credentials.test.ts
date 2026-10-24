@@ -7,6 +7,8 @@ import assert from "node:assert/strict";
 import { afterEach, describe, test } from "node:test";
 import { CookieJar } from "tough-cookie";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
+import { upcoming } from "../src/aula-virtual/format/agenda.js";
+import { grades } from "../src/aula-virtual/format/grades.js";
 import { open } from "../src/aula-virtual/format/navigation.js";
 import { search } from "../src/aula-virtual/format/search.js";
 import type { GuaraniSession } from "../src/guarani/client/session.js";
@@ -141,6 +143,68 @@ describe("aula", () => {
         mockFetch((_, body) => moodle[body.get("wsfunction") ?? ""]);
         assertClean(await search(session, "parcial"));
         assertClean(await search(session, "clase"));
+    });
+
+    test("aula_list_grades y aula_list_upcoming", async () => {
+        const now = Date.now() / 1000;
+        mockFetch((_, body) => {
+            switch (body.get("wsfunction")) {
+                case "gradereport_user_get_grade_items":
+                    return {
+                        usergrades: [
+                            {
+                                gradeitems: [
+                                    {
+                                        id: 1,
+                                        itemname: "TP 1",
+                                        itemtype: "mod",
+                                        itemmodule: "assign",
+                                        cmid: 10,
+                                        gradeformatted: "8,00",
+                                        feedback: teacherHtml,
+                                    },
+                                ],
+                            },
+                        ],
+                    };
+                case "core_calendar_get_action_events_by_timesort":
+                    return {
+                        events: [
+                            {
+                                id: 1,
+                                name: "TP 1",
+                                modulename: "assign",
+                                eventtype: "due",
+                                timesort: now + 3600,
+                                course: { id: 7, fullname: "Curso" },
+                                url: `${AULA}/mod/assign/view.php?id=10&token=${TOKEN}`,
+                            },
+                        ],
+                    };
+                case "core_calendar_get_calendar_events":
+                    return {
+                        events: [
+                            {
+                                id: 2,
+                                name: "Parcial",
+                                description: teacherHtml,
+                                courseid: 7,
+                                modulename: "",
+                                instance: 0,
+                                eventtype: "course",
+                                timestart: now + 7200,
+                                timeduration: 0,
+                            },
+                        ],
+                    };
+            }
+            return moodle[body.get("wsfunction") ?? ""];
+        });
+        assertClean(await grades(session, { course: "/curso/7" }));
+        assertClean(await grades(session));
+        const agenda = await upcoming(session);
+        assertClean(agenda);
+        assert.ok(agenda.eventos?.[0].detalle, "El evento tiene que traer su detalle");
     });
 
     test("los errores de Moodle", async () => {

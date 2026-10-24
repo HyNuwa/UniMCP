@@ -190,3 +190,20 @@ export interface CalendarEvent {
     /** En segundos. */
     timeduration: number;
 }
+
+/** Un ítem del libro de calificaciones (`gradereport_user_get_grade_items`). */
+export interface GradeItem {
+    id: number;
+    itemname: string | null;
+    /** `course` (el total), `category`, `mod` (una actividad) o `manual` (cargado a mano). */
+    itemtype: string;
+    itemmodule: string | null;
+    cmid?: number;
+    /** Ya formateados por Moodle: "7,50", "-" sin nota, "0&ndash;10" (con entidades). */
+    gradeformatted?: string;
+    rangeformatted?: string;
+    percentageformatted?: string;
+    feedback?: string;
+    gradeishidden?: boolean;
+    gradedategraded?: number | null;
+}
