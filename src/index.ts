@@ -61,9 +61,8 @@ async function main() {
         // página.
         const loginUrl = process.env.UNIMCP_LOGIN_URL || `${baseUrl}/login`;
         const writePolicy = writePolicyFromEnv(false);
-        logger.info(
-            `Tools que escriben: ${writePolicy === "all" ? "todas" : [...writePolicy].join(", ") || "ninguna"} (UNIMCP_WRITE_TOOLS)`,
-        );
+        const allowed = writePolicy === "all" ? "todas" : [...writePolicy].join(", ") || "ninguna";
+        logger.info(`Tools que escriben: ${allowed} (UNIMCP_WRITE_TOOLS)`);
         const store = await SqliteStore.open();
         const inbox = new UploadInbox(baseUrl);
         const factory = (ctx: { authInfo?: AuthInfo }) => {
@@ -92,7 +91,9 @@ async function main() {
             guarani: campus.guarani && new LocalGuaraniSession(campus.guarani),
         };
         const writePolicy = writePolicyFromEnv(true);
-        serveStdio(() => createServer(platforms, { local: true }, writePolicy), { onerror: (e) => logger.error(e.message) });
+        serveStdio(() => createServer(platforms, { local: true }, writePolicy), {
+            onerror: (e) => logger.error(e.message),
+        });
         logger.info(`Servidor MCP iniciado en STDIO (${campus.universidad} · ${campus.nombre})`);
     }
 }

@@ -20,14 +20,19 @@ interface Registered {
     name: string;
     description: string;
     readOnly: boolean;
+    annotations: { readOnlyHint?: boolean; destructiveHint?: boolean; idempotentHint?: boolean };
 }
 
 /** Las tools que registra cada plataforma, sin levantar un servidor: alcanza con anotar las llamadas. */
 function registeredTools(local: boolean): Registered[] {
     const tools: Registered[] = [];
     const server = {
-        registerTool(name: string, config: { description: string; annotations?: { readOnlyHint?: boolean } }) {
-            tools.push({ name, description: config.description, readOnly: config.annotations?.readOnlyHint === true });
+        registerTool(name: string, config: { description: string; annotations?: Registered["annotations"] }) {
+            const annotations = config.annotations ?? {};
+            const readOnly = annotations.readOnlyHint === true;
+            tools.push({ name, description: config.description, readOnly, annotations });
+            // Como el servidor real: con lo que devuelve, aula_assign_submit habilita su link de subida.
+            return {};
         },
     } as unknown as McpServer;
     registerAulaVirtualTools(
@@ -41,6 +46,15 @@ function registeredTools(local: boolean): Registered[] {
 
 /** Las que devuelven texto que escriben docentes y compañeros. */
 const THIRD_PARTY_TOOLS = ["aula_open", "aula_search", "aula_read_file", "aula_list_upcoming"];
+
+/** Las de lectura que no, con el motivo. Una tool de lectura nueva tiene que estar en una de las dos listas. */
+const OWN_TEXT_TOOLS: Record<string, string> = {
+    aula_get_site_info: "Datos del usuario y del sitio.",
+    aula_list_courses: "Nombres de cursos, que pone la universidad.",
+    aula_assign_upload_link: "Un link de subida que arma el servidor.",
+    guarani_menu: "El menú del sistema.",
+    guarani_open: "Páginas que arma el sistema de la universidad, no docentes ni compañeros.",
+};
 
 describe("prompt injection", () => {
     for (const local of [true, false]) {
@@ -59,6 +73,27 @@ describe("prompt injection", () => {
             assert.ok(t.description.includes(THIRD_PARTY_TEXT), `${name} no lo dice`);
         }
     });
+
+    for (const local of [true, false]) {
+        test(`cada tool de lectura está clasificada: texto de terceros o no (${local ? "STDIO" : "HTTP"})`, () => {
+            for (const t of registeredTools(local).filter((x) => x.readOnly)) {
+                assert.ok(
+                    THIRD_PARTY_TOOLS.includes(t.name) !== t.name in OWN_TEXT_TOOLS,
+                    `${t.name} tiene que estar en THIRD_PARTY_TOOLS o en OWN_TEXT_TOOLS (y en una sola)`,
+                );
+            }
+        });
+
+        test(`cada tool declara qué hace (${local ? "STDIO" : "HTTP"})`, () => {
+            for (const t of registeredTools(local)) {
+                const a = t.annotations;
+                assert.equal(typeof a.readOnlyHint, "boolean", `${t.name} no declara readOnlyHint`);
+                if (t.readOnly) continue;
+                assert.equal(typeof a.destructiveHint, "boolean", `${t.name} no declara destructiveHint`);
+                assert.equal(typeof a.idempotentHint, "boolean", `${t.name} no declara idempotentHint`);
+            }
+        });
+    }
 
     test("el servidor manda las instrucciones al inicializar", async () => {
         const [client, transport] = InMemoryTransport.createLinkedPair();
