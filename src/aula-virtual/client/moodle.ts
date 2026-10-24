@@ -154,12 +154,14 @@ export async function updateDiscussionPost(
     subject: string,
     message: string,
 ): Promise<void> {
-    await callWs(session, "mod_forum_update_discussion_post", { postid, subject, message });
+    const result = await callWs<WriteResult>(session, "mod_forum_update_discussion_post", { postid, subject, message });
+    requireDone(result, "Moodle no editó la publicación.");
 }
 
 /** Borra una publicación; borrar la primera elimina la discusión. */
 export async function deletePost(session: AulaSession, postid: number): Promise<void> {
-    await callWs(session, "mod_forum_delete_post", { postid });
+    const result = await callWs<WriteResult>(session, "mod_forum_delete_post", { postid });
+    requireDone(result, "Moodle no borró la publicación.");
 }
 
 // --- Tareas ---
@@ -188,6 +190,18 @@ export async function getUnusedDraftItemId(session: AulaSession): Promise<number
 /** Cuando Moodle no guarda o no envía no lanza error: lo avisa en `warnings`. */
 function throwOnWarnings(warnings: { message: string }[] | undefined, fallback: string) {
     if (warnings?.length) throw new MoodleError(warnings.map((w) => w.message).join(" ") || fallback);
+}
+
+/** Respuesta de las escrituras que, en lugar de fallar, contestan `status: false` o con `warnings`. */
+interface WriteResult {
+    status?: boolean;
+    warnings?: { message: string }[];
+}
+
+/** Falla si Moodle no hizo el cambio, con su motivo o con `fallback`. */
+function requireDone(result: WriteResult | null, fallback: string) {
+    throwOnWarnings(result?.warnings, fallback);
+    if (result?.status === false) throw new MoodleError(fallback);
 }
 
 /**
@@ -255,11 +269,13 @@ export async function getChoiceOptions(session: AulaSession, choiceid: number): 
 export async function submitChoiceResponse(session: AulaSession, choiceid: number, optionIds: number[]): Promise<void> {
     const params: Record<string, number> = { choiceid };
     optionIds.forEach((id, i) => (params[`responses[${i}]`] = id));
-    await callWs(session, "mod_choice_submit_choice_response", params);
+    const result = await callWs<WriteResult>(session, "mod_choice_submit_choice_response", params);
+    requireDone(result, "Moodle no guardó la respuesta.");
 }
 
 export async function deleteChoiceResponses(session: AulaSession, choiceid: number): Promise<void> {
-    await callWs(session, "mod_choice_delete_choice_responses", { choiceid });
+    const result = await callWs<WriteResult>(session, "mod_choice_delete_choice_responses", { choiceid });
+    requireDone(result, "Moodle no borró la respuesta.");
 }
 
 export async function getChoicegroupOptions(session: AulaSession, choicegroupid: number): Promise<ChoiceOption[]> {
@@ -290,11 +306,15 @@ export async function submitChoicegroupResponse(
         params[`data[${i}][name]`] = d.name;
         params[`data[${i}][value]`] = d.value;
     });
-    await callWs(session, "mod_choicegroup_submit_choicegroup_response", params);
+    const result = await callWs<WriteResult>(session, "mod_choicegroup_submit_choicegroup_response", params);
+    requireDone(result, "Moodle no guardó la elección de grupo.");
 }
 
 export async function deleteChoicegroupResponses(session: AulaSession, choicegroupid: number): Promise<void> {
-    await callWs(session, "mod_choicegroup_delete_choicegroup_responses", { choicegroupid });
+    const result = await callWs<WriteResult>(session, "mod_choicegroup_delete_choicegroup_responses", {
+        choicegroupid,
+    });
+    requireDone(result, "Moodle no borró la elección de grupo.");
 }
 
 // --- Mensajes ---
@@ -335,7 +355,7 @@ export async function createUserEvent(
     session: AulaSession,
     event: { name: string; description: string; timestart: number; timeduration: number },
 ): Promise<number> {
-    const { events } = await callWs<{ events: { id: number }[]; warnings: { message: string }[] }>(
+    const { events, warnings } = await callWs<{ events: { id: number }[]; warnings?: { message: string }[] }>(
         session,
         "core_calendar_create_calendar_events",
         {
@@ -347,7 +367,7 @@ export async function createUserEvent(
             "events[0][timeduration]": event.timeduration,
         },
     );
-    if (!events[0]) throw new MoodleError("Moodle no creó el evento.");
+    if (!events[0]) throw new MoodleError(warnings?.map((w) => w.message).join(" ") || "Moodle no creó el evento.");
     return events[0].id;
 }
 
