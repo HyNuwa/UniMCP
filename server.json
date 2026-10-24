@@ -1,0 +1,59 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.HyNuwa/unimcp",
+  "title": "UniMCP",
+  "description": "Aula virtual (Moodle) y SIU Guaraní de universidades argentinas: cursos, entregas, notas, historia.",
+  "repository": {
+    "url": "https://github.com/HyNuwa/UniMCP",
+    "source": "github",
+    "id": "1425101037"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "unimcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "UNI_CAMPUS",
+          "description": "Id del campus del registro (unju, unsa-exactas, uba-fiuba, utn-frba…). Sin definir, el que elegiste en `npx unimcp login`.",
+          "format": "string"
+        },
+        {
+          "name": "UNI_USER",
+          "description": "Usuario del aula, si no usás `npx unimcp login` (que lo guarda en el keychain).",
+          "format": "string"
+        },
+        {
+          "name": "UNI_PASS",
+          "description": "Contraseña del aula, si no usás `npx unimcp login`.",
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "UNI_GUARANI_USER",
+          "description": "Usuario de SIU Guaraní, si no usás `npx unimcp login`.",
+          "format": "string"
+        },
+        {
+          "name": "UNI_GUARANI_PASS",
+          "description": "Contraseña de SIU Guaraní, si no usás `npx unimcp login`.",
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "UNI_AULA_BASE_URL",
+          "description": "URL del Moodle si tu campus no está en el registro, por ejemplo https://virtual.tu-universidad.edu.ar.",
+          "format": "string"
+        },
+        {
+          "name": "UNI_GUARANI_URL",
+          "description": "URL de la autogestión de Guaraní si tu campus no está en el registro.",
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

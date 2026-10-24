@@ -2,6 +2,7 @@
   "name": "unimcp",
   "version": "0.1.0",
   "description": "Model Context Protocol server NO OFICIAL para universidades argentinas: aula virtual (Moodle) y SIU Guaraní.",
+  "mcpName": "io.github.HyNuwa/unimcp",
   "main": "build/index.js",
   "bin": {
     "unimcp": "build/index.js"
