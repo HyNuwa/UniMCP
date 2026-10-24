@@ -1,6 +1,8 @@
 # UniMCP: el puente entre tu agente y los sistemas de tu universidad
 Este es un Model Context Protocol server **NO OFICIAL** para universidades argentinas. Con él podés pedirle a tu agente (Claude, ChatGPT, etc.) que lea los apuntes del **aula virtual (Moodle)** y consulte tu **SIU Guaraní** y, con tu confirmación, que publique en los foros o entregue tareas. Corre en tu computadora o como servidor HTTP con OAuth.
 
+¿Sos alumno y no programás? Empezá por la [guía para alumnos](docs/guia-alumnos.md).
+
 ## Qué podés pedirle
 - *"¿Cuándo es el recuperatorio del primer parcial de Álgebra?"*
 - *"¿Qué avisó la profesora de Física esta semana?"*
