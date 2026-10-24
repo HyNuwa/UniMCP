@@ -1,4 +1,4 @@
-import { logger } from "../shared/logger.js";
+import { logger, masked } from "../shared/logger.js";
 
 export type AccessDecision = { allowed: true } | { allowed: false; reason: string; url?: string };
 
@@ -54,7 +54,7 @@ function remotePolicy(url: string, secret: string | undefined): AccessPolicy {
             if (data.permitido === true) return { allowed: true };
             return { allowed: false, reason: data.motivo || "Tu cuenta no está habilitada en este servidor.", url: data.url };
         } catch (e) {
-            logger.error(`No se pudo consultar el acceso de ${email}: ${(e as Error).message}`);
+            logger.error(`No se pudo consultar el acceso de ${masked(email)}: ${(e as Error).message}`);
             return { allowed: false, reason: "No pudimos verificar si tenés acceso: probá de nuevo en unos minutos." };
         }
     };

@@ -9,7 +9,7 @@ import {
 import { linkAulaAccount } from "../aula-virtual/client/link-account.js";
 import { InvalidCredentialsError } from "../aula-virtual/client/token-login.js";
 import { findCampus, listCampuses } from "../shared/campus.js";
-import { logger } from "../shared/logger.js";
+import { logger, masked } from "../shared/logger.js";
 import { escapeHtml, page } from "../shared/html-pages.js";
 import type { SessionStore } from "../shared/store/session-store.js";
 import type { AccessPolicy } from "./access.js";
@@ -214,7 +214,7 @@ export function mountOAuth(app: Express, { issuer, store, access, sameOrigin, re
             redirectUri: request.redirectUri,
             codeChallenge: request.codeChallenge,
         });
-        logger.info(`OAuth: ${account.username} (${account.campus}) autorizó a ${request.clientName ?? request.clientId}.`);
+        logger.info(`OAuth: usuario ${account.userId} (${account.campus}) autorizó a ${request.clientName ?? request.clientId}.`);
         redirectWith(res, request.redirectUri, { code, state: request.state, iss: issuer });
     });
 
@@ -275,7 +275,7 @@ export function mountOAuth(app: Express, { issuer, store, access, sameOrigin, re
             res.type("html").send(loginPage({ action: "/login", campus: String(req.body?.campus ?? ""), error })),
         );
         if (!account) return;
-        logger.info(`OAuth: ${account.username} (${account.campus}) renovó su sesión del aula.`);
+        logger.info(`OAuth: usuario ${account.userId} (${account.campus}) renovó su sesión del aula.`);
         res.type("html").send(page("Listo", "<p>Ya renovamos tu sesión del aula. Volvé al chat y pedile al agente que reintente.</p>"));
     });
 
@@ -303,7 +303,7 @@ export function mountOAuth(app: Express, { issuer, store, access, sameOrigin, re
         } catch (e) {
             if (e instanceof InvalidCredentialsError) retry("El aula rechazó el usuario o la contraseña.");
             else {
-                logger.error(`Login de ${username}: ${(e as Error).message}`);
+                logger.error(`Login de ${masked(username)} (${campus.id}): ${(e as Error).message}`);
                 retry("No pudimos entrar al aula. Puede que esté caída: probá de nuevo en unos minutos.");
             }
             return null;

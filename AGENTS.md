@@ -77,7 +77,7 @@ The user's token never leaves the server. The model and the user get URLs that o
 - **Text for people and for the model** (comments, errors, descriptions, logs) in Rioplatense Spanish with voseo: "corré `unimcp login`", "No tenés acceso al módulo".
 - **Actionable errors**: the message says what to do next. Our own errors are classes with a `name` (`MoodleError`, `LoginRequiredError`, `GuaraniLoginRequiredError`).
 - **Comments**: one-line JSDoc, or a little more, explaining the why or a platform fact. Constants state their unit or their origin.
-- **Logs**: always through `logger` from `shared/logger.ts`. It writes to stderr because stdout is the protocol's STDIO channel.
+- **Logs**: always through `logger` from `shared/logger.ts`. It writes to stderr because stdout is the protocol's STDIO channel. Logs never carry the aula username (it can be the DNI) or an email: log the store id of a linked account, or `masked(...)` otherwise; `test/logs.test.ts` fails if a log interpolates `username` or `email`.
 - **Env vars**: `UNI_*` for the user's campus and credentials, `UNIMCP_*` for the server (HTTP, store, keys).
 - **Imports**: ESM with the `.js` extension (`./client/client.js`), because of `module: Node16`.
 - **Moodle token**: the flow is described as the "launch.php flow" or "web service token". The `moodle_mobile_app` identifier stays as is, because it's the service's real name.
