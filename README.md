@@ -145,6 +145,8 @@ Instalado en tu computadora, todo queda ahí:
 
 Los links que el agente te pasa abren con la sesión de tu navegador y **nunca incluyen tu token**.
 
+Si encontrás una falla de seguridad, reportala en privado como explica [SECURITY.md](SECURITY.md).
+
 ## Desarrollo
 ```bash
 npm install
