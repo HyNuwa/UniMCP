@@ -4,42 +4,95 @@ import { VERSION } from "./version.js";
 /** Con quién habla el aula o Guaraní: si un admin ve tráfico raro, sabe de dónde viene. */
 export const USER_AGENT = `unimcp/${VERSION} (+https://github.com/HyNuwa/UniMCP)`;
 
+/**
+ * `maybeProcessed`: el pedido pudo haber llegado y el servidor pudo haberlo hecho aunque no haya
+ * respuesta (timeout, conexión cortada, un 5xx). Para una escritura, eso significa que no se sabe si se hizo.
+ */
 export class HttpError extends Error {
-    constructor(message: string, readonly status?: number) {
+    constructor(
+        message: string,
+        readonly status?: number,
+        readonly maybeProcessed = false,
+    ) {
         super(message);
         this.name = "HttpError";
     }
 }
 
-/** POST application/x-www-form-urlencoded con respuesta JSON y timeout. */
+/** Errores de red en los que el pedido no salió: el servidor no lo recibió. */
+const NOT_SENT = new Set(["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "EHOSTUNREACH", "ENETUNREACH"]);
+
+/** Reintentos ante 429 (y 503 en lo que se puede repetir), y la espera más larga que aceptamos. */
+const RETRIES = 2;
+const MAX_WAIT_MS = 10_000;
+
+export interface PostOptions {
+    timeoutMs?: number;
+    /** Repetirlo no cambia nada (una lectura): se reintenta también ante 503. */
+    idempotent?: boolean;
+}
+
+/**
+ * POST application/x-www-form-urlencoded con respuesta JSON y timeout. Ante 429 reintenta, esperando lo
+ * que diga `Retry-After`: el servidor rechazó el pedido sin hacerlo. Ante 503, solo si es `idempotent`.
+ */
 export async function postForm<T>(
     url: string,
     params: Record<string, string | number>,
-    timeoutMs = 30_000,
+    { timeoutMs = 30_000, idempotent = false }: PostOptions = {},
 ): Promise<T> {
+    const { host, pathname } = new URL(url);
     const body = new URLSearchParams(
         Object.entries(params).map(([k, v]) => [k, String(v)]),
     );
 
-    let res: Response;
-    try {
-        res = await fetch(url, {
-            method: "POST",
-            body,
-            headers: { "user-agent": USER_AGENT },
-            signal: AbortSignal.timeout(timeoutMs),
-        });
-    } catch (e) {
-        throw new HttpError(`No se pudo conectar con ${new URL(url).host}: ${(e as Error).message}`);
-    }
+    for (let attempt = 0; ; attempt++) {
+        let res: Response;
+        try {
+            res = await fetch(url, {
+                method: "POST",
+                body,
+                headers: { "user-agent": USER_AGENT },
+                signal: AbortSignal.timeout(timeoutMs),
+            });
+        } catch (e) {
+            const err = e as Error & { cause?: { code?: string } };
+            if (err.name === "TimeoutError") {
+                throw new HttpError(`${host} no contestó en ${timeoutMs / 1000} s`, undefined, true);
+            }
+            const sent = !NOT_SENT.has(err.cause?.code ?? "");
+            throw new HttpError(`No se pudo conectar con ${host}: ${err.message}`, undefined, sent);
+        }
 
-    if (!res.ok) throw new HttpError(`HTTP ${res.status} en ${new URL(url).pathname}`, res.status);
+        const busy = res.status === 429 || (res.status === 503 && idempotent);
+        if (busy && attempt < RETRIES) {
+            const waitMs = retryAfterMs(res.headers.get("retry-after")) ?? 500 * 2 ** attempt;
+            if (waitMs <= MAX_WAIT_MS) {
+                await res.body?.cancel();
+                await new Promise((resolve) => setTimeout(resolve, waitMs));
+                continue;
+            }
+        }
+        if (busy || res.status === 503) {
+            throw new HttpError(`${host} está saturado (HTTP ${res.status}); probá de nuevo en un rato.`, res.status);
+        }
+        if (!res.ok) throw new HttpError(`HTTP ${res.status} en ${pathname}`, res.status, res.status >= 500);
 
-    try {
-        return (await res.json()) as T;
-    } catch {
-        throw new HttpError(`Respuesta no JSON en ${new URL(url).pathname}`, res.status);
+        try {
+            return (await res.json()) as T;
+        } catch {
+            throw new HttpError(`Respuesta no JSON en ${pathname}`, res.status, true);
+        }
     }
+}
+
+/** `Retry-After` en milisegundos: viene en segundos o como fecha. */
+function retryAfterMs(header: string | null): number | undefined {
+    if (!header) return undefined;
+    const seconds = Number(header);
+    if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+    const date = Date.parse(header);
+    return Number.isNaN(date) ? undefined : Math.max(0, date - Date.now());
 }
 
 /** Cantidad de redirects que se siguen antes de abandonar. */

@@ -61,8 +61,8 @@ En las opciones 1 a 3, la contraseña (o la sesión SAML) pasa por el servidor i
 
 Hosteado, todos los pedidos de todos los alumnos salen de la IP del servidor. Para el firewall de la universidad, muchos logins distintos desde una misma IP se parecen a un ataque de credenciales, y un bloqueo deja sin servicio a todos a la vez. Por eso:
 
-- Límites de frecuencia conservadores por plataforma, para todo el servidor y por alumno, sobre todo en los logins (`token.php`, el formulario de G3W). Hoy solo limitamos los intentos contra nuestro propio login (`RateLimiter` en `src/oauth/`), no lo que le pedimos a la universidad.
-- Reintentos con espera creciente, y frenar todo ante un 429, un 403 o una página de bloqueo, en lugar de insistir.
+- Límites de frecuencia conservadores por plataforma, para todo el servidor y por alumno, sobre todo en los logins (`token.php`, el formulario de G3W). Hoy limitamos los intentos contra nuestro propio login (`RateLimiter` en `src/oauth/`) y los pedidos simultáneos de cada sesión al web service del aula (6, en `web-service.ts`); falta un límite para todo el servidor y para los logins contra la universidad.
+- Reintentos con espera creciente, y frenar todo ante un 429, un 403 o una página de bloqueo, en lugar de insistir. El web service del aula ya reintenta dos veces ante 429 (y 503 en las lecturas) respetando `Retry-After`, y no insiste si pide esperar más de 10 s; falta frenar todo el servidor.
 - La opción 2 de Guaraní (mantener viva la sesión) es la más expuesta: un pedido por alumno cada pocos minutos. Si se usa, solo mientras hay una conversación activa.
 - Avisarle a la universidad antes de abrirlo a más alumnos. Además de evitar el bloqueo, es la puerta para la opción 3.
 

@@ -4,7 +4,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { afterEach, describe, test } from "node:test";
-import { getSiteInfo, getUserCourses } from "../src/aula-virtual/client/moodle.js";
+import { deletePost, getSiteInfo, getUserCourses } from "../src/aula-virtual/client/moodle.js";
+import { callWs } from "../src/aula-virtual/client/web-service.js";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import { fetchWithCookies } from "../src/shared/http.js";
 import { CookieJar } from "tough-cookie";
@@ -75,5 +76,64 @@ describe("User-Agent", () => {
         await fetchWithCookies(new CookieJar(), "https://guarani.test/acceso");
         const { version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
         assert.deepEqual(agents, Array(2).fill(`unimcp/${version} (+https://github.com/HyNuwa/UniMCP)`));
+    });
+});
+
+describe("cuidar el aula", () => {
+    test("nunca más de 6 pedidos a la vez por sesión", async () => {
+        let inFlight = 0;
+        let most = 0;
+        globalThis.fetch = (async () => {
+            most = Math.max(most, ++inFlight);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            inFlight--;
+            return Response.json([]);
+        }) as typeof fetch;
+        const session = sessionWith(() => "tok");
+        const calls = Array.from({ length: 30 }, () => callWs(session, "core_course_get_updates_since"));
+        const results = await Promise.all(calls);
+        assert.equal(results.length, 30);
+        assert.equal(most, 6);
+    });
+
+    /** Contesta los `statuses` en orden y después 200; devuelve cuántos pedidos llegaron. */
+    function mockStatuses(...statuses: number[]) {
+        let calls = 0;
+        globalThis.fetch = (async () => {
+            const status = statuses[calls++];
+            if (!status) return Response.json({ userid: 7, status: true, warnings: [] });
+            return new Response("", { status, headers: { "retry-after": "0" } });
+        }) as typeof fetch;
+        return () => calls;
+    }
+
+    test("ante 429 espera y reintenta, también una escritura: no se hizo", async () => {
+        const calls = mockStatuses(429, 429);
+        await deletePost(sessionWith(() => "tok"), 1);
+        assert.equal(calls(), 3);
+    });
+
+    test("ante 503 reintenta una lectura, nunca una escritura", async () => {
+        let calls = mockStatuses(503);
+        assert.equal((await getSiteInfo(sessionWith(() => "tok-503"))).userid, 7);
+        assert.equal(calls(), 2);
+
+        calls = mockStatuses(503);
+        await assert.rejects(deletePost(sessionWith(() => "tok"), 1), /saturado/);
+        assert.equal(calls(), 1);
+    });
+
+    test("si sigue saturado, o pide esperar demasiado, lo dice", async () => {
+        const calls = mockStatuses(429, 429, 429);
+        await assert.rejects(getUserCourses(sessionWith(() => "tok-429")), /aula.test está saturado \(HTTP 429\)/);
+        assert.equal(calls(), 3);
+
+        let asked = 0;
+        globalThis.fetch = (async () => {
+            asked++;
+            return new Response("", { status: 429, headers: { "retry-after": "3600" } });
+        }) as typeof fetch;
+        await assert.rejects(getUserCourses(sessionWith(() => "tok-espera")), /saturado/);
+        assert.equal(asked, 1);
     });
 });

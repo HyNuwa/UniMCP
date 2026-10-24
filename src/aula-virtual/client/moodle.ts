@@ -1,4 +1,4 @@
-import { callWs, MoodleError } from "./web-service.js";
+import { callWs, MoodleError, WRITE } from "./web-service.js";
 import type { AulaSession } from "./session.js";
 import type {
     ActionEvent,
@@ -144,7 +144,7 @@ export async function addDiscussion(
         forumid,
         subject,
         message,
-    });
+    }, WRITE);
     return discussionid;
 }
 
@@ -159,7 +159,7 @@ export async function addDiscussionPost(
         postid,
         subject,
         message,
-    });
+    }, WRITE);
     return newPostId;
 }
 
@@ -170,13 +170,18 @@ export async function updateDiscussionPost(
     subject: string,
     message: string,
 ): Promise<void> {
-    const result = await callWs<WriteResult>(session, "mod_forum_update_discussion_post", { postid, subject, message });
+    const result = await callWs<WriteResult>(
+        session,
+        "mod_forum_update_discussion_post",
+        { postid, subject, message },
+        WRITE,
+    );
     requireDone(result, "Moodle no editó la publicación.");
 }
 
 /** Borra una publicación; borrar la primera elimina la discusión. */
 export async function deletePost(session: AulaSession, postid: number): Promise<void> {
-    const result = await callWs<WriteResult>(session, "mod_forum_delete_post", { postid });
+    const result = await callWs<WriteResult>(session, "mod_forum_delete_post", { postid }, WRITE);
     requireDone(result, "Moodle no borró la publicación.");
 }
 
@@ -236,7 +241,7 @@ export async function saveSubmission(
         params["plugindata[onlinetext_editor][format]"] = data.text.format;
         params["plugindata[onlinetext_editor][itemid]"] = data.text.itemid;
     }
-    const warnings = await callWs<{ message: string }[]>(session, "mod_assign_save_submission", params);
+    const warnings = await callWs<{ message: string }[]>(session, "mod_assign_save_submission", params, WRITE);
     throwOnWarnings(warnings, "Moodle no guardó la entrega.");
 }
 
@@ -249,7 +254,7 @@ export async function submitForGrading(
     const warnings = await callWs<{ message: string }[]>(session, "mod_assign_submit_for_grading", {
         assignmentid,
         acceptsubmissionstatement: acceptStatement ? 1 : 0,
-    });
+    }, WRITE);
     throwOnWarnings(warnings, "Moodle no envió la entrega.");
 }
 
@@ -262,7 +267,7 @@ export async function removeSubmission(session: AulaSession, assignid: number): 
     const warnings = await callWs<{ message: string }[]>(session, "mod_assign_remove_submission", {
         userid,
         assignid,
-    });
+    }, WRITE);
     throwOnWarnings(warnings, "Moodle no quitó la entrega.");
 }
 
@@ -285,12 +290,12 @@ export async function getChoiceOptions(session: AulaSession, choiceid: number): 
 export async function submitChoiceResponse(session: AulaSession, choiceid: number, optionIds: number[]): Promise<void> {
     const params: Record<string, number> = { choiceid };
     optionIds.forEach((id, i) => (params[`responses[${i}]`] = id));
-    const result = await callWs<WriteResult>(session, "mod_choice_submit_choice_response", params);
+    const result = await callWs<WriteResult>(session, "mod_choice_submit_choice_response", params, WRITE);
     requireDone(result, "Moodle no guardó la respuesta.");
 }
 
 export async function deleteChoiceResponses(session: AulaSession, choiceid: number): Promise<void> {
-    const result = await callWs<WriteResult>(session, "mod_choice_delete_choice_responses", { choiceid });
+    const result = await callWs<WriteResult>(session, "mod_choice_delete_choice_responses", { choiceid }, WRITE);
     requireDone(result, "Moodle no borró la respuesta.");
 }
 
@@ -322,14 +327,19 @@ export async function submitChoicegroupResponse(
         params[`data[${i}][name]`] = d.name;
         params[`data[${i}][value]`] = d.value;
     });
-    const result = await callWs<WriteResult>(session, "mod_choicegroup_submit_choicegroup_response", params);
+    const result = await callWs<WriteResult>(
+        session,
+        "mod_choicegroup_submit_choicegroup_response",
+        params,
+        WRITE,
+    );
     requireDone(result, "Moodle no guardó la elección de grupo.");
 }
 
 export async function deleteChoicegroupResponses(session: AulaSession, choicegroupid: number): Promise<void> {
     const result = await callWs<WriteResult>(session, "mod_choicegroup_delete_choicegroup_responses", {
         choicegroupid,
-    });
+    }, WRITE);
     requireDone(result, "Moodle no borró la elección de grupo.");
 }
 
@@ -359,6 +369,7 @@ export async function sendInstantMessage(session: AulaSession, touserid: number,
         session,
         "core_message_send_instant_messages",
         { "messages[0][touserid]": touserid, "messages[0][text]": html, "messages[0][textformat]": 1 },
+        WRITE,
     );
     if (!res || res.msgid === -1) throw new MoodleError(res?.errormessage || "Moodle no aceptó el mensaje.");
     return res.msgid;
@@ -382,6 +393,7 @@ export async function createUserEvent(
             "events[0][timestart]": event.timestart,
             "events[0][timeduration]": event.timeduration,
         },
+        WRITE,
     );
     if (!events[0]) throw new MoodleError(warnings?.map((w) => w.message).join(" ") || "Moodle no creó el evento.");
     return events[0].id;

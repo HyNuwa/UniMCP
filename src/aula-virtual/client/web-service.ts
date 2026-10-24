@@ -1,4 +1,5 @@
-import { postForm, USER_AGENT } from "../../shared/http.js";
+import { HttpError, postForm, USER_AGENT } from "../../shared/http.js";
+import { Limiter } from "../../shared/limit.js";
 import type { AulaSession } from "./session.js";
 
 const TOKEN_ERRORS = new Set(["invalidtoken", "expiredtoken"]);
@@ -7,6 +8,17 @@ export class MoodleError extends Error {
     constructor(message: string, readonly errorcode?: string) {
         super(message);
         this.name = "MoodleError";
+    }
+}
+
+/** Una escritura que pudo haberse hecho aunque no llegó la respuesta: reintentarla puede hacerla dos veces. */
+export class UncertainWriteError extends Error {
+    constructor(cause: string) {
+        super(
+            `No sé si el aula hizo el cambio (${cause}). Antes de reintentar, revisá en el aula si ya quedó ` +
+                "hecho, para no hacerlo dos veces.",
+        );
+        this.name = "UncertainWriteError";
     }
 }
 
@@ -19,23 +31,46 @@ interface MoodleException {
 const isException = (data: unknown): data is MoodleException =>
     typeof data === "object" && data !== null && "exception" in data;
 
+/** Pedidos simultáneos de una sesión al aula: los mismos que abre un navegador por sitio. */
+const MAX_PARALLEL = 6;
+const limiters = new WeakMap<AulaSession, Limiter>();
+
+/** Lo que una tool lanza en paralelo (un pedido por curso o por módulo) espera su turno. */
+function limited<T>(session: AulaSession, task: () => Promise<T>): Promise<T> {
+    let limiter = limiters.get(session);
+    if (!limiter) limiters.set(session, (limiter = new Limiter(MAX_PARALLEL)));
+    return limiter.run(task);
+}
+
+/** Opciones de `callWs` para una función que cambia algo en el aula. */
+export const WRITE = { write: true } as const;
+
 /**
  * Llama a una función del web service de Moodle y, si el token venció, lo renueva una vez y reintenta.
+ * Con `WRITE`, nunca reintenta un pedido que pudo haberse hecho, y si no se sabe, lo dice.
  */
 export async function callWs<T>(
     session: AulaSession,
     wsfunction: string,
     params: Record<string, string | number> = {},
+    { write = false }: { write?: boolean } = {},
 ): Promise<T> {
     let token = await session.getToken();
 
     for (let attempt = 0; ; attempt++) {
-        const data = await postForm<T | MoodleException>(`${session.site.baseUrl}/webservice/rest/server.php`, {
-            ...params,
-            wstoken: token,
-            wsfunction,
-            moodlewsrestformat: "json",
-        });
+        let data: T | MoodleException;
+        try {
+            data = await limited(session, () =>
+                postForm<T | MoodleException>(
+                    `${session.site.baseUrl}/webservice/rest/server.php`,
+                    { ...params, wstoken: token, wsfunction, moodlewsrestformat: "json" },
+                    { idempotent: !write },
+                ),
+            );
+        } catch (e) {
+            if (write && e instanceof HttpError && e.maybeProcessed) throw new UncertainWriteError(e.message);
+            throw e;
+        }
         if (!isException(data)) return data;
 
         if (attempt === 0 && data.errorcode && TOKEN_ERRORS.has(data.errorcode)) {
@@ -63,10 +98,9 @@ export async function fetchFile(
 
         let res: Response;
         try {
-            res = await fetch(withToken, {
-                headers: { "user-agent": USER_AGENT },
-                signal: AbortSignal.timeout(60_000),
-            });
+            res = await limited(session, () =>
+                fetch(withToken, { headers: { "user-agent": USER_AGENT }, signal: AbortSignal.timeout(60_000) }),
+            );
         } catch (e) {
             throw new MoodleError(`No se pudo bajar el archivo: ${(e as Error).message}`);
         }

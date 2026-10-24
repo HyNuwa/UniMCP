@@ -39,6 +39,8 @@ Before adding a Moodle, check `tool_mobile_get_public_config` returns `enablemob
 
 The server serves many students at once, so authentication state is never global. Every function that touches a platform receives the user's session as its first parameter (`AulaSession`, `GuaraniSession`), and `createServer` receives them from outside. Store users are keyed by `(campus, username)`.
 
+Requests to the aula go through `callWs`, which keeps at most 6 in flight per session and retries a 429 (and a 503 on reads) honoring `Retry-After`. A web service function that changes something is called with `WRITE`: it is never retried when it may have been done, and when the response didn't arrive (timeout, a dropped connection, a 5xx) it fails with `UncertainWriteError`, which says to check the aula before retrying. `test/writes.test.ts` lists every write.
+
 The user's token never leaves the server. The model and the user get URLs that open with the browser session (`userFacingUrl`). Before sending the token or the cookies to a URL that came from the model, validate that it belongs to the user's platform (`downloadUrl` in the aula, `pageUrl` in Guaraní).
 
 ## SIU Guaraní
