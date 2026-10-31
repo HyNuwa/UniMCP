@@ -1,3 +1,4 @@
+import { CONFIRMATION_TTL_MS, confirmationProblem, fingerprint, issueConfirmation } from "../../shared/confirmation.js";
 import { textToHtml } from "../../shared/html.js";
 import {
     addDiscussion,
@@ -8,8 +9,11 @@ import {
     deletePost,
     getChoiceOptions,
     getChoicegroupOptions,
+    getCourseRoles,
     getDiscussionPosts,
     getMemberName,
+    getSiteInfo,
+    getUserCourses,
     sendInstantMessage,
     submitChoiceResponse,
     submitChoicegroupResponse,
@@ -19,7 +23,7 @@ import type { AulaSession } from "../client/session.js";
 import type { ChoiceOption, ForumPost } from "../client/types.js";
 import { toOption } from "./activities.js";
 import { discussionAddr, formatAddress, parseAddress } from "./address.js";
-import { isoDate } from "./fields.js";
+import { cleanName, isoDate } from "./fields.js";
 import { findModule } from "./navigation.js";
 
 // --- Foros ---
@@ -182,15 +186,80 @@ const CHOICE_APIS: Record<string, ChoiceApi> = {
 
 // --- Mensajes ---
 
-export async function sendMessage(session: AulaSession, userId: number, message: string) {
+/** Caracteres de un mensaje: alcanza para cualquier consulta y no para volcar lo que se leyó en el aula. */
+export const MAX_MESSAGE_CHARS = 4000;
+
+/**
+ * Lo que deja el filtro de privacidad. En un mensaje delata texto copiado de una respuesta de tool, que
+ * es como un prompt injection le saca al alumno lo que leyó.
+ */
+const PRIVACY_MARKS = /\[(DNI|email|teléfono)\]|\[Lista de \d+ personas/;
+
+const ROLE_LABELS: Record<string, string> = {
+    editingteacher: "docente",
+    teacher: "docente sin edición",
+    student: "estudiante",
+    manager: "gestor",
+};
+
+/**
+ * Un mensaje privado en dos pasos: sin `confirmation`, la vista previa con el destinatario y su rol en los
+ * cursos que comparten; con el código, se manda. Solo a alguien que comparte un curso con el usuario: un
+ * id que no, viene de otro lado.
+ */
+export async function sendMessage(session: AulaSession, userId: number, message: string, confirmation?: string) {
+    if (message.length > MAX_MESSAGE_CHARS) {
+        throw new Error(`El mensaje tiene ${message.length} caracteres y se mandan hasta ${MAX_MESSAGE_CHARS}: acortalo.`);
+    }
+    if (PRIVACY_MARKS.test(message)) {
+        throw new Error(
+            "El mensaje trae datos que UniMCP tapó ([DNI], [email], una lista resumida): parece copiado de una " +
+                "respuesta de una tool. No lo mando: escribilo con lo que el usuario quiere decir.",
+        );
+    }
     // Primero se busca el nombre: con un id equivocado, el mensaje le llegaría a otra persona y nadie
     // se enteraría.
     const name = await getMemberName(session, userId);
     if (!name) {
         throw new Error(`No existe el usuario ${userId}. El id sale del \`autorId\` de un foro abierto con aula_open.`);
     }
+    const roles = await sharedRoles(session, userId);
+    if (!roles.length) {
+        throw new Error(
+            `${name} no comparte ningún curso con vos: desde UniMCP solo se les escribe a docentes y compañeros ` +
+                "de tus cursos. Si de verdad querés escribirle, hacelo desde el aula en el navegador.",
+        );
+    }
+
+    const { userid } = await getSiteInfo(session);
+    const print = fingerprint({ sitio: session.site.baseUrl, usuario: userid, para: userId, mensaje: message });
+    if (confirmation === undefined) {
+        return {
+            vistaPrevia: "Todavía no se mandó nada.",
+            para: name,
+            rol: roles.join("; "),
+            mensaje: message,
+            confirmacion: issueConfirmation(print),
+            aviso:
+                "Mostrale al usuario a quién le llega, con su rol, y el mensaje. Si está de acuerdo, llamá de " +
+                `nuevo con los mismos parámetros y \`confirmacion\`; vence en ${CONFIRMATION_TTL_MS / 60_000} minutos.`,
+        };
+    }
+    const problem = confirmationProblem(confirmation, print);
+    if (problem) throw new Error(problem);
     await sendInstantMessage(session, userId, textToHtml(message));
     return { enviado: true, para: name };
+}
+
+/** "docente en Física II" por cada curso del usuario donde está el otro. */
+async function sharedRoles(session: AulaSession, userId: number): Promise<string[]> {
+    const courses = await getUserCourses(session);
+    const found = await Promise.all(
+        courses.map(async (c) => ({ course: c, roles: await getCourseRoles(session, userId, c.id) })),
+    );
+    return found
+        .filter((f) => f.roles.length)
+        .map((f) => `${f.roles.map((r) => r.name || ROLE_LABELS[r.shortname] || r.shortname).join(", ")} en ${cleanName(f.course.fullname)}`);
 }
 
 // --- Calendario ---

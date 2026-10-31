@@ -67,7 +67,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | `aula_assign_submit` | Entrega una tarea: sube archivos de tu compu, escribe el texto en línea y confirma el envío. Primero muestra una vista previa (qué archivos se suman, cuáles quedan y cuáles se quitan) y entrega recién cuando confirmás. |
 | `aula_assign_upload_link` | Solo en modo HTTP: un link para subir los archivos de una entrega. |
 | `aula_choice_answer` | Responde una elección o te anota en un grupo. |
-| `aula_send_message` | Manda un mensaje privado a un docente o compañero. |
+| `aula_send_message` | Manda un mensaje privado a un docente o compañero de tus cursos. Primero muestra a quién le llega y con qué rol, y lo manda recién cuando confirmás. |
 | `aula_calendar_add_event` | Agrega un recordatorio a tu calendario del aula. |
 
 También trae un **prompt**, `aula_plan_semana` (en Claude Desktop, en el menú "+"): arma el plan de la semana con lo que tenés que entregar, lo nuevo en el aula y cómo vas en cada materia.

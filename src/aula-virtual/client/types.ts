@@ -195,6 +195,12 @@ export interface QuizAttempt {
     sumgrades: number | null;
 }
 
+/** Rol en un curso; `name` viene vacío en los roles de fábrica y vale `shortname`. */
+export interface Role {
+    name: string;
+    shortname: string;
+}
+
 export interface ChoiceOption {
     id: number;
     /** Texto de la opción en choice; en choicegroup está en `name`. */

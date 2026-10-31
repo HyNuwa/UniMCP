@@ -77,7 +77,14 @@ export const TOOL_FUNCTIONS: Record<string, { needs: string[]; partial?: Record<
             mod_choicegroup_delete_choicegroup_responses: CHOICEGROUP,
         },
     },
-    aula_send_message: { needs: ["core_message_get_member_info", "core_message_send_instant_messages"] },
+    aula_send_message: {
+        needs: [
+            "core_enrol_get_users_courses",
+            "core_user_get_course_user_profiles",
+            "core_message_get_member_info",
+            "core_message_send_instant_messages",
+        ],
+    },
     aula_assign_submit: {
         needs: [
             "core_enrol_get_users_courses",

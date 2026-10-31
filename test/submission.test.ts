@@ -132,7 +132,7 @@ test("con el código de la vista previa entrega, y el mismo código no sirve dos
     assert.equal(state.saves, 1);
     await assert.rejects(
         submitAssignment(session, ADDRESS, request({ files, confirmation: confirmacion }), local),
-        /cambió desde entonces \(o ya se hizo\)/,
+        /ya se usó|cambió desde entonces/,
     );
     assert.equal(state.saves, 1);
 });
@@ -173,8 +173,9 @@ test("dejarla sin nada avisa que borra la entrega, y si el aula no deja, lo dice
 
 test("un código vencido o mal copiado no vale", () => {
     const code = issueConfirmation("huella", 0);
-    assert.equal(confirmationProblem(code, "huella", 1), undefined);
     assert.match(confirmationProblem(code, "huella", CONFIRMATION_TTL_MS + 1) ?? "", /venció/);
+    assert.equal(confirmationProblem(code, "huella", 1), undefined);
+    assert.match(confirmationProblem(code, "huella", 2) ?? "", /ya se usó/);
     assert.match(confirmationProblem("basura", "huella") ?? "", /no es válido/);
     // Cambiar el vencimiento rompe la firma: no se puede estirar.
     const [, mac] = code.split(".");

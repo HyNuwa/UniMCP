@@ -11,6 +11,7 @@ import {
     deleteForumPost,
     editForumPost,
     postToForum,
+    MAX_MESSAGE_CHARS,
     sendMessage,
 } from "./format/writes.js";
 import { ROOT } from "./format/address.js";
@@ -576,9 +577,17 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "Manda un mensaje privado por la mensajería del aula virtual a otro usuario, docente o " +
                 "compañero. El `usuarioId` sale del `autorId` de una discusión abierta con aula_open, o del " +
                 "`usuarioId` de una conversación de aula_list_messages para responderle: no lo inventes ni lo " +
-                "deduzcas del nombre. La respuesta trae el nombre del destinatario." +
-                CONFIRM_FIRST +
-                " Incluí a quién va dirigido.",
+                "deduzcas del nombre. Solo a alguien que comparte un curso con el usuario, y hasta " +
+                `${MAX_MESSAGE_CHARS} caracteres.
+
+` +
+                "Se llama dos veces. La primera, sin `confirmacion`, no manda nada: devuelve la vista previa con " +
+                "a quién le llega (`para`), su `rol` en los cursos que comparten y el `mensaje`, y un " +
+                "`confirmacion`. Mostrásela al usuario y, si está de acuerdo, llamá de nuevo con los mismos " +
+                "parámetros y ese `confirmacion`. Cada código sirve una vez." +
+                `
+
+${ON_REQUEST}`,
             inputSchema: z.object({
                 usuarioId: z
                     .number()
@@ -591,12 +600,19 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                     .string()
                     .min(1)
                     .describe('Texto del mensaje, en texto plano. Ej: "Profe, ¿puedo rendir el recuperatorio el viernes?"'),
+                confirmacion: z
+                    .string()
+                    .optional()
+                    .describe(
+                        "El `confirmacion` de la vista previa, después de que el usuario esté de acuerdo. Sin él no " +
+                            'se manda nada. Ej: "1761930000000.Zk3pQ8vX1mR7tY2wB5nC9dF4gH6jK0lA3sE8uI1oP2q".',
+                    ),
             }),
             annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
         },
-        async ({ usuarioId, mensaje }) => {
+        async ({ usuarioId, mensaje, confirmacion }) => {
             try {
-                return json(await sendMessage(session, usuarioId, mensaje));
+                return json(await sendMessage(session, usuarioId, mensaje, confirmacion));
             } catch (e) {
                 return failure(e);
             }

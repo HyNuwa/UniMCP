@@ -21,6 +21,7 @@ import type {
     PublicConfig,
     Quiz,
     QuizAttempt,
+    Role,
     Message,
     MessageMember,
     SiteInfo,
@@ -390,6 +391,20 @@ export async function deleteChoicegroupResponses(session: AulaSession, choicegro
 }
 
 // --- Mensajes ---
+
+/** Roles de otro usuario en un curso; vacío si no está inscripto o el usuario no lo puede ver. */
+export async function getCourseRoles(session: AulaSession, userId: number, courseId: number): Promise<Role[]> {
+    try {
+        const profiles = await callWs<{ id: number; roles?: Role[] }[]>(session, "core_user_get_course_user_profiles", {
+            "userlist[0][userid]": userId,
+            "userlist[0][courseid]": courseId,
+        });
+        return profiles.find((p) => p.id === userId)?.roles ?? [];
+    } catch (e) {
+        if (e instanceof MoodleError) return [];
+        throw e;
+    }
+}
 
 /** Nombre de otro usuario tal como lo ve el usuario logueado; null si no existe. */
 export async function getMemberName(session: AulaSession, userId: number): Promise<string | null> {
