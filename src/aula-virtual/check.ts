@@ -24,7 +24,11 @@ export const TOOL_FUNCTIONS: Record<string, { needs: string[]; partial?: Record<
             "mod_choice_get_choices_by_courses",
             "mod_choice_get_choice_options",
         ],
-        partial: { mod_choicegroup_get_choicegroup_options: CHOICEGROUP },
+        partial: {
+            mod_choicegroup_get_choicegroup_options: CHOICEGROUP,
+            mod_quiz_get_quizzes_by_courses: "las fechas de los cuestionarios",
+            mod_quiz_get_user_attempts: "los intentos hechos en un cuestionario",
+        },
     },
     aula_search: {
         needs: ["core_enrol_get_users_courses", "core_course_get_contents", "mod_forum_get_forum_discussions"],

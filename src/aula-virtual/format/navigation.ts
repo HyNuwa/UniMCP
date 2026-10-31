@@ -20,7 +20,7 @@ import {
 import type { AulaSite } from "../../shared/campus.js";
 import type { AulaSession } from "../client/session.js";
 import type { CourseModule, CourseSection, ForumPost } from "../client/types.js";
-import { viewChoice, viewChoicegroup, viewSubmission } from "./activities.js";
+import { viewChoice, viewChoicegroup, viewQuiz, viewSubmission } from "./activities.js";
 import { cleanName, isoDate, richText, safeLink, toFile, toFileSummary } from "./fields.js";
 import { BUDGET_CHARS } from "./files.js";
 
@@ -249,6 +249,8 @@ async function viewModule(session: AulaSession, address: ModuleAddress, page: nu
             return { ...base, eleccion: await viewChoice(session, address.courseId, module) };
         case "choicegroup":
             return { ...base, eleccion: await viewChoicegroup(session, module) };
+        case "quiz":
+            return { ...base, cuestionario: await viewQuiz(session, address.courseId, module) };
         default:
             return base;
     }

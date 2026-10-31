@@ -105,7 +105,9 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "web, la descripción entera y todos los datos de sus archivos.\n\n" +
                 "Según el tipo de módulo trae además: en una tarea (assign), `entrega` con el estado, el " +
                 "vencimiento, lo que se subió y la devolución con la nota; en una elección (choice) o " +
-                "selección de grupos (choicegroup), `eleccion` con las opciones y sus ids; en un foro, " +
+                "selección de grupos (choicegroup), `eleccion` con las opciones y sus ids; en un cuestionario " +
+                "(quiz), `cuestionario` con su `estado` (abierto, cerrado o todavía no abre), las fechas, el " +
+                "límite de tiempo y los intentos que quedan (nunca las preguntas); en un foro, " +
                 "`puedeAbrirHilo`; en una discusión, el `id`, el `autorId` y las `acciones` permitidas de " +
                 "cada publicación. Es lo que piden las tools que escriben en el aula.\n\n" +
                 "No hace falta armar la dirección: cada respuesta trae las direcciones de lo que hay adentro " +

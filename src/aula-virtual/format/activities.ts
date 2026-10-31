@@ -4,11 +4,14 @@ import {
     getChoiceOptions,
     getChoicegroupOptions,
     getChoices,
+    getQuizAttempts,
+    getQuizzes,
     getSubmissionStatus,
 } from "../client/moodle.js";
+import { MoodleError } from "../client/web-service.js";
 import type { AulaSite } from "../../shared/campus.js";
 import type { AulaSession } from "../client/session.js";
-import type { AssignPlugin, ChoiceOption, CourseModule, MoodleFile } from "../client/types.js";
+import type { AssignPlugin, ChoiceOption, CourseModule, MoodleFile, Quiz, QuizAttempt } from "../client/types.js";
 import { isoDate, richText, toFile } from "./fields.js";
 
 const SUBMISSION_STATUS_LABELS: Record<string, string> = {
@@ -88,6 +91,62 @@ function pluginContent(site: AulaSite, plugins: AssignPlugin[] = []) {
     return {
         archivos: files.length ? files.map(toFile) : undefined,
         texto: texts.length ? texts.join("\n\n") : undefined,
+    };
+}
+
+const ATTEMPT_STATE_LABELS: Record<string, string> = {
+    inprogress: "en curso",
+    overdue: "vencido sin enviar",
+    finished: "terminado",
+    abandoned: "abandonado",
+};
+
+/**
+ * Fechas, límite de tiempo e intentos de un cuestionario. El `estado` se calcula acá contra `now`: con
+ * las fechas solas, el modelo dio por vigente uno que ya había cerrado. `now` se inyecta en los tests.
+ */
+export async function viewQuiz(session: AulaSession, courseId: number, module: CourseModule, now = new Date()) {
+    const [quizzes, attempts] = await Promise.all([
+        getQuizzes(session, courseId),
+        // Un aula que no deja ver los intentos no impide mostrar las fechas.
+        getQuizAttempts(session, module.instance).catch((e) => {
+            if (e instanceof MoodleError) return undefined;
+            throw e;
+        }),
+    ]);
+    const quiz = quizzes.find((q) => q.coursemodule === module.id);
+    if (!quiz) return { aviso: "El aula no mostró la configuración de este cuestionario: mirá sus fechas en su `url`." };
+
+    const seconds = now.getTime() / 1000;
+    const state =
+        quiz.timeopen && seconds < quiz.timeopen
+            ? "todavía no abre"
+            : quiz.timeclose && seconds > quiz.timeclose
+              ? "cerrado"
+              : "abierto";
+    const made = attempts?.length ?? 0;
+    return {
+        estado: state,
+        abre: isoDate(quiz.timeopen) || undefined,
+        cierra: isoDate(quiz.timeclose) || undefined,
+        // Que no traiga `cierra` no dice si no tiene o si no se pudo leer: se dice.
+        sinCierre: !quiz.timeclose || undefined,
+        limiteMinutos: quiz.timelimit ? Math.round(quiz.timelimit / 60) : undefined,
+        intentosPermitidos: quiz.attempts || "sin límite",
+        intentosQuedan: attempts && quiz.attempts ? Math.max(quiz.attempts - made, 0) : undefined,
+        intentos: attempts?.map((a) => toAttempt(a, quiz)),
+    };
+}
+
+function toAttempt(a: QuizAttempt, quiz: Quiz) {
+    const scale = quiz.grade && quiz.sumgrades ? quiz.grade / quiz.sumgrades : undefined;
+    return {
+        numero: a.attempt,
+        estado: ATTEMPT_STATE_LABELS[a.state] ?? a.state,
+        empezado: isoDate(a.timestart) || undefined,
+        terminado: isoDate(a.timefinish) || undefined,
+        // Sin `nota`, el docente todavía no deja ver el puntaje.
+        nota: a.sumgrades !== null && scale ? `${Math.round(a.sumgrades * scale * 100) / 100} / ${quiz.grade}` : undefined,
     };
 }
 

@@ -19,6 +19,8 @@ import type {
     GradeItem,
     ModuleInfo,
     PublicConfig,
+    Quiz,
+    QuizAttempt,
     Message,
     MessageMember,
     SiteInfo,
@@ -293,6 +295,26 @@ export async function removeSubmission(session: AulaSession, assignid: number): 
         assignid,
     }, WRITE);
     throwOnWarnings(warnings, "Moodle no quitó la entrega.");
+}
+
+// --- Cuestionarios (quiz) ---
+// Solo configuración e intentos: nunca preguntas, respuestas ni empezar un intento, que son decisiones
+// de integridad académica.
+
+export async function getQuizzes(session: AulaSession, courseId: number): Promise<Quiz[]> {
+    const { quizzes } = await callWs<{ quizzes: Quiz[] }>(session, "mod_quiz_get_quizzes_by_courses", {
+        "courseids[0]": courseId,
+    });
+    return quizzes;
+}
+
+/** Los intentos del usuario, terminados o no. */
+export async function getQuizAttempts(session: AulaSession, quizid: number): Promise<QuizAttempt[]> {
+    const { attempts } = await callWs<{ attempts: QuizAttempt[] }>(session, "mod_quiz_get_user_attempts", {
+        quizid,
+        status: "all",
+    });
+    return attempts;
 }
 
 // --- Elecciones (choice) y selección de grupos (choicegroup) ---

@@ -171,6 +171,30 @@ export interface Choice {
     timeclose: number;
 }
 
+/** Configuración de un cuestionario: fechas e intentos, sin preguntas. */
+export interface Quiz {
+    id: number;
+    coursemodule: number;
+    timeopen: number;
+    timeclose: number;
+    /** En segundos; 0 sin límite. */
+    timelimit: number;
+    /** Intentos permitidos; 0 sin límite. */
+    attempts: number;
+    /** Nota máxima del cuestionario, y la suma de puntajes de sus preguntas con la que se escala. */
+    grade?: number;
+    sumgrades?: number | null;
+}
+
+export interface QuizAttempt {
+    attempt: number;
+    state: "inprogress" | "overdue" | "finished" | "abandoned" | string;
+    timestart: number;
+    timefinish: number;
+    /** Puntaje sin escalar; null si el docente no deja verlo todavía. */
+    sumgrades: number | null;
+}
+
 export interface ChoiceOption {
     id: number;
     /** Texto de la opción en choice; en choicegroup está en `name`. */

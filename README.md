@@ -53,7 +53,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | Tool | Qué hace |
 |---|---|
 | `aula_list_courses` | Lista tus cursos. Es el punto de partida. |
-| `aula_open` | Entra a un curso, una sección, un módulo, un foro o una discusión. Cada respuesta trae las direcciones de lo que hay adentro y de un nivel más arriba, así el agente navega sin perderse. Un curso grande llega como índice de secciones con sus actividades, y cada sección se abre aparte. Si algo se recortó para que entre, la respuesta lo avisa y dice cómo verlo. |
+| `aula_open` | Entra a un curso, una sección, un módulo, un foro o una discusión. Cada respuesta trae las direcciones de lo que hay adentro y de un nivel más arriba, así el agente navega sin perderse. Un curso grande llega como índice de secciones con sus actividades, y cada sección se abre aparte. Un cuestionario trae si está abierto o cerrado, sus fechas, el límite de tiempo y los intentos que te quedan (nunca las preguntas). Si algo se recortó para que entre, la respuesta lo avisa y dice cómo verlo. |
 | `aula_search` | Busca palabras en uno o en todos tus cursos: secciones, módulos, nombres de archivo y discusiones de los foros. Compara palabras enteras e ignora las de menos de 3 letras, salvo los números. Sirve cuando no sabés en qué materia está algo. |
 | `aula_list_upcoming` | Lo que viene en todas tus materias: qué tenés pendiente de entregar o resolver y para cuándo, y el resto del calendario (aperturas, clases, eventos del curso). |
 | `aula_list_grades` | Tus notas: un resumen de cada materia o, en una, cada ítem del libro de calificaciones con su nota, rango y la devolución del docente. Avisa si el docente oculta las notas. |
