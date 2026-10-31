@@ -38,3 +38,5 @@ npm test             # tests, con respuestas inventadas de Moodle y G3W
 La arquitectura y las convenciones (capas, nombres, cómo se diseña una tool, español con voseo en todo lo que lee una persona o el modelo) están en [`AGENTS.md`](AGENTS.md). Leelo antes de un PR grande; si usás un agente para programar, ya lo lee solo. El plan de lo que sigue está en [`docs/roadmap.md`](docs/roadmap.md).
 
 Para cambios grandes, abrí primero un issue y lo charlamos. Los tests nunca usan datos reales de alumnos.
+
+Cada PR pasa por el CI (tipos, tests, build y lo que iría a npm, en Node 22, 24 y 26) y no se puede mergear si falla. La plantilla del PR tiene la lista de lo que conviene revisar antes de pedir revisión. Se mergea con squash: el título del PR queda como el commit.
