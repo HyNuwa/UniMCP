@@ -24,6 +24,26 @@ export const INSTRUCTIONS =
     "otras personas llegan tapados ([DNI], [email], [teléfono]) y las listas de alumnos, resumidas: decile " +
     "al usuario si figura, sin intentar conseguir los datos de los demás.";
 
+/**
+ * Sin las tools que escriben, el modelo no sabe por qué no puede publicar y el alumno lo toma como una
+ * falla: las instrucciones lo dicen.
+ */
+export const READ_ONLY_NOTE =
+    "Este servidor es de solo lectura: quien lo opera dejó afuera las tools que escriben (UNIMCP_WRITE_TOOLS). " +
+    "Si el usuario pide publicar, mandar un mensaje, entregar o responder una elección, decile que lo haga " +
+    "desde el aula en el navegador: no es una falla.";
+
+/** Las instrucciones según qué tools que escriben quedaron, de las que tiene el campus. */
+export function instructionsFor(policy: WritePolicy, writeTools: string[]): string {
+    const allowed = policy === "all" ? writeTools : writeTools.filter((name) => policy.has(name));
+    if (allowed.length === writeTools.length) return INSTRUCTIONS;
+    if (!allowed.length) return `${INSTRUCTIONS} ${READ_ONLY_NOTE}`;
+    return (
+        `${INSTRUCTIONS} De las tools que escriben, este servidor tiene solo ${allowed.join(", ")}: para lo demás, ` +
+        "decile al usuario que lo haga desde el aula en el navegador."
+    );
+}
+
 /** Plataformas que tiene el campus del usuario: no todos tienen aula y Guaraní. */
 export interface Platforms {
     aula?: AulaSession;
@@ -40,24 +60,32 @@ export function createServer(
     files: FileSource,
     writePolicy: WritePolicy = writePolicyFromEnv(files.local),
 ): McpServer {
-    const server = new McpServer({ name: "unimcp", version: VERSION }, { instructions: INSTRUCTIONS });
-    const { tools, writeTools } = withWritePolicy(server, writePolicy);
+    // El SDK fija las instrucciones al crear el servidor: antes, una pasada en seco junta los nombres de
+    // las tools que escriben, que dependen del campus y del modo.
+    const dryRun = withWritePolicy(undefined, writePolicy);
+    registerPlatforms(dryRun.tools, { aula, guarani }, files);
+    const instructions = instructionsFor(writePolicy, [...dryRun.writeTools]);
 
-    if (aula) {
-        registerAulaVirtualTools(tools, aula, files);
-        registerAulaPrompts(server);
-    }
-    if (guarani) registerGuaraniTools(tools, guarani);
+    const server = new McpServer({ name: "unimcp", version: VERSION }, { instructions });
+    const { tools, writeTools } = withWritePolicy(server, writePolicy);
+    registerPlatforms(tools, { aula, guarani }, files);
+    if (aula) registerAulaPrompts(server);
 
     if (writePolicy !== "all") warnUnknown(writePolicy, writeTools);
     return server;
 }
 
+function registerPlatforms(tools: McpServer, { aula, guarani }: Platforms, files: FileSource) {
+    if (aula) registerAulaVirtualTools(tools, aula, files);
+    if (guarani) registerGuaraniTools(tools, guarani);
+}
+
 /**
  * Las plataformas registran a través de `tools`, que deja afuera las que escriben y no están permitidas.
- * `writeTools` junta los nombres de todas las que escriben, permitidas o no.
+ * `writeTools` junta los nombres de todas las que escriben, permitidas o no. Sin `server`, solo junta
+ * los nombres.
  */
-function withWritePolicy(server: McpServer, policy: WritePolicy) {
+function withWritePolicy(server: McpServer | undefined, policy: WritePolicy) {
     const writeTools = new Set<string>();
     const tools = {
         registerTool(name: string, config: { annotations?: { readOnlyHint?: boolean } }, callback: unknown) {
@@ -65,6 +93,9 @@ function withWritePolicy(server: McpServer, policy: WritePolicy) {
                 writeTools.add(name);
                 if (policy !== "all" && !policy.has(name)) return undefined;
             }
+            // En la pasada en seco, algo distinto de undefined: una tool que depende de otra (el link de
+            // subida de la entrega) se registra solo si esa quedó.
+            if (!server) return {};
             return (server.registerTool as (...args: unknown[]) => unknown).call(server, name, config, callback);
         },
     } as unknown as McpServer;

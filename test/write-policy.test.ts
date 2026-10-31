@@ -7,7 +7,7 @@ import { describe, test } from "node:test";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import type { GuaraniSession } from "../src/guarani/client/session.js";
-import { createServer } from "../src/mcp-server.js";
+import { createServer, INSTRUCTIONS, READ_ONLY_NOTE } from "../src/mcp-server.js";
 import type { FileSource } from "../src/shared/uploads.js";
 import { UploadInbox } from "../src/shared/uploads.js";
 import { type WritePolicy, writePolicyFromEnv } from "../src/shared/write-policy.js";
@@ -24,6 +24,11 @@ interface Listed {
 
 /** Las tools que ve un cliente, pedidas con `tools/list`. */
 async function listTools(files: FileSource, policy?: WritePolicy): Promise<Listed[]> {
+    return (await connect(files, policy)).tools;
+}
+
+/** Lo que ve un cliente: las instrucciones del `initialize` y las tools. */
+async function connect(files: FileSource, policy?: WritePolicy): Promise<{ instructions?: string; tools: Listed[] }> {
     const [client, transport] = InMemoryTransport.createLinkedPair();
     await createServer({ aula, guarani }, files, policy).connect(transport);
     const responses = new Map<number, (r: unknown) => void>();
@@ -37,15 +42,15 @@ async function listTools(files: FileSource, policy?: WritePolicy): Promise<Liste
             responses.set(id, resolve);
             void client.send({ jsonrpc: "2.0", id, method, params });
         });
-    await request(1, "initialize", {
+    const { instructions } = (await request(1, "initialize", {
         protocolVersion: "2025-06-18",
         capabilities: {},
         clientInfo: { name: "test", version: "1" },
-    });
+    })) as { instructions?: string };
     await client.send({ jsonrpc: "2.0", method: "notifications/initialized" });
     const { tools } = (await request(2, "tools/list", {})) as { tools: Listed[] };
     await client.close();
-    return tools;
+    return { instructions, tools };
 }
 
 const writeNames = (tools: Listed[]) =>
@@ -86,5 +91,14 @@ describe("UNIMCP_WRITE_TOOLS", () => {
         const tools = await listTools(HTTP, new Set(["aula_forum_post", "aula_assign_submit"]));
         assert.deepEqual(writeNames(tools), ["aula_assign_submit", "aula_forum_post"]);
         assert.ok(tools.some((t) => t.name === "aula_assign_upload_link"));
+    });
+
+    test("las instrucciones dicen si es de solo lectura o qué tools que escriben hay", async () => {
+        assert.equal((await connect(LOCAL)).instructions, INSTRUCTIONS);
+        assert.ok((await connect(HTTP)).instructions?.endsWith(READ_ONLY_NOTE));
+        const some = (await connect(HTTP, new Set(["aula_forum_post"]))).instructions ?? "";
+        assert.match(some, /tiene solo aula_forum_post: para lo demás/);
+        // Un nombre que no es de una tool del campus no se anuncia.
+        assert.ok((await connect(HTTP, new Set(["aula_inventada"]))).instructions?.endsWith(READ_ONLY_NOTE));
     });
 });
