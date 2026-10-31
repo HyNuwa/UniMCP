@@ -5,8 +5,13 @@
 /build-mcpb
 /*.mcpb
 .env
-# Links locales a .agents/skills (junction/symlink): no se versionan
+# Skills de agentes: son de terceros y se restauran desde skills-lock.json
+# (`npx skills@1.7.4 experimental_install`). Los links de .claude/skills son locales.
+/.agents/skills
 /.claude/skills
+
+# Grafo de graphify, generado en cada máquina
+/graphify-out
 
 # Evaluaciones: preguntas y reportes con datos académicos del alumno
 /.venv

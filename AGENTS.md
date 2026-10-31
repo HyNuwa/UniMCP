@@ -88,7 +88,7 @@ The user's token never leaves the server. The model and the user get URLs that o
 
 ## Agent skills
 
-Skills live in `.agents/skills/` (installed with `npx skills add`, pinned in `skills-lock.json`): `mcp-builder` (from `anthropics/skills`) has the MCP best practices and the evaluation harness, so read it before designing or reviewing tools; `archify` draws diagrams into `.archify/` (untracked); the rest come from `mattpocock/skills`. Claude Code only looks in `.claude/skills/`, so each skill there is a local, untracked link to its folder in `.agents/skills/`. After cloning, recreate them:
+Skills live in `.agents/skills/`, which is not tracked: they are third-party projects, and copying them in would bring their dependencies (and their Dependabot alerts) and licenses into this repo. `skills-lock.json` pins each one to its source and hash; after cloning, restore them with `npx skills@1.7.4 experimental_install`. `mcp-builder` (from `anthropics/skills`) has the MCP best practices and the evaluation harness, so read it before designing or reviewing tools; `archify` draws diagrams into `.archify/` (untracked); the rest come from `mattpocock/skills`. None of them is needed to build or test UniMCP. Claude Code only looks in `.claude/skills/`, so each skill there is a local, untracked link to its folder in `.agents/skills/`. Recreate them:
 
 ```powershell
 New-Item -ItemType Directory -Force .claude\skills | Out-Null; Get-ChildItem .agents\skills -Directory | ForEach-Object { New-Item -ItemType Junction -Path ".claude\skills\$($_.Name)" -Target $_.FullName }   # Windows
