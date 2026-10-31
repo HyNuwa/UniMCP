@@ -4,7 +4,7 @@ Paramos el pulido de parsers: el aula y Guaraní de UNJu ya contestan bien las e
 
 UniMCP es solo un servidor MCP: el modelo lo pone el cliente (Claude, ChatGPT, un agente propio). Nosotros no elegimos ni pagamos el modelo, así que las respuestas tienen que funcionar también con los modelos chicos que pueda usar un alumno.
 
-Estado al 19/10/2026. Los issues abiertos se clasifican al final.
+Estado al 31/10/2026. Los issues abiertos se clasifican al final. Ya están resueltos los datos de terceros (#17) y las fechas de los cuestionarios (#14), que bloqueaban el hito 4.
 
 ## 1. Autenticación multiusuario sin guardar contraseñas
 
@@ -111,9 +111,7 @@ Todas las aulas del registro aceptan login con contraseña desde la app (`typeof
 
 | Issue | Bloquea | Por qué |
 |---|---|---|
-| [#17](https://github.com/HyNuwa/UniMCP/issues/17) Datos personales de terceros | **Hito 4** | Con alumnos reales, un aviso con la lista de legajos de otros llega al modelo. No se puede salir a probar así. |
 | [#18](https://github.com/HyNuwa/UniMCP/issues/18) Dos promedios en `porcentaje_avance_carrera` | **Hito 4** | "¿Cuál es mi promedio?" es de las primeras cosas que va a preguntar un alumno, y hoy la página muestra dos valores sin decir cuál vale. Conviene revisarlo también en la segunda universidad (hito 2). |
-| [#14](https://github.com/HyNuwa/UniMCP/issues/14) Cuestionarios sin fechas | **Hito 4** | La parte del fragmento de búsqueda ya está hecha. Falta la fecha de los cuestionarios, que es otra pregunta frecuente ("¿hasta cuándo tengo para el cuestionario?"). |
 | [#16](https://github.com/HyNuwa/UniMCP/issues/16) Fechas en la búsqueda | Backlog | Cuesta llamadas de más, no da respuestas malas. Revisarlo con los resultados del hito 3: si el modelo chico se pierde buscando fechas, sube de prioridad. |
 | [#12](https://github.com/HyNuwa/UniMCP/issues/12) `otrasPropuestas` en `guarani_open` | Backlog | Una llamada de más, y solo para alumnos con dos carreras. |
 
