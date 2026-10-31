@@ -1,5 +1,7 @@
 name: CI
 
+# Corre con `pull_request` y no con `pull_request_target`: el código de un PR desde un fork se ejecuta
+# sin secretos y con el token de solo lectura.
 on:
   push:
     branches: [master]
@@ -11,13 +13,45 @@ permissions:
 
 jobs:
   check:
+    name: check (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Las versiones de Node con soporte (https://github.com/nodejs/Release); `engines` pide 22 o más.
+        node: [22, 24, 26]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npm test
+      - run: npm run build
+      # Lo que iría a npm: tiene que ser build/, vendor/, README y LICENSE, nada más.
+      - run: npm pack --dry-run
+
+  # Una dependencia nueva con una vulnerabilidad conocida frena el PR antes de llegar a master.
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+
+  # El check que pide la protección de master: un solo nombre, aunque cambien las versiones de Node.
+  ci-ok:
+    name: CI ok
+    needs: [check, dependency-review]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Todo en verde
+        run: |
+          echo "check: ${{ needs.check.result }} · dependency-review: ${{ needs.dependency-review.result }}"
+          test "${{ needs.check.result }}" = success
+          test "${{ needs.dependency-review.result }}" = success -o "${{ needs.dependency-review.result }}" = skipped

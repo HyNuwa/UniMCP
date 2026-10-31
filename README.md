@@ -89,7 +89,7 @@ Guaraní no tiene API: el servidor entra con tu usuario y lee las páginas como 
 No hace falta instalar nada más: Claude Desktop trae su propio Node.
 
 ### Con la terminal (cualquier cliente)
-Necesitás [Node.js](https://nodejs.org) 20 o superior.
+Necesitás [Node.js](https://nodejs.org) 22 o superior.
 
 #### 1. Iniciar sesión
 ```bash
