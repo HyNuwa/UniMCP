@@ -4,7 +4,9 @@ Lo que cambia en cada versión para quien usa UniMCP. El formato sigue [Keep a C
 
 ## [Sin publicar]
 
-La primera versión publicada en npm y en el registro de MCP: va a salir como 0.1.0.
+## [0.1.0] - 2026-10-31
+
+La primera versión publicada en npm y en el registro de MCP.
 
 ### Aula virtual (Moodle)
 - Navegar el aula con `aula_open`: cursos, secciones, módulos, foros y discusiones. Un curso grande llega como índice, y lo que se recorta se avisa con cómo verlo.
@@ -33,4 +35,5 @@ La primera versión publicada en npm y en el registro de MCP: va a salir como 0.
 - Modo HTTP multiusuario con OAuth, donde la contraseña del aula se usa una vez y no se guarda.
 - Doce campus de UNJu, UNSa, UNT, UBA y UTN, y cualquier otro por variables de entorno.
 
-[Sin publicar]: https://github.com/HyNuwa/UniMCP/commits/master
+[Sin publicar]: https://github.com/HyNuwa/UniMCP/compare/v0.1.0...master
+[0.1.0]: https://github.com/HyNuwa/UniMCP/releases/tag/v0.1.0
