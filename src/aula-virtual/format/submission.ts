@@ -1,9 +1,13 @@
+import { createHash } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { basename, isAbsolute } from "node:path";
+import { CONFIRMATION_TTL_MS, confirmationProblem, fingerprint, issueConfirmation } from "../../shared/confirmation.js";
+import { isoDate } from "../../shared/dates.js";
 import { htmlToText, textToHtml } from "../../shared/html.js";
 import {
     checkFiles,
     formatSize,
+    sized,
     type FileSource,
     type UploadedFile,
     type UploadInbox,
@@ -11,6 +15,7 @@ import {
 } from "../../shared/uploads.js";
 import {
     getAssignments,
+    getSiteInfo,
     getSubmissionStatus,
     getUnusedDraftItemId,
     removeSubmission,
@@ -43,6 +48,8 @@ export interface SubmissionRequest {
     /** Si la tarea usa borradores, confirmar el envío. */
     send: boolean;
     acceptStatement: boolean;
+    /** El código de la vista previa; sin él, no se cambia nada. */
+    confirmation?: string;
 }
 
 /**
@@ -114,8 +121,17 @@ export async function createUploadLink(session: AulaSession, rawAddress: string,
 }
 
 /**
+ * Un archivo de la lista final: uno que ya está en la entrega (se baja recién al guardar, porque el
+ * borrador reemplaza todo el área) o uno nuevo, con sus bytes.
+ */
+type PlannedFile = { name: string; size: number } & ({ existing: MoodleFile } | { bytes: Uint8Array });
+
+/**
  * Deja la entrega con los archivos y el texto indicados y la envía si corresponde. Lo que no se indica
  * se mantiene: como Moodle pisa cada plugin con lo que recibe, se le vuelve a mandar lo que ya había.
+ *
+ * Sin `confirmation` no cambia nada: devuelve la vista previa (qué archivos se suman, quedan y se
+ * quitan, si se envía) y el código para confirmarla. Con el código, y solo si nada cambió, entrega.
  */
 export async function submitAssignment(
     session: AulaSession,
@@ -123,8 +139,19 @@ export async function submitAssignment(
     request: SubmissionRequest,
     source: FileSource,
 ) {
-    const { address, module, assignment, attempt, config, limits, acceptsFiles, acceptsText, submission } =
-        await openAssignment(session, rawAddress);
+    const plan = await planSubmission(session, rawAddress, request, source);
+    const print = fingerprint(await planParts(session, plan));
+    if (request.confirmation === undefined) return preview(plan, issueConfirmation(print));
+
+    const problem = confirmationProblem(request.confirmation, print);
+    if (problem) throw new Error(problem);
+    return applySubmission(session, plan, request, source);
+}
+
+/** Lo que va a pasar con la entrega, validado contra la tarea, sin tocar nada. */
+async function planSubmission(session: AulaSession, rawAddress: string, request: SubmissionRequest, source: FileSource) {
+    const opened = await openAssignment(session, rawAddress);
+    const { assignment, attempt, config, limits, acceptsFiles, acceptsText, submission } = opened;
     const usesDrafts = assignment.submissiondrafts === 1;
     const fileChanges = request.files !== undefined || request.upload !== undefined;
     const changes = fileChanges || request.text !== undefined;
@@ -145,28 +172,95 @@ export async function submitAssignment(
         );
     }
 
-    if (changes) {
-        const files = acceptsFiles ? await collectFiles(session, request, submittedFiles(submission), source) : [];
-        checkFiles(files, limits);
-        const text = acceptsText
-            ? currentOrNewText(submission, request.text, Number(config("onlinetext", "wordlimit")))
-            : null;
+    const current = submittedFiles(submission);
+    const files = changes && acceptsFiles ? await collectFiles(request, current, source) : undefined;
+    if (files) checkFiles(files, limits);
+    const oldText = currentOrNewText(submission, undefined, 0);
+    const text = changes && acceptsText ? currentOrNewText(submission, request.text, Number(config("onlinetext", "wordlimit"))) : null;
+    const removes = changes && !files?.length && !htmlToText(text?.html);
+    if (removes && !current.length && !htmlToText(oldText.html)) {
+        throw new Error("Pasá archivos, `texto` o los dos: no hay nada para entregar.");
+    }
+    if (removes) await requireRemoval(session, opened.module);
 
-        if (!files.length && !htmlToText(text?.html)) {
+    return { ...opened, rawAddress, usesDrafts, changes, confirm, current, files, oldText, text, removes };
+}
+
+type Plan = Awaited<ReturnType<typeof planSubmission>>;
+
+/**
+ * Todo lo que define la entrega: quién, qué tarea, en qué estado estaba y qué se va a guardar. Un
+ * cambio en cualquiera (otro archivo, otro texto, una entrega hecha en el medio) invalida el código.
+ */
+async function planParts(session: AulaSession, plan: Plan) {
+    const { userid } = await getSiteInfo(session);
+    return {
+        sitio: session.site.baseUrl,
+        usuario: userid,
+        tarea: plan.assignment.id,
+        estado: [plan.submission?.status, plan.submission?.timemodified],
+        archivos: plan.files?.map((f) =>
+            "existing" in f
+                ? [f.existing.fileurl, f.existing.filesize, f.existing.timemodified]
+                : [f.name, createHash("sha256").update(f.bytes).digest("base64url")],
+        ),
+        texto: plan.text?.html,
+        borra: plan.removes,
+        envia: plan.confirm,
+    };
+}
+
+function preview(plan: Plan, confirmacion: string) {
+    const { assignment, module, current, files, oldText, text } = plan;
+    const kept = new Set(files?.flatMap((f) => ("existing" in f ? [f.existing.fileurl] : [])));
+    const textChanges = text && text.html !== oldText.html;
+    return {
+        vistaPrevia: "Todavía no se entregó nada.",
+        tarea: module.name,
+        direccion: plan.rawAddress,
+        vence: isoDate(assignment.duedate) ?? undefined,
+        cierre: isoDate(assignment.cutoffdate) ?? undefined,
+        archivos: files && {
+            seSuman: files.filter((f) => !("existing" in f)).map((f) => f.name),
+            quedan: files.filter((f) => "existing" in f).map((f) => f.name),
+            seQuitan: current.filter((f) => !kept.has(f.fileurl)).map((f) => f.filename),
+        },
+        texto: textChanges ? (htmlToText(text.html) ? "reemplaza el texto en línea" : "borra el texto en línea") : undefined,
+        borraLaEntrega: plan.removes || undefined,
+        envio: plan.confirm
+            ? "Se envía para calificar: después, en general, no se puede cambiar."
+            : plan.usesDrafts
+              ? "Queda como borrador: no cuenta como entregada hasta confirmar el envío."
+              : plan.changes
+                ? "Esta tarea no usa borradores: guardar ya es entregar."
+                : undefined,
+        confirmacion,
+        aviso:
+            "Mostrale esto al usuario, sobre todo lo que se quita. Si está de acuerdo, llamá de nuevo con " +
+            `los mismos parámetros y \`confirmacion\`; vence en ${CONFIRMATION_TTL_MS / 60_000} minutos.`,
+    };
+}
+
+async function applySubmission(session: AulaSession, plan: Plan, request: SubmissionRequest, source: FileSource) {
+    const { address, module, assignment, files, text } = plan;
+    if (plan.changes) {
+        if (plan.removes) {
             await removeSubmission(session, assignment.id).catch((e) => {
-                // Algunas aulas no habilitan la función en el servicio de la app (UNJu).
                 if (!(e instanceof MoodleError) || !NOT_ENABLED.has(e.errorcode ?? "")) throw e;
-                const where = module.url ? `: ${userFacingUrl(module.url)}` : "";
-                throw new Error(
-                    "Esta aula no deja borrar la entrega entera desde UniMCP. El usuario la puede borrar " +
-                        `desde el navegador${where}.`,
-                );
+                throw new Error(cannotRemove(module));
             });
         } else {
+            const uploads = await Promise.all(
+                (files ?? []).map(async (f) =>
+                    "existing" in f
+                        ? { name: f.name, bytes: (await fetchFile(session, new URL(f.existing.fileurl), SITE_MAX_BYTES)).bytes }
+                        : { name: f.name, bytes: f.bytes },
+                ),
+            );
             await saveSubmission(session, assignment.id, {
-                filesItemId: acceptsFiles
-                    ? files.length
-                        ? await uploadDraftFiles(session, files)
+                filesItemId: files
+                    ? uploads.length
+                        ? await uploadDraftFiles(session, uploads)
                         : await getUnusedDraftItemId(session)
                     : undefined,
                 text: text ? { ...text, itemid: await getUnusedDraftItemId(session) } : undefined,
@@ -175,20 +269,35 @@ export async function submitAssignment(
         if (request.upload && !source.local) source.inbox.close(request.upload);
     }
 
-    if (confirm) await submitForGrading(session, assignment.id, request.acceptStatement);
+    if (plan.confirm) await submitForGrading(session, assignment.id, request.acceptStatement);
 
     const after = await viewSubmission(session, address.courseId, module);
     return {
-        direccion: rawAddress,
+        direccion: plan.rawAddress,
         estado: after.estado,
         // Con borradores sin confirmar, lo subido todavía no vale.
         aviso:
-            usesDrafts && !request.send && after.estado === "borrador"
+            plan.usesDrafts && !request.send && after.estado === "borrador"
                 ? "Quedó como borrador: no cuenta como entregada hasta confirmar el envío."
                 : undefined,
         archivos: after.archivos?.map(({ nombre, tamanio, url }) => ({ nombre, tamanio, url })),
         texto: after.texto,
     };
+}
+
+const cannotRemove = (module: { url?: string }) =>
+    "Esta aula no deja borrar la entrega entera desde UniMCP. El usuario la puede borrar desde el " +
+    `navegador${module.url ? `: ${userFacingUrl(module.url)}` : ""}.`;
+
+/**
+ * Algunas aulas no habilitan borrar la entrega en el servicio de la app (UNJu): se avisa en la vista
+ * previa y no después de confirmar.
+ */
+async function requireRemoval(session: AulaSession, module: { url?: string }) {
+    const { functions } = await getSiteInfo(session);
+    if (functions && !functions.some((f) => f.name === "mod_assign_remove_submission")) {
+        throw new Error(cannotRemove(module));
+    }
 }
 
 function submittedFiles(submission: AssignSubmission | undefined): MoodleFile[] {
@@ -197,32 +306,23 @@ function submittedFiles(submission: AssignSubmission | undefined): MoodleFile[] 
         .flatMap((p) => p.fileareas?.flatMap((a) => a.files ?? []) ?? []);
 }
 
-/**
- * Reúne los bytes de la lista final: los de `files` (o los ya entregados si no se pasa) y los del link
- * de subida. Los ya entregados se suben de nuevo porque el borrador reemplaza todo el área.
- */
-async function collectFiles(
-    session: AulaSession,
-    request: SubmissionRequest,
-    current: MoodleFile[],
-    source: FileSource,
-): Promise<UploadedFile[]> {
+const newFile = (f: UploadedFile): PlannedFile => ({ ...sized(f), bytes: f.bytes });
+
+/** La lista final: la de `files` (o los ya entregados si no se pasa) más los del link de subida. */
+async function collectFiles(request: SubmissionRequest, current: MoodleFile[], source: FileSource): Promise<PlannedFile[]> {
     const entries = request.files ?? current.map((f) => userFacingUrl(f.fileurl));
-    const collected: UploadedFile[] = [];
+    const collected: PlannedFile[] = [];
     for (const entry of entries) {
         const existing = current.find((f) => userFacingUrl(f.fileurl) === entry || f.fileurl === entry);
         collected.push(
             existing
-                ? {
-                      name: existing.filename,
-                      bytes: (await fetchFile(session, new URL(existing.fileurl), SITE_MAX_BYTES)).bytes,
-                  }
-                : await readLocal(entry, source),
+                ? { name: existing.filename, size: existing.filesize, existing }
+                : newFile(await readLocal(entry, source)),
         );
     }
     if (request.upload !== undefined) {
         if (source.local) throw new Error("`subida` es del modo HTTP; acá los archivos van como ruta en `archivos`.");
-        collected.push(...source.inbox.take(request.upload, source.owner));
+        collected.push(...source.inbox.take(request.upload, source.owner).map(newFile));
     }
     return collected;
 }

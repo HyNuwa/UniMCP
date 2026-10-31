@@ -71,7 +71,7 @@ export class UploadInbox {
         if (!upload || upload.expiresAt < Date.now()) throw new Error("El link de subida venció o no existe.");
         if (upload.files) throw new Error("Este link ya se usó. Pedile al agente uno nuevo.");
         if (!files.length) throw new Error('No llegó ningún archivo: van en el campo "archivos".');
-        checkFiles(files, upload.limits);
+        checkFiles(files.map(sized), upload.limits);
         upload.files = files;
     }
 
@@ -97,15 +97,18 @@ export class UploadInbox {
     }
 }
 
+/** Nombre y tamaño de un archivo subido, lo que mira checkFiles. */
+export const sized = (f: UploadedFile) => ({ name: f.name, size: f.bytes.length });
+
 /** Cantidad, tamaño, tipo y nombres repetidos, que Moodle rechaza. */
-export function checkFiles(files: UploadedFile[], limits: UploadLimits): void {
+export function checkFiles(files: { name: string; size: number }[], limits: UploadLimits): void {
     if (limits.maxFiles && files.length > limits.maxFiles) {
         throw new Error(`Se aceptan hasta ${limits.maxFiles} archivo(s) y llegaron ${files.length}.`);
     }
     const seen = new Set<string>();
     for (const f of files) {
-        if (f.bytes.length > limits.maxBytes) {
-            throw new Error(`"${f.name}" pesa ${formatSize(f.bytes.length)}; el máximo es ${formatSize(limits.maxBytes)} por archivo.`);
+        if (f.size > limits.maxBytes) {
+            throw new Error(`"${f.name}" pesa ${formatSize(f.size)}; el máximo es ${formatSize(limits.maxBytes)} por archivo.`);
         }
         if (limits.extensions?.length && !limits.extensions.includes(extname(f.name).toLowerCase())) {
             throw new Error(`"${f.name}" no es de un tipo aceptado (${limits.extensions.join(", ")}).`);

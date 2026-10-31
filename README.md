@@ -64,7 +64,7 @@ Tiene que contestar `"enablemobilewebservice":1`. Si trae `identityproviders`, e
 | `aula_forum_post` | Abre un hilo en un foro o responde en una discusión. |
 | `aula_forum_edit_post` | Edita una publicación tuya. |
 | `aula_forum_delete_post` | Borra una publicación tuya. |
-| `aula_assign_submit` | Entrega una tarea: sube archivos de tu compu, escribe el texto en línea y confirma el envío. |
+| `aula_assign_submit` | Entrega una tarea: sube archivos de tu compu, escribe el texto en línea y confirma el envío. Primero muestra una vista previa (qué archivos se suman, cuáles quedan y cuáles se quitan) y entrega recién cuando confirmás. |
 | `aula_assign_upload_link` | Solo en modo HTTP: un link para subir los archivos de una entrega. |
 | `aula_choice_answer` | Responde una elección o te anota en un grupo. |
 | `aula_send_message` | Manda un mensaje privado a un docente o compañero. |

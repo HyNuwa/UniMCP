@@ -642,6 +642,13 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
             .describe(
                 "true si el usuario aceptó la `declaracion` de la tarea. Solo hace falta si la tarea la pide. Ej: true.",
             ),
+        confirmacion: z
+            .string()
+            .optional()
+            .describe(
+                "El `confirmacion` de la vista previa, después de mostrársela al usuario y que esté de acuerdo. " +
+                    "Sin él no se entrega nada. Ej: \"1761930000000.Zk3pQ8vX1mR7tY2wB5nC9dF4gH6jK0lA3sE8uI1oP2q\".",
+            ),
     });
     const httpSubmitSchema = submitSchema.extend({
         subida: z
@@ -667,14 +674,19 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                 "Si la tarea no usa borradores, guardar ya es entregar. Si los usa (`requiereConfirmarEnvio`), " +
                 "la tool además confirma el envío, salvo con `enviar: false`; una vez enviada, en general no se " +
                 "puede cambiar. Con `declaracion`, el usuario tiene que aceptarla (`aceptoDeclaracion`). " +
-                "Devuelve cómo quedó la entrega." +
-                CONFIRM_FIRST +
-                " Incluí la tarea, los nombres de los archivos y si se confirma el envío.",
+                "Se llama dos veces. La primera, sin `confirmacion`, no cambia nada: devuelve la vista previa " +
+                "(`archivos` con lo que `seSuman`, `quedan` y `seQuitan`, `texto`, `borraLaEntrega`, `envio`, " +
+                "`vence`) y un `confirmacion`. Mostrale la vista previa al usuario y, si está de acuerdo, llamá " +
+                "de nuevo con los mismos parámetros y ese `confirmacion`: ahí se entrega y devuelve cómo quedó. " +
+                "Si algo cambió en el medio, el código no sirve y hay que pedir otra vista previa." +
+                `
+
+${ON_REQUEST}`,
             // `subida` solo existe en HTTP; el cast deja que el handler la reciba en ambos modos.
             inputSchema: (files.local ? submitSchema : httpSubmitSchema) as typeof httpSubmitSchema,
             annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
         },
-        async ({ direccion, archivos, subida, texto, enviar, aceptoDeclaracion }) => {
+        async ({ direccion, archivos, subida, texto, enviar, aceptoDeclaracion, confirmacion }) => {
             try {
                 return json(
                     await submitAssignment(
@@ -686,6 +698,7 @@ export function registerAulaVirtualTools(server: McpServer, session: AulaSession
                             text: texto,
                             send: enviar ?? true,
                             acceptStatement: aceptoDeclaracion ?? false,
+                            confirmation: confirmacion,
                         },
                         files,
                     ),
