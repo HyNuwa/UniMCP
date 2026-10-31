@@ -1,0 +1,50 @@
+name: Publicar en npm
+
+# Al publicar un release `vX.Y.Z`, publica esa versión en npm con trusted publishing: npm confía en este
+# workflow por OIDC, sin un token guardado, y le agrega al paquete la procedencia (de qué commit salió).
+# La 0.1.0 se publica a mano, porque npm solo deja configurar el trusted publisher sobre un paquete que
+# ya existe: si la versión ya está en npm, el job no hace nada.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Trusted publishing pide Node 24 o más nuevo y npm 11.5.1 o más nuevo.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@11.21.1
+      - name: La versión del release es la de package.json
+        if: github.event_name == 'release'
+        run: |
+          version=$(jq -r .version package.json)
+          tag="${{ github.event.release.tag_name }}"
+          if [ "$tag" != "v$version" ]; then
+            echo "El release es $tag y package.json dice $version: tienen que coincidir (v$version)." >&2
+            exit 1
+          fi
+      - name: ¿Ya está publicada?
+        id: published
+        run: |
+          version=$(jq -r .version package.json)
+          if npm view "unimcp@$version" version >/dev/null 2>&1; then
+            echo "unimcp@$version ya está en npm: no hay nada que publicar."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.published.outputs.skip != 'true'
+        run: npm ci
+      - if: steps.published.outputs.skip != 'true'
+        run: npx tsc --noEmit && npm test
+      # `prepack` compila y arma vendor/ antes de empaquetar.
+      - if: steps.published.outputs.skip != 'true'
+        run: npm publish
