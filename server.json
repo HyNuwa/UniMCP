@@ -12,34 +12,34 @@
   "packages": [
     {
       "registryType": "npm",
-      "identifier": "unimcp",
+      "identifier": "@nuwujix/unimcp",
       "version": "0.1.0",
       "transport": { "type": "stdio" },
       "environmentVariables": [
         {
           "name": "UNI_CAMPUS",
-          "description": "Id del campus del registro (unju, unsa-exactas, uba-fiuba, utn-frba…). Sin definir, el que elegiste en `npx unimcp login`.",
+          "description": "Id del campus del registro (unju, unsa-exactas, uba-fiuba, utn-frba…). Sin definir, el que elegiste en `npx @nuwujix/unimcp login`.",
           "format": "string"
         },
         {
           "name": "UNI_USER",
-          "description": "Usuario del aula, si no usás `npx unimcp login` (que lo guarda en el keychain).",
+          "description": "Usuario del aula, si no usás `npx @nuwujix/unimcp login` (que lo guarda en el keychain).",
           "format": "string"
         },
         {
           "name": "UNI_PASS",
-          "description": "Contraseña del aula, si no usás `npx unimcp login`.",
+          "description": "Contraseña del aula, si no usás `npx @nuwujix/unimcp login`.",
           "format": "string",
           "isSecret": true
         },
         {
           "name": "UNI_GUARANI_USER",
-          "description": "Usuario de SIU Guaraní, si no usás `npx unimcp login`.",
+          "description": "Usuario de SIU Guaraní, si no usás `npx @nuwujix/unimcp login`.",
           "format": "string"
         },
         {
           "name": "UNI_GUARANI_PASS",
-          "description": "Contraseña de SIU Guaraní, si no usás `npx unimcp login`.",
+          "description": "Contraseña de SIU Guaraní, si no usás `npx @nuwujix/unimcp login`.",
           "format": "string",
           "isSecret": true
         },

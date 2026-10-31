@@ -30,7 +30,7 @@ La primera versión publicada en npm y en el registro de MCP.
 - Los links que te pasa el agente nunca llevan tu token, y los logs no llevan tu usuario ni tu email.
 
 ### Instalación
-- Extensión de Claude Desktop (`.mcpb`) en cada release, o `npx unimcp` con cualquier cliente MCP.
+- Extensión de Claude Desktop (`.mcpb`) en cada release, o `npx @nuwujix/unimcp` con cualquier cliente MCP.
 - `unimcp login` para elegir el campus y guardar las credenciales en el gestor del sistema, y `unimcp check` para probar el campus sin mostrar datos personales.
 - Modo HTTP multiusuario con OAuth, donde la contraseña del aula se usa una vez y no se guarda.
 - Doce campus de UNJu, UNSa, UNT, UBA y UTN, y cualquier otro por variables de entorno.

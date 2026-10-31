@@ -37,8 +37,8 @@ jobs:
         id: published
         run: |
           version=$(jq -r .version package.json)
-          if npm view "unimcp@$version" version >/dev/null 2>&1; then
-            echo "unimcp@$version ya está en npm: no hay nada que publicar."
+          if npm view "@nuwujix/unimcp@$version" version >/dev/null 2>&1; then
+            echo "@nuwujix/unimcp@$version ya está en npm: no hay nada que publicar."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
       - if: steps.published.outputs.skip != 'true'

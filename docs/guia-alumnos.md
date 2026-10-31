@@ -69,4 +69,4 @@ En Claude Desktop también tenés un atajo: en el menú **+** de la conversació
 | "… está saturado" o "no contestó" | El servidor de tu universidad está lento (pasa en épocas de inscripción). Probá en un rato. |
 | Una tool dice que tu aula no la permite | Algunas facultades apagan funciones del aula para la app. Hacelo desde el navegador. |
 
-Si sigue sin andar, abrí un [issue](https://github.com/HyNuwa/UniMCP/issues/new/choose). Si sabés usar la terminal, sumá la salida de `npx -y unimcp check`: prueba los logins y dice qué funciona en tu aula, sin datos personales. No pegues capturas con tus notas, tu DNI o tus contraseñas.
+Si sigue sin andar, abrí un [issue](https://github.com/HyNuwa/UniMCP/issues/new/choose). Si sabés usar la terminal, sumá la salida de `npx -y @nuwujix/unimcp check`: prueba los logins y dice qué funciona en tu aula, sin datos personales. No pegues capturas con tus notas, tu DNI o tus contraseñas.

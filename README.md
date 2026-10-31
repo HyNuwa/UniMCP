@@ -93,38 +93,38 @@ Necesitás [Node.js](https://nodejs.org) 22 o superior.
 
 #### 1. Iniciar sesión
 ```bash
-npx -y unimcp login
+npx -y @nuwujix/unimcp login
 ```
 Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
-Para ver si anda todo, `npx -y unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales.
+Para ver si anda todo, `npx -y @nuwujix/unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales.
 
 #### 2. Agregarlo a tu cliente
 **Claude Code**
 ```bash
-claude mcp add uni -- npx -y unimcp
+claude mcp add uni -- npx -y @nuwujix/unimcp
 ```
 
 **Claude Desktop**: en *Settings → Developer → Edit Config*, dentro de `mcpServers`:
 ```json
 "uni": {
   "command": "npx",
-  "args": ["-y", "unimcp"]
+  "args": ["-y", "@nuwujix/unimcp"]
 }
 ```
-En Windows, si no arranca, usá `"command": "cmd"` y `"args": ["/c", "npx", "-y", "unimcp"]`.
+En Windows, si no arranca, usá `"command": "cmd"` y `"args": ["/c", "npx", "-y", "@nuwujix/unimcp"]`.
 
-**Codex**: `codex mcp add uni -- npx -y unimcp` · **Gemini CLI**: `gemini mcp add uni npx -y unimcp`
+**Codex**: `codex mcp add uni -- npx -y @nuwujix/unimcp` · **Gemini CLI**: `gemini mcp add uni npx -y @nuwujix/unimcp`
 
-**Cursor** (`~/.cursor/mcp.json`) y **VS Code** (`.vscode/mcp.json`): un servidor STDIO con `"command": "npx"` y `"args": ["-y", "unimcp"]`.
+**Cursor** (`~/.cursor/mcp.json`) y **VS Code** (`.vscode/mcp.json`): un servidor STDIO con `"command": "npx"` y `"args": ["-y", "@nuwujix/unimcp"]`.
 
-Cualquier cliente MCP que lance servidores por STDIO sirve con `npx -y unimcp`.
+Cualquier cliente MCP que lance servidores por STDIO sirve con `npx -y @nuwujix/unimcp`.
 
 ### Modo HTTP (opcional)
 Necesita Node 22.13 o más nuevo:
 ```bash
-npx -y unimcp login --http   # una vez: te muestra el token para el header Authorization
-npx -y unimcp --http --port 3000
+npx -y @nuwujix/unimcp login --http   # una vez: te muestra el token para el header Authorization
+npx -y @nuwujix/unimcp --http --port 3000
 ```
 Hosteado, el servidor también hace de servidor de autorización OAuth: el cliente MCP abre una página donde el alumno **elige su campus** y entra con su usuario del aula. La contraseña se usa una sola vez y **no se guarda**. La configuración (quién puede entrar, URL pública, clave de cifrado) está en [`.env.example`](.env.example), con las variables `UNIMCP_*`.
 

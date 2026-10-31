@@ -1,5 +1,5 @@
 {
-  "name": "unimcp",
+  "name": "@nuwujix/unimcp",
   "version": "0.1.0",
   "description": "Model Context Protocol server NO OFICIAL para universidades argentinas: aula virtual (Moodle) y SIU Guaraní.",
   "mcpName": "io.github.HyNuwa/unimcp",
@@ -66,5 +66,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,6 +1,6 @@
 # UniMCP
 
-MCP server that gives an agent access to the systems of Argentine universities: the virtual classroom (Moodle) and SIU Guaraní. It runs locally over STDIO (`npx unimcp`) or hosted and multi-user over HTTP with OAuth. For something new, copy how `src/aula-virtual/` is built.
+MCP server that gives an agent access to the systems of Argentine universities: the virtual classroom (Moodle) and SIU Guaraní. It runs locally over STDIO (`npx @nuwujix/unimcp`) or hosted and multi-user over HTTP with OAuth. For something new, copy how `src/aula-virtual/` is built.
 
 ## Module layout
 
