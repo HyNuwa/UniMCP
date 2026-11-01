@@ -11,7 +11,8 @@
     "prebuild": "npm run data && npm run map",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "precheck": "npm run data",
+        "check": "astro check"
   },
   "dependencies": {
     "astro": "^7.4.4",
