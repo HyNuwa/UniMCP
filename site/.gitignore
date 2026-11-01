@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+# Contornos bajados por scripts/map.mts
+.cache/
+# Generados en cada build: datos del servidor (scripts/data.mts) y mapas (scripts/map.mts)
+src/data/generated.json
+public/map/

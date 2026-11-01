@@ -1,0 +1,160 @@
+---
+import { Image } from "astro:assets";
+import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
+import Tools from "../components/Tools.astro";
+import MapSection from "../components/MapSection.astro";
+import Community from "../components/Community.astro";
+import Roadmap from "../components/Roadmap.astro";
+import Install from "../components/Install.astro";
+import hero from "../assets/hero.jpg";
+import laptop from "../assets/laptop.jpg";
+import phone from "../assets/phone.jpg";
+import { ASKS, FAQ, SAFETY } from "../data/copy";
+import { REPO, STATS, UNIVERSITY_LIST } from "../data/site";
+
+const askColor = (tool: string) => (tool.startsWith("guarani") ? "var(--g3w)" : ["aula_assign_submit", "aula_send_message", "aula_forum_post"].includes(tool) ? "var(--coral)" : "var(--aula)");
+const toneBg = { soft: "var(--soft)", aula: "#e6f3ff", coral: "#ffe6de", g3w: "#efeaff" } as const;
+const faq = FAQ.map((f) => ({ ...f, a: f.a.replace("{campus}", String(STATS.campus)).replace("{universidades}", UNIVERSITY_LIST) }));
+---
+
+<Base
+    title="UniMCP · Tu facultad, ahora en tu chat"
+    description="Un servidor MCP que le da a tu agente (Claude, ChatGPT, Gemini) acceso a tu aula virtual y a tu SIU Guaraní. Hecho por estudiantes, para universidades argentinas."
+>
+    <header class="wrap nav">
+        <nav class="nav-links" aria-label="Secciones">
+            <a href="#tools">Tools</a>
+            <a href="#mapa">Mapa</a>
+            <a href="#comunidad">Comunidad</a>
+            <a href="#faq">Preguntas</a>
+        </nav>
+        <a href="#top" class="logo" aria-label="UniMCP, inicio">
+            <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#0B0B0C"></rect><rect x="12" y="12" width="12" height="12" rx="2" fill="#FF6B4A"></rect></svg>
+            <span class="disp">unimcp</span>
+        </a>
+        <div style="flex: 1 1 0; display: flex; justify-content: flex-end">
+            <a class="pill pill-ink" href="#instalar">Instalar</a>
+        </div>
+    </header>
+
+    <main>
+        <Hero />
+
+        <section class="wrap" style="padding-top: 96px">
+            <div class="grid" style="--min: 480px; gap: 24px">
+                <figure class="photo-card">
+                    <Image src={laptop} alt="Una laptop sobre un banquito de madera con una conversación con un agente en pantalla" widths={[600, 1000]} sizes="(max-width: 1040px) 100vw, 580px" />
+                    <figcaption class="caption" style="background: var(--ink); color: var(--white)">
+                        <p>
+                            Para
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"></rect><path d="M2 20h20"></path></svg>
+                            el aula virtual
+                        </p>
+                        <h2 class="disp">Leé, buscá y entregá desde el chat</h2>
+                    </figcaption>
+                </figure>
+                <figure class="photo-card">
+                    <Image src={phone} alt="Dos manos sosteniendo un celular con una respuesta del agente sobre notas" widths={[600, 1000]} sizes="(max-width: 1040px) 100vw, 580px" />
+                    <figcaption class="caption" style="background: var(--white); color: var(--ink)">
+                        <p>
+                            Para
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"></path><path d="M6 11v5c3 2 9 2 12 0v-5"></path></svg>
+                            el SIU Guaraní
+                        </p>
+                        <h2 class="disp">Tu historia y tus mesas, en una pregunta</h2>
+                    </figcaption>
+                </figure>
+            </div>
+
+            <dl class="stats">
+                <div><dd class="disp">{STATS.tools}</dd><dt>Tools para tu agente</dt></div>
+                <div><dd class="disp">{STATS.campus}</dd><dt>Campus verificados</dt></div>
+                <div><dd class="disp">{STATS.universidades}</dd><dt>Universidades</dt></div>
+                <div><dd class="disp">MIT</dd><dt>Código abierto</dt></div>
+            </dl>
+        </section>
+
+        <section class="wrap section center">
+            <p class="eyebrow">01 / Qué podés pedirle</p>
+            <h2 class="disp h2" style="margin: 0 auto; max-width: 760px">Preguntale como le preguntarías a un compañero</h2>
+            <p class="lead" style="margin: 20px auto 56px; max-width: 560px">El agente elige qué tool usar. Vos escribís normal.</p>
+            <div class="grid" style="--min: 340px; text-align: left">
+                {
+                    ASKS.map((a) => (
+                        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 22px; min-height: 150px">
+                            <p style="margin: 0; font-size: 19px; line-height: 1.35; font-weight: 500; letter-spacing: -0.01em">"{a.q}"</p>
+                            <span class="chip" style="align-self: flex-start"><span class="dot" style={`width: 8px; height: 8px; background: ${askColor(a.tool)}`} />{a.tool}</span>
+                        </div>
+                    ))
+                }
+            </div>
+        </section>
+
+        <Tools />
+
+        <section id="seguridad" class="wrap section">
+            <p class="eyebrow">03 / Seguridad</p>
+            <div class="split">
+                <h2 class="disp h2">Tus datos se quedan<br />en tu compu</h2>
+                <p class="lead">Instalado en tu computadora, el servidor habla solo con tu universidad. Lo que el agente lee pasa antes por filtros pensados para alumnos.</p>
+            </div>
+            <div class="grid" style="--min: 260px">
+                {
+                    SAFETY.map((s) => (
+                        <div class="card" style="border-radius: 26px; padding: 26px; display: flex; flex-direction: column; gap: 14px">
+                            <span class="mono" style={`align-self: flex-start; background: ${toneBg[s.tone as keyof typeof toneBg]}; border-radius: 10px; padding: 8px 12px; font-size: 13px`}>{s.chip}</span>
+                            <h3 class="disp" style="margin: 6px 0 0; font-size: 23px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15">{s.title}</h3>
+                            <p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--muted)">{s.text}</p>
+                        </div>
+                    ))
+                }
+            </div>
+        </section>
+
+        <MapSection />
+        <Community />
+        <Roadmap />
+        <Install />
+
+        <section id="faq" class="wrap section" style="max-width: 880px">
+            <div class="center"><p class="eyebrow">07 / Preguntas</p></div>
+            <h2 class="disp h2 center" style="margin-bottom: 40px">Preguntas frecuentes</h2>
+            {
+                faq.map((f) => (
+                    <details class="faq">
+                        <summary>
+                            {f.q}
+                            <svg class="plus" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+                        </summary>
+                        <p style="margin: 14px 0 0; font-size: 16px; line-height: 1.6; color: var(--muted); max-width: 720px">{f.a}</p>
+                    </details>
+                ))
+            }
+        </section>
+    </main>
+
+    <section style="padding: 140px 16px 16px">
+        <div class="hero" style="min-height: 0; padding: 120px 24px; gap: 28px">
+            <Image class="photo-bg" src={hero} alt="" widths={[960, 1600]} sizes="100vw" style="object-position: 50% 70%" />
+            <div class="scrim" aria-hidden="true" style="background: rgba(10,7,4,.62)"></div>
+            <h2 class="disp" style="margin: 0; text-align: center; text-transform: uppercase; font-size: clamp(2.4rem, 6vw, 5rem); line-height: 0.92; font-weight: 800; letter-spacing: -0.05em">Menos pestañas,<br />más estudiar</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center">
+                <a class="pill pill-white" href="#instalar">Instalar UniMCP</a>
+                <a class="pill pill-glass" href={REPO}>Ver en GitHub ↗</a>
+            </div>
+        </div>
+        <footer class="wrap" style="max-width: 1240px; display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; padding-top: 32px; padding-bottom: 24px; font-size: 14px; color: var(--muted)">
+            <span style="display: flex; align-items: center; gap: 8px; color: var(--ink)">
+                <svg width="18" height="18" viewBox="0 0 26 26" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" fill="#0B0B0C"></rect><rect x="12" y="12" width="12" height="12" rx="2" fill="#FF6B4A"></rect></svg>
+                <strong class="disp" style="font-size: 18px">unimcp</strong>
+            </span>
+            <span>No oficial: no está afiliado ni avalado por ninguna universidad ni por el SIU.</span>
+            <span style="display: flex; gap: 20px">
+                <a href={REPO}>GitHub</a>
+                <a href={`${REPO}/blob/master/docs/guia-alumnos.md`}>Guía para alumnos</a>
+                <a href={`${REPO}/blob/master/LICENSE`}>MIT</a>
+            </span>
+        </footer>
+    </section>
+</Base>

@@ -1,0 +1,60 @@
+---
+import { Image } from "astro:assets";
+import hero from "../assets/hero.jpg";
+import { FEED } from "../data/copy";
+
+const color = (tool: string) => (tool.startsWith("guarani") ? "var(--g3w)" : "var(--aula)");
+---
+
+<section id="top" style="padding: 0 16px">
+    <div class="hero">
+        <Image class="photo-bg" src={hero} alt="" widths={[960, 1600, 2400]} sizes="100vw" loading="eager" fetchpriority="high" />
+        <div class="scrim" aria-hidden="true"></div>
+
+        <div class="float glass" aria-hidden="true" style="left: 6%; top: 41%; width: 230px; border-radius: 20px; padding: 14px">
+            <div style="display: flex; align-items: center; gap: 10px">
+                <span style="width: 38px; height: 38px; border-radius: 50%; background: var(--soft); color: var(--ink); display: flex; align-items: center; justify-content: center; font-weight: 700">Á</span>
+                <div>
+                    <p style="margin: 0; font-weight: 600; font-size: 15px">Álgebra II</p>
+                    <p style="margin: 0; font-size: 13px; color: var(--aula); font-weight: 600">Aula virtual</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 14px; margin: 14px 0; font-size: 13px">
+                <div><p style="margin: 0; color: var(--on-dark)">Entrega</p><p style="margin: 2px 0 0; font-weight: 600; font-size: 15px">TP 3</p></div>
+                <div style="border-left: 1px solid rgba(255,255,255,.2); padding-left: 14px"><p style="margin: 0; color: var(--on-dark)">Vence</p><p style="margin: 2px 0 0; font-weight: 600; font-size: 15px">Jueves 23:59</p></div>
+            </div>
+            <div style="background: rgba(255,255,255,.1); border-radius: 14px; padding: 12px 14px">
+                <p style="margin: 0 0 4px; color: #ffb199; font-size: 13px; font-weight: 600">Pedile al agente</p>
+                <p style="margin: 0; font-size: 14px; line-height: 1.35; font-weight: 500">"Resumime la consigna y armame un plan."</p>
+            </div>
+        </div>
+
+        <div class="float" aria-hidden="true" style="right: 7%; top: 45%">
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 14px">
+                <span class="glass pill" style="font-size: 14px; padding: 10px 16px"><span class="dot" style="background: var(--g3w)"></span>Aprobaste Física I con 8</span>
+                <span class="glass pill" style="font-size: 14px; padding: 10px 16px; margin-right: 34px"><span class="dot" style="background: var(--aula)"></span>2 avisos nuevos en el foro</span>
+            </div>
+        </div>
+
+        <h1 class="disp">Tu facultad,<br />ahora en<br />tu chat</h1>
+
+        <ul class="feed" aria-label="Ejemplo de lo que hace el agente">
+            {
+                FEED.map((f) => (
+                    <li style={f.faded ? "opacity: .55" : undefined}>
+                        <span class="icon" style={`background: ${color(f.tool)}`} aria-hidden="true" />
+                        <div style="flex: 1; min-width: 0">
+                            <p style="margin: 0; font-size: 14px; font-weight: 500">{f.text}</p>
+                            <p class="mono" style="margin: 2px 0 0; font-size: 11px; color: var(--muted)">{f.tool}</p>
+                        </div>
+                        <span style="font-size: 12px; color: var(--muted); flex: 0 0 auto">{f.when}</span>
+                    </li>
+                ))
+            }
+        </ul>
+
+        <p style="margin: 36px 0 0; max-width: 560px; text-align: center; font-size: 18px; line-height: 1.5; font-weight: 500">
+            Un servidor MCP que le da a tu agente acceso a tu aula virtual y a tu SIU Guaraní. Hecho por estudiantes, para universidades argentinas.
+        </p>
+    </div>
+</section>
