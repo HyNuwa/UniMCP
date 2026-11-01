@@ -12,7 +12,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "precheck": "npm run data",
-        "check": "astro check"
+    "check": "astro check"
   },
   "dependencies": {
     "astro": "^7.4.4",
