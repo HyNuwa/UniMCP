@@ -1,0 +1,152 @@
+---
+import { PINS, PKG, STATS, UNIVERSITIES, WORLD_PIN, asset } from "../data/site";
+import { ZOOM } from "../lib/projection";
+
+const first = UNIVERSITIES[0].id;
+---
+
+<section id="mapa" class="dark map" data-map data-view="mundo" style={`--zoom: ${ZOOM}; --unzoom: ${1 / ZOOM}; padding: clamp(28px, 5vw, 72px) 0`}>
+    <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 48px; align-items: center">
+        <div style="flex: 1.1 1 460px; min-width: 0">
+            <div class="map-stage">
+                <div class="layer layer-world">
+                    <img src={asset("map/world.svg")} alt="Globo de puntos centrado en Argentina, con Argentina resaltada" width="920" height="920" />
+                    <button class="pin" type="button" data-zoom="arg" style={`left: ${WORLD_PIN.x}%; top: ${WORLD_PIN.y}%`}>
+                        <span class="pin-ping"><span class="ping"></span><span class="pin-dot"></span></span>
+                        <span class="pin-label">{STATS.universidades} universidades · acercá</span>
+                    </button>
+                </div>
+                <div class="layer layer-arg">
+                    <img src={asset("map/argentina.svg")} alt="Argentina en puntos con sus provincias; las que tienen campus, resaltadas" width="920" height="920" />
+                    {
+                        PINS.map((p) => (
+                            <button class={`pin ${p.side === "left" ? "pin-l" : ""}`} type="button" data-unis={p.label.replaceAll(" · ", " ")} style={`left: ${p.x}%; top: ${p.y}%`} aria-label={`${p.label} en ${p.name}`}>
+                                <span class="pin-dot" />
+                                <span class="pin-label">{p.label}</span>
+                            </button>
+                        ))
+                    }
+                </div>
+                <div class="map-switch">
+                    <button class="tab" type="button" data-zoom="mundo" aria-pressed="true">Mundo</button>
+                    <button class="tab" type="button" data-zoom="arg" aria-pressed="false">Argentina</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 1 1 380px; min-width: 0">
+            <p class="eyebrow">04 / Dónde anda</p>
+            <h2 class="disp h2" style="margin-bottom: 16px">Del mundo<br />a tu provincia</h2>
+            <p class="lead" style="margin-bottom: 28px">{STATS.campus} campus en {STATS.universidades} universidades. Elegí una para ver sus campus y quién la probó.</p>
+            <ul style="list-style: none; margin: 0; padding: 0">
+                {
+                    UNIVERSITIES.map((u) => (
+                        <li>
+                            <button class="uni-btn" type="button" data-uni={u.id} aria-pressed={u.id === first ? "true" : "false"}>
+                                <span class="disp" style="font-size: 22px; font-weight: 600; width: 64px; flex: 0 0 auto">{u.id}</span>
+                                <span style="flex: 1; min-width: 0; font-size: 15px; color: var(--on-dark)">{u.cityLabel}</span>
+                                <span class="dot uni-dot" />
+                            </button>
+                        </li>
+                    ))
+                }
+            </ul>
+            {
+                UNIVERSITIES.map((u) => (
+                    <div class="uni-card" data-detail={u.id} hidden={u.id !== first}>
+                        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px">
+                            <span style="font-weight: 600; font-size: 17px; margin-right: auto">{u.name}</span>
+                            <span class="tag" style={u.testedBy ? "background: var(--ink); color: var(--white)" : "background: var(--soft)"}>{u.testedBy ? "Probado a fondo" : "Verificado"}</span>
+                        </div>
+                        <p style="margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--muted)">{u.campus}</p>
+                        <div style="display: flex; gap: 6px; margin-bottom: 18px">
+                            {u.aula && <span class="tag tag-aula">Aula</span>}
+                            {u.guarani && <span class="tag tag-g3w">Guaraní</span>}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px">
+                            {u.testedBy ? (
+                                <>
+                                    <img src={`https://github.com/${u.testedBy}.png?size=80`} alt="" width="40" height="40" loading="lazy" style="border-radius: 50%" />
+                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                        <a href={`https://github.com/${u.testedBy}`} style="color: var(--ink)"><strong>@{u.testedBy}</strong></a>
+                                        <br />
+                                        <span style="color: var(--muted)">la probó a fondo</span>
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <span class="slot" aria-hidden="true">+</span>
+                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                        <strong>Nadie la probó todavía.</strong>
+                                        <br />
+                                        <span style="color: var(--muted)">¿Sos de acá? Corré <code class="mono" style="font-size: 12px">npx -y {PKG} check</code></span>
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                ))
+            }
+        </div>
+    </div>
+</section>
+
+<style>
+    .map-stage { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; margin: 0 auto; overflow: hidden; border-radius: 28px; }
+    .layer { position: absolute; inset: 0; transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease; }
+    .layer img { width: 100%; height: 100%; display: block; }
+    [data-view="mundo"] .layer-arg { transform: scale(var(--unzoom)); opacity: 0; pointer-events: none; visibility: hidden; }
+    [data-view="arg"] .layer-world { transform: scale(var(--zoom)); opacity: 0; pointer-events: none; visibility: hidden; }
+    .layer { transition-property: transform, opacity, visibility; }
+
+    .pin { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 6px; cursor: pointer; color: var(--white); font: 600 13px var(--body); white-space: nowrap; }
+    .layer-arg .pin { transform: translate(-12px, -50%); }
+    .layer-arg .pin-l { flex-direction: row-reverse; transform: translate(calc(-100% + 12px), -50%); }
+    .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--dark); box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.35); background: var(--white); flex: 0 0 auto; }
+    .pin-label { background: rgba(21, 17, 13, 0.85); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 5px 11px; }
+    .pin.is-on .pin-dot { background: var(--coral); }
+    .pin.is-on .pin-label { background: var(--coral); color: var(--ink); border-color: var(--coral); }
+    .pin-ping { position: relative; width: 14px; height: 14px; flex: 0 0 auto; }
+    .pin-ping .pin-dot { position: absolute; inset: 0; background: var(--coral); }
+    .ping { position: absolute; inset: 0; border-radius: 50%; background: var(--coral); animation: ping 1.8s ease-out infinite; }
+    @keyframes ping { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(3.2); opacity: 0; } }
+
+    .map-switch { position: absolute; left: 16px; bottom: 16px; display: flex; gap: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 999px; padding: 4px; }
+    .map-switch .tab { background: transparent; }
+    .map-switch .tab[aria-pressed="true"] { background: var(--white); color: var(--ink); }
+
+    .uni-btn { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); background: transparent; padding: 16px 8px; min-height: 44px; cursor: pointer; font: inherit; color: var(--white); }
+    .uni-btn[aria-pressed="true"] { background: rgba(255, 255, 255, 0.08); }
+    .uni-dot { background: rgba(255, 255, 255, 0.25); }
+    .uni-btn[aria-pressed="true"] .uni-dot { background: var(--coral); }
+    .uni-card { margin-top: 20px; background: var(--white); color: var(--ink); border-radius: 24px; padding: 24px; }
+    .slot { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #b9b5ac; display: flex; align-items: center; justify-content: center; color: var(--muted); flex: 0 0 auto; }
+
+    @media (prefers-reduced-motion: reduce) { .layer { transition: none; } .ping { animation: none; } }
+</style>
+
+<script>
+    for (const map of document.querySelectorAll<HTMLElement>("[data-map]")) {
+        const view = (v: string) => {
+            map.dataset.view = v;
+            for (const b of map.querySelectorAll<HTMLElement>(".map-switch [data-zoom]")) b.setAttribute("aria-pressed", String(b.dataset.zoom === v));
+        };
+        const select = (id: string) => {
+            for (const b of map.querySelectorAll<HTMLElement>("[data-uni]")) b.setAttribute("aria-pressed", String(b.dataset.uni === id));
+            for (const d of map.querySelectorAll<HTMLElement>("[data-detail]")) d.hidden = d.dataset.detail !== id;
+            for (const p of map.querySelectorAll<HTMLElement>("[data-unis]")) {
+                const on = p.dataset.unis!.split(" ").includes(id);
+                p.classList.toggle("is-on", on);
+                p.setAttribute("aria-pressed", String(on));
+            }
+        };
+        map.addEventListener("click", (e) => {
+            const el = (e.target as HTMLElement).closest<HTMLElement>("[data-zoom], [data-uni], [data-unis]");
+            if (!el) return;
+            if (el.dataset.zoom) return view(el.dataset.zoom);
+            select(el.dataset.uni ?? el.dataset.unis!.split(" ")[0]);
+            view("arg");
+        });
+        select(map.querySelector<HTMLElement>("[data-uni]")!.dataset.uni!);
+    }
+</script>

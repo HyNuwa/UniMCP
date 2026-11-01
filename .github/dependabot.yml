@@ -8,6 +8,13 @@ updates:
     groups:
       menores:
         update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+    groups:
+      web:
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -1,0 +1,44 @@
+---
+import { READ_COUNT, TOOLS, WRITE_COUNT } from "../data/site";
+---
+
+<section id="tools" class="dark" style="padding: 120px 0">
+    <div class="wrap center">
+        <p class="eyebrow">02 / Las tools</p>
+        <p style="margin: 0 auto 14px; font-size: 17px; color: var(--on-dark); max-width: 620px; line-height: 1.5">
+            Leer no deja rastro: el docente no ve "visto" en sus reportes. <strong style="color: var(--white)">Escribir, solo si lo pediste.</strong>
+        </p>
+        <h2 class="disp h2" style="margin-bottom: 64px; font-weight: 600">No todas las tools hacen lo mismo</h2>
+    </div>
+    <div class="wrap">
+        <div style="display: flex; gap: 4px" aria-hidden="true">
+            {TOOLS.map((t) => <span class="seg" style={`background: ${t.color}`} />)}
+        </div>
+        <div style="display: flex; justify-content: space-between; gap: 16px; margin-top: 14px; font-size: 13px; color: var(--on-dark)">
+            <span>Solo leen · {READ_COUNT}</span><span>Escriben en el aula · {WRITE_COUNT}</span>
+        </div>
+        <ul class="tool-list">
+            {
+                TOOLS.map((t) => (
+                    <li>
+                        <div style="display: flex; align-items: center; gap: 10px; justify-content: space-between">
+                            <span class="mono" style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500">
+                                <span class="dot" style={`background: ${t.color}`} />
+                                {t.name}
+                            </span>
+                            <span style="font-size: 12px; color: rgba(255,255,255,.62)">{t.kind}</span>
+                        </div>
+                        <p style="margin: 8px 0 0 20px; font-size: 15px; line-height: 1.45; color: var(--on-dark)">{t.text}</p>
+                    </li>
+                ))
+            }
+        </ul>
+        <div style="display: flex; justify-content: center; margin-top: 48px">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid rgba(255,255,255,.18); border-radius: 22px; padding: 8px">
+                <span class="pill" style="background: rgba(255,255,255,.08); font-size: 14px"><span class="dot" style="background: var(--aula)"></span>Aula virtual (Moodle)</span>
+                <span class="pill" style="background: rgba(255,255,255,.08); font-size: 14px"><span class="dot" style="background: var(--g3w)"></span>SIU Guaraní</span>
+                <span class="pill" style="background: rgba(255,255,255,.08); font-size: 14px"><span class="dot" style="background: var(--coral)"></span>Escriben</span>
+            </div>
+        </div>
+    </div>
+</section>
