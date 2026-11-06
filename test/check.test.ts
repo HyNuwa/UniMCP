@@ -10,6 +10,8 @@ import { checkAula, TOOL_FUNCTIONS } from "../src/aula-virtual/check.js";
 import type { AulaSession } from "../src/aula-virtual/client/session.js";
 import { registerAulaVirtualTools } from "../src/aula-virtual/tools.js";
 import { redact } from "../src/check.js";
+import { listCampuses } from "../src/shared/campus.js";
+import { CHECK_HEADING, campusLine, checkedCampus, TESTED_THREAD } from "../src/shared/community.js";
 import { withoutIds } from "../src/shared/logger.js";
 import { UploadInbox } from "../src/shared/uploads.js";
 
@@ -110,5 +112,28 @@ describe("unimcp check", () => {
         assert.equal(withoutIds("DNI 40123456 · 40.123.456 · 2.345.678"), "DNI [número] · [número] · [número]");
         const notIds = "Moodle 3.9.25 · 387 funciones · aula 2023";
         assert.equal(withoutIds(notIds), notIds);
+    });
+});
+
+/** El resumen se pega en el hilo de GitHub, y la web lee de ahí el campus para poner a cada uno en el mapa. */
+describe("el hilo del mapa", () => {
+    test("de cada campus se lee el id del resumen, pegado tal cual, en un bloque de código o con CRLF", () => {
+        for (const campus of listCampuses()) {
+            const summary = [CHECK_HEADING, "- unimcp 0.1.0 · Node v24.0.0 · linux", campusLine(campus), "", "#### Aula virtual"].join("\n");
+            assert.equal(checkedCampus(summary), campus.id);
+            assert.equal(checkedCampus("```\n" + summary + "\n```"), campus.id);
+            assert.equal(checkedCampus(summary.replaceAll("\n", "\r\n")), campus.id);
+        }
+    });
+
+    test("un comentario que no es un resumen no cuenta", () => {
+        assert.equal(checkedCampus("¡Anda bárbaro en unju!"), undefined);
+        assert.equal(checkedCampus(campusLine({ id: "unju", universidad: "UNJu", nombre: "UNJu" })), undefined);
+    });
+
+    test("el workflow de la web filtra por el número del hilo", () => {
+        assert.ok(TESTED_THREAD.url.endsWith(`/discussions/${TESTED_THREAD.number}`));
+        const workflow = readFileSync(new URL("../.github/workflows/site.yml", import.meta.url), "utf8");
+        assert.ok(workflow.includes(`github.event.discussion.number == ${TESTED_THREAD.number}\n`) || workflow.includes(`github.event.discussion.number == ${TESTED_THREAD.number}\r\n`));
     });
 });

@@ -9,6 +9,7 @@ import { StoredAulaSession } from "./aula-virtual/client/hosted-session.js";
 import { LocalGuaraniSession } from "./guarani/client/local-session.js";
 import { campusOf, startHttpServer, userIdOf } from "./http-server.js";
 import { runCheck } from "./check.js";
+import { TESTED_THREAD } from "./shared/community.js";
 import { runLogin } from "./login.js";
 import { accessPolicyFromEnv } from "./oauth/access.js";
 import { redirectAllowlistFromEnv } from "./oauth/redirects.js";
@@ -49,6 +50,11 @@ async function main() {
     }
     if (positionals[0] === "check") {
         process.stdout.write(`${await runCheck()}
+`);
+        // A stderr: el resumen de stdout queda limpio para pegarlo o guardarlo en un archivo.
+        process.stderr.write(`
+¿Anduvo? Pegá este resumen en ${TESTED_THREAD.url} y aparecés en el mapa de UniMCP con tu usuario de GitHub.
+Si algo falló, abrí un issue: https://github.com/HyNuwa/UniMCP/issues/new/choose
 `);
         return;
     }

@@ -2,16 +2,24 @@ name: Web
 
 # La web (site/) lee los campus y las tools de src/, así que se rearma cuando cambian ellos también.
 # En un PR solo se arma, para que un cambio en el servidor no la rompa sin enterarnos; en master se publica.
+# El mapa muestra quienes pegaron su `unimcp check` en el hilo (src/shared/community.ts): se rearma cuando
+# alguien comenta ahí, y una vez por día, para que se vaya un comentario ocultado o borrado.
 on:
   push:
     branches: [master]
     paths: [site/**, src/**, package.json, package-lock.json, .github/workflows/site.yml]
   pull_request:
     paths: [site/**, src/**, package.json, package-lock.json, .github/workflows/site.yml]
+  discussion_comment:
+    types: [created, edited, deleted]
+  schedule:
+    - cron: "17 9 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
+  # Leer los comentarios del hilo del mapa.
+  discussions: read
 
 # Una publicación a la vez; la que está en curso termina antes de que arranque la siguiente.
 concurrency:
@@ -20,6 +28,8 @@ concurrency:
 
 jobs:
   build:
+    # Un comentario en otra discusión no cambia el mapa. El número es TESTED_THREAD en src/shared/community.ts.
+    if: github.event_name != 'discussion_comment' || github.event.discussion.number == 64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

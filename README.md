@@ -97,7 +97,7 @@ npx -y @nuwujix/unimcp login
 ```
 Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
-Para ver si anda todo, `npx -y @nuwujix/unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales.
+Para ver si anda todo, `npx -y @nuwujix/unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales. Si anduvo, pegá el resumen en [el hilo del mapa](https://github.com/HyNuwa/UniMCP/discussions/64) y aparecés en la [web](https://hynuwa.github.io/UniMCP/#mapa), en el pin de tu campus.
 
 #### 2. Agregarlo a tu cliente
 **Claude Code**

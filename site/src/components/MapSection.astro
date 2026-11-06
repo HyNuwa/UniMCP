@@ -1,8 +1,11 @@
 ---
-import { PINS, PKG, STATS, UNIVERSITIES, WORLD_PIN, asset } from "../data/site";
+import { PINS, PKG, STATS, THREAD, UNIVERSITIES, WORLD_PIN, asset } from "../data/site";
 import { ZOOM } from "../lib/projection";
 
 const first = UNIVERSITIES[0].id;
+/** Cuántas caras se ven por universidad; el resto se cuenta. */
+const FACES = 6;
+const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(", ") + (logins.length > 3 ? ` y ${logins.length - 3} más` : "");
 ---
 
 <section id="mapa" class="dark map" data-map data-view="mundo" style={`--zoom: ${ZOOM}; --unzoom: ${1 / ZOOM}; padding: clamp(28px, 5vw, 72px) 0`}>
@@ -56,32 +59,49 @@ const first = UNIVERSITIES[0].id;
                     <div class="uni-card" data-detail={u.id} hidden={u.id !== first}>
                         <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px">
                             <span style="font-weight: 600; font-size: 17px; margin-right: auto">{u.name}</span>
-                            <span class="tag" style={u.testedBy ? "background: var(--ink); color: var(--white)" : "background: var(--soft)"}>{u.testedBy ? "Probado a fondo" : "Verificado"}</span>
+                            <span class="tag" style={u.testedBy || u.testers.length ? "background: var(--ink); color: var(--white)" : "background: var(--soft)"}>{u.testedBy ? "Probado a fondo" : u.testers.length ? "Probado" : "Verificado"}</span>
                         </div>
                         <p style="margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--muted)">{u.campus}</p>
                         <div style="display: flex; gap: 6px; margin-bottom: 18px">
                             {u.aula && <span class="tag tag-aula">Aula</span>}
                             {u.guarani && <span class="tag tag-g3w">Guaraní</span>}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px">
-                            {u.testedBy ? (
-                                <>
+                        <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 16px">
+                            {u.testedBy && (
+                                <div style="display: flex; align-items: center; gap: 12px">
                                     <img src={`https://github.com/${u.testedBy}.png?size=80`} alt="" width="40" height="40" loading="lazy" style="border-radius: 50%" />
                                     <p style="margin: 0; font-size: 14px; line-height: 1.45">
                                         <a href={`https://github.com/${u.testedBy}`} style="color: var(--ink)"><strong>@{u.testedBy}</strong></a>
                                         <br />
                                         <span style="color: var(--muted)">la probó a fondo</span>
                                     </p>
-                                </>
-                            ) : (
-                                <>
+                                </div>
+                            )}
+                            {u.testers.length > 0 && (
+                                <div style="display: flex; align-items: center; gap: 12px">
+                                    <span class="faces">
+                                        {u.testers.slice(0, FACES).map((login) => (
+                                            <a href={`https://github.com/${login}`} title={`@${login}`}>
+                                                <img src={`https://github.com/${login}.png?size=64`} alt={`@${login}`} width="32" height="32" loading="lazy" />
+                                            </a>
+                                        ))}
+                                    </span>
+                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                        <strong>{names(u.testers)}</strong>
+                                        <br />
+                                        <span style="color: var(--muted)">{u.testers.length === 1 ? "la probó" : "la probaron"} · <a href={THREAD} style="color: inherit">sumate</a></span>
+                                    </p>
+                                </div>
+                            )}
+                            {!u.testedBy && u.testers.length === 0 && (
+                                <div style="display: flex; align-items: center; gap: 12px">
                                     <span class="slot" aria-hidden="true">+</span>
                                     <p style="margin: 0; font-size: 14px; line-height: 1.45">
                                         <strong>Nadie la probó todavía.</strong>
                                         <br />
-                                        <span style="color: var(--muted)">¿Sos de acá? Corré <code class="mono" style="font-size: 12px">npx -y {PKG} check</code></span>
+                                        <span style="color: var(--muted)">¿Sos de acá? Corré <code class="mono" style="font-size: 12px">npx -y {PKG} check</code> y pegá el resultado en <a href={THREAD} style="color: inherit">el hilo</a>.</span>
                                     </p>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -92,6 +112,10 @@ const first = UNIVERSITIES[0].id;
 </section>
 
 <style>
+    .faces { display: flex; flex-shrink: 0; }
+    .faces a { margin-left: -8px; }
+    .faces a:first-child { margin-left: 0; }
+    .faces img { display: block; border-radius: 50%; border: 2px solid var(--white); }
     .map-stage { position: relative; width: 100%; max-width: 600px; aspect-ratio: 1 / 1; margin: 0 auto; overflow: hidden; border-radius: 28px; }
     .layer { position: absolute; inset: 0; transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease; }
     .layer img { width: 100%; height: 100%; display: block; }

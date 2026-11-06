@@ -4,6 +4,8 @@ Lo que cambia en cada versión para quien usa UniMCP. El formato sigue [Keep a C
 
 ## [Sin publicar]
 
+- `unimcp check` termina diciendo dónde pegar el resumen para aparecer en el mapa de la web, en el pin de tu campus.
+
 ## [0.1.0] - 2026-10-31
 
 La primera versión publicada en npm y en el registro de MCP.

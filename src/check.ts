@@ -4,11 +4,12 @@ import { checkGuarani } from "./guarani/check.js";
 import { LocalGuaraniSession } from "./guarani/client/local-session.js";
 import { localCampus } from "./shared/campus.js";
 import { loadCredentials, loginHint } from "./shared/credentials.js";
+import { CHECK_HEADING, campusLine } from "./shared/community.js";
 import { VERSION } from "./shared/version.js";
 
 /**
  * `unimcp check`: prueba el campus elegido y escribe un resumen para pegar en el issue "Probé mi
- * universidad". No muestra datos personales, y por las dudas tapa el usuario de las credenciales y los
+ * universidad" o en el hilo del mapa (`TESTED_THREAD`). No muestra datos personales, y por las dudas tapa el usuario de las credenciales y los
  * números con forma de DNI si algún mensaje de error los trae.
  */
 export async function runCheck(): Promise<string> {
@@ -16,9 +17,9 @@ export async function runCheck(): Promise<string> {
     if (!campus) throw new Error(`Todavía no elegiste tu campus. ${loginHint("el campus")}`);
 
     const lines = [
-        "### unimcp check",
+        CHECK_HEADING,
         `- unimcp ${VERSION} · Node ${process.version} · ${process.platform}`,
-        `- Campus: \`${campus.id}\` (${campus.universidad} · ${campus.nombre})`,
+        campusLine(campus),
     ];
     if (campus.aula) {
         lines.push("", "#### Aula virtual", ...(await checkAula(campus.aula, new LocalSession(campus.aula))));
