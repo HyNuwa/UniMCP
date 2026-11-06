@@ -33,7 +33,7 @@ Each layer has a single job and dependencies go in one direction only: `tools.ts
 
 The site is never a global or a module-level constant: it travels with the session (`session.site`), because in HTTP mode each user can be on a different campus. Locally the campus comes from `UNI_CAMPUS`, the `campus.json` written by `login`, or the custom env vars (`UNI_AULA_BASE_URL`, `UNI_GUARANI_URL`). In HTTP mode it's stored with the user, and the token verifier puts it in `authInfo.extra.campus`.
 
-Before adding a Moodle, check `tool_mobile_get_public_config` returns `enablemobilewebservice: 1`; `identityproviders` means an SSO.
+Before adding a Moodle, check `tool_mobile_get_public_config` returns `enablemobilewebservice: 1`; `identityproviders` means an SSO. Add it only if students log in with a Moodle password (`typeoflogin` 1) or through Keycloak (`ssoHost`): with OAuth2 or a portal of its own, our login can't enter, and a certificate Node rejects rules it out too. Each campus has its `provincia` (geoBoundaries' name, which the website paints), and `unimcp login` finds it with `searchCampuses`: by id, acronym, name or province, without accents.
 
 ## Session and multi-user
 

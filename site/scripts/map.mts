@@ -121,7 +121,9 @@ const argentina = svg(
         `<path d="${provinces.flatMap((p) => p.polygons.map((poly) => border(poly[0]))).join("")}" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.4" stroke-linejoin="round"/>`,
 );
 
-const missing = [...withCampus].filter((p) => !provinces.some((s) => s.key === p));
+/** Provincias que geoBoundaries no trae como polígono: sus pines se ubican igual, por coordenadas. */
+const NO_POLYGON = new Set(["Entre Ríos"]);
+const missing = [...withCampus].filter((p) => !NO_POLYGON.has(p) && !provinces.some((s) => s.key === p));
 if (missing.length) throw new Error(`Estas provincias de places.ts no están en geoBoundaries: ${missing.join(", ")}`);
 
 writeFileSync(new URL("world.svg", out), world);
