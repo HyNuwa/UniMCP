@@ -7,6 +7,9 @@ import { RADIUS, percent } from "../lib/projection";
 export const PKG = generated.paquete;
 export const VERSION = generated.version;
 export const REPO = "https://github.com/HyNuwa/UniMCP";
+/** El hilo donde cada uno pega su `unimcp check` para aparecer en el mapa. */
+export const THREAD = generated.hilo;
+const probaron: Record<string, string[]> = generated.probaron;
 
 const unplaced = generated.campus.filter((c) => !CAMPUS_CITY[c.id]).map((c) => c.id);
 if (unplaced.length) throw new Error(`Falta la ciudad de estos campus en src/data/places.ts: ${unplaced.join(", ")}`);
@@ -29,6 +32,8 @@ export const UNIVERSITIES = [...new Set(generated.campus.map((c) => c.universida
         aula: campus.some((c) => c.aula),
         guarani: campus.some((c) => c.guarani),
         testedBy: TESTED_BY[sigla],
+        /** Quienes pegaron su `unimcp check` en el hilo con un campus de esta universidad, sin repetir al de testedBy. */
+        testers: [...new Set(campus.flatMap((c) => probaron[c.id] ?? []))].filter((login) => login !== TESTED_BY[sigla]),
     };
 });
 
