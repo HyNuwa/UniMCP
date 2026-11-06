@@ -17,22 +17,40 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 - *"¿Qué mesas de examen hay para Análisis II?"* (Guaraní)
 
 ## Universidades y campus
-| Id | Universidad | Campus | Aula (Moodle) | Guaraní |
-|---|---|---|---|---|
-| `unju` | UNJu | Universidad Nacional de Jujuy | `virtual.unju.edu.ar` | `alumnos.unju.edu.ar` |
-| `unsa-exactas` | UNSa | Facultad de Ciencias Exactas | `exavirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
-| `unsa-salud` | UNSa | Facultad de Ciencias de la Salud | `saludvirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
-| `unsa` | UNSa | Otras facultades | — | `autogestiong3.unsa.edu.ar` |
-| `unt-facet` | UNT | FACET | `facetvirtual.facet.unt.edu.ar` | `guarani.unt.edu.ar` |
-| `unt-face` | UNT | Ciencias Económicas | `campus2.unt.edu.ar` | `guarani.unt.edu.ar` |
-| `unt-filo` | UNT | Filosofía y Letras | `campus.filo.unt.edu.ar` | `guarani.unt.edu.ar` |
-| `unt` | UNT | Otras facultades | — | `guarani.unt.edu.ar` |
-| `uba-fiuba` | UBA | Ingeniería (FIUBA) | `campusgrado.fi.uba.ar` | `guaraniautogestion.fi.uba.ar` |
-| `uba-exactas` | UBA | Ciencias Exactas y Naturales | `campus.exactas.uba.ar` (SSO idEx) | `inscripciones.exactas.uba.ar` |
-| `utn-frba` | UTN | Regional Buenos Aires | `aulasvirtuales.frba.utn.edu.ar` (SSO) | — |
-| `utn-frt` | UTN | Regional Tucumán | `frt.cvg.utn.edu.ar` | — |
+| Id | Universidad | Campus | Provincia | Aula (Moodle) | Guaraní |
+|---|---|---|---|---|---|
+| `unju` | UNJu | Universidad Nacional de Jujuy | Jujuy | `virtual.unju.edu.ar` | `alumnos.unju.edu.ar` |
+| `unsa-exactas` | UNSa | Facultad de Ciencias Exactas | Salta | `exavirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
+| `unsa-salud` | UNSa | Facultad de Ciencias de la Salud | Salta | `saludvirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
+| `unsa` | UNSa | Otras facultades | Salta | — | `autogestiong3.unsa.edu.ar` |
+| `unt-facet` | UNT | FACET | Tucumán | `facetvirtual.facet.unt.edu.ar` | `guarani.unt.edu.ar` |
+| `unt-face` | UNT | Ciencias Económicas | Tucumán | `campus2.unt.edu.ar` | `guarani.unt.edu.ar` |
+| `unt-filo` | UNT | Filosofía y Letras | Tucumán | `campus.filo.unt.edu.ar` | `guarani.unt.edu.ar` |
+| `unt` | UNT | Otras facultades | Tucumán | — | `guarani.unt.edu.ar` |
+| `uba-fiuba` | UBA | Ingeniería (FIUBA) | Ciudad Autónoma de Buenos Aires | `campusgrado.fi.uba.ar` | `guaraniautogestion.fi.uba.ar` |
+| `uba-exactas` | UBA | Ciencias Exactas y Naturales | Ciudad Autónoma de Buenos Aires | `campus.exactas.uba.ar` (SSO idEx) | `inscripciones.exactas.uba.ar` |
+| `uba-agronomia` | UBA | Agronomía (FAUBA) | Ciudad Autónoma de Buenos Aires | `campus.agro.uba.ar` | — |
+| `uba-farmacia` | UBA | Farmacia y Bioquímica | Ciudad Autónoma de Buenos Aires | `campus.ffyb.uba.ar` | — |
+| `uba-filo` | UBA | Filosofía y Letras | Ciudad Autónoma de Buenos Aires | `campus.filo.uba.ar` | — |
+| `uba-sociales` | UBA | Ciencias Sociales | Ciudad Autónoma de Buenos Aires | `campus.sociales.uba.ar` | — |
+| `utn-frba` | UTN | Regional Buenos Aires | Ciudad Autónoma de Buenos Aires | `aulasvirtuales.frba.utn.edu.ar` (SSO) | — |
+| `utn-frt` | UTN | Regional Tucumán | Tucumán | `frt.cvg.utn.edu.ar` | — |
+| `utn-frc` | UTN | Regional Córdoba | Córdoba | `uv.frc.utn.edu.ar` | — |
+| `utn-frsf` | UTN | Regional Santa Fe | Santa Fe | `campusvirtual.frsf.utn.edu.ar` | — |
+| `unc-famaf` | UNC | Matemática, Astronomía, Física y Computación (FAMAF) | Córdoba | `famaf.aulavirtual.unc.edu.ar` | — |
+| `unicen-exactas` | UNICEN | Ciencias Exactas | Buenos Aires | `moodle.exa.unicen.edu.ar` | — |
+| `uns` | UNS | Universidad Nacional del Sur | Buenos Aires | `moodle.uns.edu.ar/moodle` | — |
+| `unne` | UNNE | Universidad Nacional del Nordeste | Corrientes | `virtual-moodle.unne.edu.ar` | — |
+| `uner-ingenieria` | UNER | Ingeniería (FIUNER) | Entre Ríos | `campus.ingenieria.uner.edu.ar` | — |
+| `uncuyo-fad` | UNCuyo | Artes y Diseño | Mendoza | `virtual.fad.uncu.edu.ar` | — |
+| `unsj` | UNSJ | Universidad Nacional de San Juan | San Juan | `campusvirtual.unsj.edu.ar` | — |
+| `unsl` | UNSL | Universidad Nacional de San Luis | San Luis | `moodle4vz.unsl.edu.ar/moodle` | — |
+| `unlpam-agronomia` | UNLPam | Agronomía | La Pampa | `v5.campus.agro.unlpam.edu.ar` | — |
+| `unco` | UNCo | Universidad Nacional del Comahue | Neuquén | `pedco.uncoma.edu.ar` | — |
+| `unpsjb` | UNPSJB | Universidad Nacional de la Patagonia San Juan Bosco | Chubut | `campusvirtual.unp.edu.ar` | — |
+| `untdf` | UNTDF | Universidad Nacional de Tierra del Fuego | Tierra del Fuego | `campus.untdf.edu.ar` | — |
 
-Cada aula se verificó con `tool_mobile_get_public_config` (el servicio móvil de Moodle tiene que estar habilitado) y cada Guaraní con su página de login de autogestión. Probado a fondo solo en **UNJu**; los demás **faltan probarlos con usuarios reales**. Si sos de otra universidad, probalo y contanos cómo te fue con la plantilla [Probé mi universidad](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien. Más formas de colaborar en [CONTRIBUTING.md](CONTRIBUTING.md).
+Cada aula se verificó con `tool_mobile_get_public_config` (el servicio móvil de Moodle tiene que estar habilitado) y cada Guaraní con su página de login de autogestión. Entran las aulas con login propio de Moodle o con SSO de Keycloak: las que entran con OAuth2 o con un portal propio (como varias de la UNC) todavía no. Probado a fondo solo en **UNJu**; los demás **faltan probarlos con usuarios reales**. Si sos de otra universidad, probalo y contanos cómo te fue con la plantilla [Probé mi universidad](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien. Más formas de colaborar en [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Sumar tu campus
 Si el tuyo no está, podés usarlo igual con variables de entorno (o un `.env`, ver [`.env.example`](.env.example)):
@@ -95,7 +113,7 @@ Necesitás [Node.js](https://nodejs.org) 22 o superior.
 ```bash
 npx -y @nuwujix/unimcp login
 ```
-Elegís tu campus de la lista, y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
+Buscás tu campus por sigla, facultad o provincia (`UNC`, `exactas`, `Córdoba`), y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
 Para ver si anda todo, `npx -y @nuwujix/unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales. Si anduvo, pegá el resumen en [el hilo del mapa](https://github.com/HyNuwa/UniMCP/discussions/64) y aparecés en la [web](https://hynuwa.github.io/UniMCP/#mapa), en el pin de tu campus.
 

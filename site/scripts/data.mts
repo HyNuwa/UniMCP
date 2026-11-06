@@ -31,6 +31,7 @@ const campus = listCampuses().map((c) => ({
     id: c.id,
     universidad: c.universidad,
     nombre: c.nombre,
+    provincia: c.provincia ?? "",
     aula: Boolean(c.aula),
     sso: Boolean(c.aula?.ssoHost),
     guarani: Boolean(c.guarani),

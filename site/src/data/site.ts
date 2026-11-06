@@ -13,6 +13,11 @@ const probaron: Record<string, string[]> = generated.probaron;
 
 const unplaced = generated.campus.filter((c) => !CAMPUS_CITY[c.id]).map((c) => c.id);
 if (unplaced.length) throw new Error(`Falta la ciudad de estos campus en src/data/places.ts: ${unplaced.join(", ")}`);
+const misplaced = generated.campus.filter((c) => CITIES[CAMPUS_CITY[c.id]].province !== c.provincia).map((c) => c.id);
+if (misplaced.length) throw new Error(`La ciudad de estos campus está en otra provincia que la de campus.ts: ${misplaced.join(", ")}`);
+
+/** Minúsculas y sin tildes: el buscador de la lista compara así. */
+const fold = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 /** Universidades en el orden de campus.ts, con sus campus y sus ciudades. */
 export const UNIVERSITIES = [...new Set(generated.campus.map((c) => c.universidad))].map((sigla) => {
@@ -29,6 +34,18 @@ export const UNIVERSITIES = [...new Set(generated.campus.map((c) => c.universida
             campus.length === 1 && campus[0].nombre === name
                 ? "Toda la universidad, en un solo campus."
                 : campus.map((c) => c.nombre + (c.sso ? " (con SSO)" : "")).join(" · "),
+        provinces: [...new Set(campus.map((c) => c.provincia))],
+        /**
+         * Lo que encuentra el buscador en cada provincia: sigla, nombre y los campus y ciudades de ahí. Así
+         * "córdoba" muestra la UTN en Córdoba, y no en todas las provincias donde está.
+         */
+        search: Object.fromEntries(
+            [...new Set(campus.map((c) => c.provincia))].map((province) => {
+                const here = campus.filter((c) => c.provincia === province);
+                const places = [...new Set(here.map((c) => CITIES[CAMPUS_CITY[c.id]].name))];
+                return [province, fold([sigla, name, province, ...here.map((c) => c.nombre), ...places].join(" "))];
+            }),
+        ) as Record<string, string>,
         aula: campus.some((c) => c.aula),
         guarani: campus.some((c) => c.guarani),
         testedBy: TESTED_BY[sigla],
@@ -37,16 +54,23 @@ export const UNIVERSITIES = [...new Set(generated.campus.map((c) => c.universida
     };
 });
 
-/** Un pin por ciudad, ubicado con la misma proyección que dibujó el mapa. */
-export const PINS = (Object.keys(CITIES) as CityId[])
-    .map((id) => ({ id, ...CITIES[id], ...percent(RADIUS.argentina, CITIES[id].lon, CITIES[id].lat), label: UNIVERSITIES.filter((u) => u.cities.includes(id)).map((u) => u.id).join(" · ") }))
-    .filter((p) => p.label);
+/**
+ * Las provincias con campus, de norte a sur: un pin cada una, en la ciudad de su primer campus, con cuántas
+ * universidades tiene. Con decenas de universidades, un pin por provincia no se pisa como las siglas.
+ */
+export const PROVINCES = [...new Set(generated.campus.map((c) => c.provincia))]
+    .map((name) => {
+        const city = CITIES[CAMPUS_CITY[generated.campus.find((c) => c.provincia === name)!.id]];
+        const unis = UNIVERSITIES.filter((u) => u.provinces.includes(name)).map((u) => u.id);
+        return { name, unis, lon: city.lon, lat: city.lat, side: city.side, ...percent(RADIUS.argentina, city.lon, city.lat) };
+    })
+    .sort((a, b) => b.lat - a.lat);
 
-/** El pin del globo: el promedio de las ciudades. */
+/** El pin del globo: el promedio de las provincias. */
 export const WORLD_PIN = percent(
     RADIUS.mundo,
-    PINS.reduce((s, p) => s + p.lon, 0) / PINS.length,
-    PINS.reduce((s, p) => s + p.lat, 0) / PINS.length,
+    PROVINCES.reduce((s, p) => s + p.lon, 0) / PROVINCES.length,
+    PROVINCES.reduce((s, p) => s + p.lat, 0) / PROVINCES.length,
 );
 
 const READ_COLORS = ["#9AD3FF", "#7CC4FF", "#5DB2FF", "#4AA2F2", "#5CC6E4", "#45B6CF", "#3FA7BA", "#5ACDB6", "#44BC9C"];
@@ -81,10 +105,9 @@ export const STATS = {
     tools: generated.tools.length,
     campus: generated.campus.length,
     universidades: UNIVERSITIES.length,
+    provincias: PROVINCES.length,
 };
 
-/** "UNJu, UNSa, UNT, UBA y UTN". */
-export const UNIVERSITY_LIST = UNIVERSITIES.map((u) => u.id).join(", ").replace(/, ([^,]*)$/, " y $1");
 
 /** Un archivo de public/, con la base del sitio (en GitHub Pages es /UniMCP/). */
 export const asset = (path: string) => import.meta.env.BASE_URL.replace(/\/?$/, "/") + path;

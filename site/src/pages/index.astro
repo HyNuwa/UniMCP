@@ -11,11 +11,11 @@ import hero from "../assets/hero.jpg";
 import laptop from "../assets/laptop.jpg";
 import phone from "../assets/phone.jpg";
 import { ASKS, FAQ, SAFETY } from "../data/copy";
-import { REPO, STATS, UNIVERSITY_LIST } from "../data/site";
+import { REPO, STATS } from "../data/site";
 
 const askColor = (tool: string) => (tool.startsWith("guarani") ? "var(--g3w)" : ["aula_assign_submit", "aula_send_message", "aula_forum_post"].includes(tool) ? "var(--coral)" : "var(--aula)");
 const toneBg = { soft: "var(--soft)", aula: "#e6f3ff", coral: "#ffe6de", g3w: "#efeaff" } as const;
-const faq = FAQ.map((f) => ({ ...f, a: f.a.replace("{campus}", String(STATS.campus)).replace("{universidades}", UNIVERSITY_LIST) }));
+const faq = FAQ.map((f) => ({ ...f, a: f.a.replace("{campus}", String(STATS.campus)).replace("{universidades}", String(STATS.universidades)).replace("{provincias}", String(STATS.provincias)) }));
 ---
 
 <Base
