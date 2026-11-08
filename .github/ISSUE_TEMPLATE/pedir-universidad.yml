@@ -1,0 +1,61 @@
+name: Pedir mi universidad
+description: Tu facultad usa Moodle y no está en la lista de UniMCP.
+title: "[Pedido] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Con el link del aula probamos si UniMCP puede entrar: el aula tiene que tener habilitado el servicio móvil de Moodle (el que usa la app oficial) y un login que sepamos hacer. **Este issue es público: no pegues tu usuario, DNI, legajo ni mails.**
+  - type: input
+    id: universidad
+    attributes:
+      label: Universidad
+      placeholder: "Universidad Nacional de Rosario (UNR)"
+    validations:
+      required: true
+  - type: input
+    id: facultad
+    attributes:
+      label: Facultad
+      description: Si el aula es de toda la universidad, dejalo vacío.
+      placeholder: "Facultad de Ciencias Exactas, Ingeniería y Agrimensura"
+  - type: input
+    id: provincia
+    attributes:
+      label: Provincia
+      placeholder: "Santa Fe"
+    validations:
+      required: true
+  - type: input
+    id: aula
+    attributes:
+      label: Link del aula virtual
+      description: La dirección donde entrás al aula, la que aparece en el navegador antes de iniciar sesión.
+      placeholder: "https://campus.facultad.edu.ar"
+    validations:
+      required: true
+  - type: dropdown
+    id: login
+    attributes:
+      label: ¿Cómo entrás al aula?
+      options:
+        - Con usuario y contraseña en la página del aula
+        - Con un botón que me lleva a otra página de la universidad
+        - No sé
+    validations:
+      required: true
+  - type: dropdown
+    id: app
+    attributes:
+      label: ¿Funciona la app oficial de Moodle con tu aula?
+      description: Si la app entra, casi seguro UniMCP también puede.
+      options:
+        - Sí
+        - "No"
+        - No la probé
+  - type: textarea
+    id: details
+    attributes:
+      label: Algo más
+      description: El link de la autogestión de SIU Guaraní, si tu universidad la usa, o lo que quieras contarnos.

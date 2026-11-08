@@ -72,7 +72,7 @@ async function chooseCampus(http: boolean): Promise<Campus> {
     }
     throw new Error(
         "No elegiste un campus. Si el tuyo no está, definí UNI_AULA_BASE_URL (y UNI_GUARANI_URL) y elegí " +
-            `"${CUSTOM_CAMPUS}", o pedilo en https://github.com/HyNuwa/UniMCP/issues/new/choose.`,
+            `"${CUSTOM_CAMPUS}", o pedilo en https://github.com/HyNuwa/UniMCP/issues/new?template=pedir-universidad.yml.`,
     );
 }
 
