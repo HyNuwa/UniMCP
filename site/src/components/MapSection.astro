@@ -7,6 +7,8 @@ const first = PROVINCES[0].unis[0];
 const byId = new Map(UNIVERSITIES.map((u) => [u.id, u]));
 /** Cuántas caras se ven por universidad; el resto se cuenta. */
 const FACES = 6;
+/** El formulario de GitHub para pedir una universidad; el script le agrega lo buscado. */
+const REQUEST_URL = `${REPO}/issues/new?template=pedir-universidad.yml`;
 const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(", ") + (logins.length > 3 ? ` y ${logins.length - 3} más` : "");
 ---
 
@@ -77,9 +79,12 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
                     ))
                 }
                 <p class="uni-empty" data-empty hidden>
-                    No la encontramos. Si tu facultad usa Moodle, <a href={`${REPO}/issues/new/choose`}>pedila</a> o probala con <code class="mono">personalizado</code>.
+                    No la encontramos. Si tu facultad usa Moodle, <a href={REQUEST_URL} data-request>pedila</a> o probala con <code class="mono">personalizado</code>.
                 </p>
             </div>
+            <p class="uni-request">
+                ¿No está tu facultad? <a class="uni-request-btn" href={REQUEST_URL} data-request>Pedila</a>
+            </p>
             <div data-cards>
                 {
                     UNIVERSITIES.map((u) => (
@@ -185,6 +190,10 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
     .uni-sigla { font-size: 20px; font-weight: 600; min-width: 84px; flex: 0 0 auto; }
     .uni-name { flex: 1; min-width: 0; font-size: 14px; color: var(--on-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .uni-empty { margin: 18px 8px; font-size: 14px; line-height: 1.5; color: var(--on-dark); }
+    .uni-request { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 4px 8px 0; font-size: 14px; color: var(--on-dark); }
+    .uni-request-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px; color: var(--white); font-weight: 600; text-decoration: none; }
+    .uni-request-btn:hover { border-color: var(--coral); color: var(--coral); }
+    .uni-request-btn:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
     .uni-btn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); background: transparent; padding: 12px 8px; min-height: 44px; cursor: pointer; font: inherit; color: var(--white); }
     .uni-btn[aria-pressed="true"] { background: rgba(255, 255, 255, 0.08); }
     .uni-dot { background: rgba(255, 255, 255, 0.25); }
@@ -281,10 +290,24 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
             select(el.dataset.uni!, el.closest<HTMLElement>("[data-group]")?.dataset.group);
             view("arg");
         });
+        /** El pedido abre el formulario con lo que se buscó ya escrito, como título y universidad. */
+        const request = () => {
+            const query = input.value.trim();
+            for (const a of map.querySelectorAll<HTMLAnchorElement>("[data-request]")) {
+                const url = new URL(a.dataset.request || a.href);
+                a.dataset.request = url.href;
+                if (query) {
+                    url.searchParams.set("title", `[Pedido] ${query}`);
+                    url.searchParams.set("universidad", query);
+                }
+                a.href = url.href;
+            }
+        };
         input.addEventListener("input", () => {
             province = null;
             filter();
             select(current, currentGroup);
+            request();
         });
         narrow.addEventListener("change", place);
         select(map.querySelector<HTMLElement>('[data-uni][aria-pressed="true"]')!.dataset.uni!);
