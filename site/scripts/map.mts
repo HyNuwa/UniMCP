@@ -83,7 +83,9 @@ function dots(r: number, step: number, dot: number, colors: Record<string, strin
 const svg = (body: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}">${body}</svg>`;
 
 const countries = shapes(await load("world.json"), (f) => f.id ?? "");
-const provinces = shapes(await load("provinces.json"), (f) => f.properties.shapeName);
+/** Nombres que geoBoundaries escribe mal: places.ts y campus.ts usan el correcto, que es el que se busca. */
+const SHAPE_NAME_FIX: Record<string, string> = { "La Roja": "La Rioja" };
+const provinces = shapes(await load("provinces.json"), (f) => SHAPE_NAME_FIX[f.properties.shapeName] ?? f.properties.shapeName);
 /** Malvinas se pinta como Argentina. */
 const ARGENTINA = new Set(["ARG", "FLK"]);
 const withCampus = new Set<string>(Object.values(CITIES).map((c) => c.province));
@@ -121,7 +123,9 @@ const argentina = svg(
         `<path d="${provinces.flatMap((p) => p.polygons.map((poly) => border(poly[0]))).join("")}" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.4" stroke-linejoin="round"/>`,
 );
 
-const missing = [...withCampus].filter((p) => !provinces.some((s) => s.key === p));
+/** Provincias que geoBoundaries no trae como polígono: sus pines se ubican igual, por coordenadas. */
+const NO_POLYGON = new Set(["Entre Ríos"]);
+const missing = [...withCampus].filter((p) => !NO_POLYGON.has(p) && !provinces.some((s) => s.key === p));
 if (missing.length) throw new Error(`Estas provincias de places.ts no están en geoBoundaries: ${missing.join(", ")}`);
 
 writeFileSync(new URL("world.svg", out), world);

@@ -93,7 +93,7 @@ export const FAQ = [
     { q: "¿Dónde quedan mis contraseñas?", a: "En el gestor de credenciales de tu sistema, o en Claude Desktop si usás la extensión. Solo viajan a tu universidad. En modo hosteado la contraseña se usa una vez y no se guarda." },
     { q: "¿El docente ve que lo usé?", a: "Leer no deja rastro: el servidor no llama a las funciones que marcan algo como visto o completo. Lo que escribís (un post, una entrega) queda como si lo hubieras hecho vos." },
     { q: "¿Puede publicar o entregar sin que me dé cuenta?", a: "Las tools que escriben se usan solo si lo pediste. Entregas y mensajes primero muestran una vista previa y esperan tu confirmación. En modo HTTP vienen apagadas." },
-    { q: "¿Mi facultad está?", a: "Hay {campus} campus de {universidades}. Si la tuya no está, podés usarla igual con variables de entorno y correr el chequeo para contarnos cómo anduvo." },
+    { q: "¿Mi facultad está?", a: "Hay {campus} campus de {universidades} universidades en {provincias} provincias: buscá la tuya en el mapa. Si no está, podés usarla igual con variables de entorno y correr el chequeo para contarnos cómo anduvo." },
     { q: "¿Guaraní anda en el modo hosteado?", a: "Todavía no: su sesión vence en minutos y renovarla necesita la contraseña, que el servidor hosteado no guarda. Instalado en tu compu anda." },
     { q: "¿Qué modelo necesito?", a: "El de tu cliente: Claude, ChatGPT, Gemini o cualquiera que hable MCP. Las tools están pensadas para gastar poco texto por respuesta." },
 ];

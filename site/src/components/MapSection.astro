@@ -1,15 +1,17 @@
 ---
-import { PINS, PKG, STATS, THREAD, UNIVERSITIES, WORLD_PIN, asset } from "../data/site";
+import { PKG, PROVINCES, REPO, STATS, THREAD, UNIVERSITIES, WORLD_PIN, asset } from "../data/site";
 import { ZOOM } from "../lib/projection";
 
-const first = UNIVERSITIES[0].id;
+/** La que se ve al entrar: la primera de la provincia de más al norte. */
+const first = PROVINCES[0].unis[0];
+const byId = new Map(UNIVERSITIES.map((u) => [u.id, u]));
 /** Cuántas caras se ven por universidad; el resto se cuenta. */
 const FACES = 6;
 const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(", ") + (logins.length > 3 ? ` y ${logins.length - 3} más` : "");
 ---
 
 <section id="mapa" class="dark map" data-map data-view="mundo" style={`--zoom: ${ZOOM}; --unzoom: ${1 / ZOOM}; padding: clamp(28px, 5vw, 72px) 0`}>
-    <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 48px; align-items: center">
+    <div class="wrap" style="display: flex; flex-wrap: wrap; gap: 48px; align-items: flex-start">
         <div style="flex: 1.1 1 460px; min-width: 0">
             <div class="map-stage">
                 <div class="layer layer-world">
@@ -22,10 +24,17 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
                 <div class="layer layer-arg">
                     <img src={asset("map/argentina.svg")} alt="Argentina en puntos con sus provincias; las que tienen campus, resaltadas" width="920" height="920" />
                     {
-                        PINS.map((p) => (
-                            <button class={`pin ${p.side === "left" ? "pin-l" : ""}`} type="button" data-unis={p.label.replaceAll(" · ", " ")} style={`left: ${p.x}%; top: ${p.y}%`} aria-label={`${p.label} en ${p.name}`}>
-                                <span class="pin-dot" />
-                                <span class="pin-label">{p.label}</span>
+                        PROVINCES.map((p) => (
+                            <button
+                                class={`pin pin-count ${p.side === "left" ? "pin-l" : ""}`}
+                                type="button"
+                                data-province={p.name}
+                                data-unis={p.unis.join(" ")}
+                                style={`left: ${p.x}%; top: ${p.y}%`}
+                                aria-label={`${p.name}: ${p.unis.length} ${p.unis.length === 1 ? "universidad" : "universidades"}`}
+                            >
+                                <span class="pin-dot">{p.unis.length}</span>
+                                <span class="pin-label">{p.name}</span>
                             </button>
                         ))
                     }
@@ -40,73 +49,92 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
         <div style="flex: 1 1 380px; min-width: 0">
             <p class="eyebrow">04 / Dónde anda</p>
             <h2 class="disp h2" style="margin-bottom: 16px">Del mundo<br />a tu provincia</h2>
-            <p class="lead" style="margin-bottom: 28px">{STATS.campus} campus en {STATS.universidades} universidades. Elegí una para ver sus campus y quién la probó.</p>
-            <ul style="list-style: none; margin: 0; padding: 0">
+            <p class="lead" style="margin-bottom: 24px">{STATS.campus} campus en {STATS.universidades} universidades de {STATS.provincias} provincias. Buscá la tuya o tocá su provincia en el mapa.</p>
+            <div class="uni-search">
+                <input class="uni-input" type="search" data-search-input placeholder="Universidad, ciudad o provincia" aria-label="Buscá tu universidad, ciudad o provincia" autocomplete="off" />
+                <button class="uni-filter" type="button" data-clear hidden></button>
+            </div>
+            <div class="uni-list">
                 {
-                    UNIVERSITIES.map((u) => (
-                        <li>
-                            <button class="uni-btn" type="button" data-uni={u.id} aria-pressed={u.id === first ? "true" : "false"}>
-                                <span class="disp" style="font-size: 22px; font-weight: 600; width: 64px; flex: 0 0 auto">{u.id}</span>
-                                <span style="flex: 1; min-width: 0; font-size: 15px; color: var(--on-dark)">{u.cityLabel}</span>
-                                <span class="dot uni-dot" />
-                            </button>
-                        </li>
+                    PROVINCES.map((p) => (
+                        <div class="uni-group" data-group={p.name}>
+                            <p class="uni-group-name">{p.name}</p>
+                            <ul>
+                                {p.unis.map((id) => {
+                                    const u = byId.get(id)!;
+                                    return (
+                                        <li>
+                                            <button class="uni-btn" type="button" data-uni={u.id} data-search={u.search[p.name]} aria-pressed={u.id === first ? "true" : "false"}>
+                                                <span class="disp uni-sigla">{u.id}</span>
+                                                <span class="uni-name">{u.name}</span>
+                                                <span class="dot uni-dot" />
+                                            </button>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
                     ))
                 }
-            </ul>
-            {
-                UNIVERSITIES.map((u) => (
-                    <div class="uni-card" data-detail={u.id} hidden={u.id !== first}>
-                        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px">
-                            <span style="font-weight: 600; font-size: 17px; margin-right: auto">{u.name}</span>
-                            <span class="tag" style={u.testedBy || u.testers.length ? "background: var(--ink); color: var(--white)" : "background: var(--soft)"}>{u.testedBy ? "Probado a fondo" : u.testers.length ? "Probado" : "Verificado"}</span>
+                <p class="uni-empty" data-empty hidden>
+                    No la encontramos. Si tu facultad usa Moodle, <a href={`${REPO}/issues/new/choose`}>pedila</a> o probala con <code class="mono">personalizado</code>.
+                </p>
+            </div>
+            <div data-cards>
+                {
+                    UNIVERSITIES.map((u) => (
+                        <div class="uni-card" data-detail={u.id} hidden={u.id !== first}>
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px">
+                                <span style="font-weight: 600; font-size: 17px; margin-right: auto">{u.name}</span>
+                                <span class="tag" style={u.testedBy || u.testers.length ? "background: var(--ink); color: var(--white)" : "background: var(--soft)"}>{u.testedBy ? "Probado a fondo" : u.testers.length ? "Probado" : "Verificado"}</span>
+                            </div>
+                            <p style="margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--muted)">{u.campus}</p>
+                            <div style="display: flex; gap: 6px; margin-bottom: 18px">
+                                {u.aula && <span class="tag tag-aula">Aula</span>}
+                                {u.guarani && <span class="tag tag-g3w">Guaraní</span>}
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 16px">
+                                {u.testedBy && (
+                                    <div style="display: flex; align-items: center; gap: 12px">
+                                        <img src={`https://github.com/${u.testedBy}.png?size=80`} alt="" width="40" height="40" loading="lazy" style="border-radius: 50%" />
+                                        <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                            <a href={`https://github.com/${u.testedBy}`} style="color: var(--ink)"><strong>@{u.testedBy}</strong></a>
+                                            <br />
+                                            <span style="color: var(--muted)">la probó a fondo</span>
+                                        </p>
+                                    </div>
+                                )}
+                                {u.testers.length > 0 && (
+                                    <div style="display: flex; align-items: center; gap: 12px">
+                                        <span class="faces">
+                                            {u.testers.slice(0, FACES).map((login) => (
+                                                <a href={`https://github.com/${login}`} title={`@${login}`}>
+                                                    <img src={`https://github.com/${login}.png?size=64`} alt={`@${login}`} width="32" height="32" loading="lazy" />
+                                                </a>
+                                            ))}
+                                        </span>
+                                        <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                            <strong>{names(u.testers)}</strong>
+                                            <br />
+                                            <span style="color: var(--muted)">{u.testers.length === 1 ? "la probó" : "la probaron"} · <a href={THREAD} style="color: inherit">sumate</a></span>
+                                        </p>
+                                    </div>
+                                )}
+                                {!u.testedBy && u.testers.length === 0 && (
+                                    <div style="display: flex; align-items: center; gap: 12px">
+                                        <span class="slot" aria-hidden="true">+</span>
+                                        <p style="margin: 0; font-size: 14px; line-height: 1.45">
+                                            <strong>Nadie la probó todavía.</strong>
+                                            <br />
+                                            <span style="color: var(--muted)">¿Sos de acá? Corré <code class="mono" style="font-size: 12px">npx -y {PKG} check</code> y pegá el resultado en <a href={THREAD} style="color: inherit">el hilo</a>.</span>
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <p style="margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--muted)">{u.campus}</p>
-                        <div style="display: flex; gap: 6px; margin-bottom: 18px">
-                            {u.aula && <span class="tag tag-aula">Aula</span>}
-                            {u.guarani && <span class="tag tag-g3w">Guaraní</span>}
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 16px">
-                            {u.testedBy && (
-                                <div style="display: flex; align-items: center; gap: 12px">
-                                    <img src={`https://github.com/${u.testedBy}.png?size=80`} alt="" width="40" height="40" loading="lazy" style="border-radius: 50%" />
-                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
-                                        <a href={`https://github.com/${u.testedBy}`} style="color: var(--ink)"><strong>@{u.testedBy}</strong></a>
-                                        <br />
-                                        <span style="color: var(--muted)">la probó a fondo</span>
-                                    </p>
-                                </div>
-                            )}
-                            {u.testers.length > 0 && (
-                                <div style="display: flex; align-items: center; gap: 12px">
-                                    <span class="faces">
-                                        {u.testers.slice(0, FACES).map((login) => (
-                                            <a href={`https://github.com/${login}`} title={`@${login}`}>
-                                                <img src={`https://github.com/${login}.png?size=64`} alt={`@${login}`} width="32" height="32" loading="lazy" />
-                                            </a>
-                                        ))}
-                                    </span>
-                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
-                                        <strong>{names(u.testers)}</strong>
-                                        <br />
-                                        <span style="color: var(--muted)">{u.testers.length === 1 ? "la probó" : "la probaron"} · <a href={THREAD} style="color: inherit">sumate</a></span>
-                                    </p>
-                                </div>
-                            )}
-                            {!u.testedBy && u.testers.length === 0 && (
-                                <div style="display: flex; align-items: center; gap: 12px">
-                                    <span class="slot" aria-hidden="true">+</span>
-                                    <p style="margin: 0; font-size: 14px; line-height: 1.45">
-                                        <strong>Nadie la probó todavía.</strong>
-                                        <br />
-                                        <span style="color: var(--muted)">¿Sos de acá? Corré <code class="mono" style="font-size: 12px">npx -y {PKG} check</code> y pegá el resultado en <a href={THREAD} style="color: inherit">el hilo</a>.</span>
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                ))
-            }
+                    ))
+                }
+                </div>
         </div>
     </div>
 </section>
@@ -124,8 +152,13 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
     .layer { transition-property: transform, opacity, visibility; }
 
     .pin { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 8px; background: none; border: 0; padding: 6px; cursor: pointer; color: var(--white); font: 600 13px var(--body); white-space: nowrap; }
-    .layer-arg .pin { transform: translate(-12px, -50%); }
-    .layer-arg .pin-l { flex-direction: row-reverse; transform: translate(calc(-100% + 12px), -50%); }
+    .layer-arg .pin { transform: translate(-17px, -50%); }
+    .layer-arg .pin-l { flex-direction: row-reverse; transform: translate(calc(-100% + 17px), -50%); }
+    /* Un pin por provincia con cuántas universidades tiene; el nombre aparece al pasar o al elegirla, para que no se pisen. */
+    .pin-count .pin-dot { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font: 700 11px var(--body); color: var(--ink); }
+    .pin-count .pin-label { opacity: 0; transition: opacity 0.2s ease; pointer-events: none; }
+    .pin-count:hover .pin-label, .pin-count:focus-visible .pin-label, .pin-count.is-on .pin-label { opacity: 1; }
+    .pin-count:hover, .pin-count:focus-visible, .pin-count.is-on { z-index: 1; }
     .pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--dark); box-shadow: 0 0 0 3px rgba(255, 122, 89, 0.35); background: var(--white); flex: 0 0 auto; }
     .pin-label { background: rgba(21, 17, 13, 0.85); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 5px 11px; }
     .pin.is-on .pin-dot { background: var(--coral); }
@@ -139,38 +172,121 @@ const names = (logins: string[]) => logins.slice(0, 3).map((l) => `@${l}`).join(
     .map-switch .tab { background: transparent; }
     .map-switch .tab[aria-pressed="true"] { background: var(--white); color: var(--ink); }
 
-    .uni-btn { width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); background: transparent; padding: 16px 8px; min-height: 44px; cursor: pointer; font: inherit; color: var(--white); }
+    .uni-search { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    /* 16px: con menos, Safari en iPhone hace zoom al tocar el campo. */
+    .uni-input { flex: 1 1 220px; min-width: 0; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 999px; padding: 12px 18px; color: var(--white); font: 16px var(--body); }
+    .uni-input::placeholder { color: var(--on-dark); }
+    .uni-input:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+    .uni-filter { border: 0; border-radius: 999px; padding: 10px 16px; background: var(--coral); color: var(--ink); font: 600 14px var(--body); cursor: pointer; min-height: 44px; }
+    /* Alto fijo con scroll propio: la tarjeta queda a la vista aunque haya decenas de universidades. */
+    .uni-list { max-height: 360px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-bottom: 28px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent); }
+    .uni-group ul { list-style: none; margin: 0; padding: 0; }
+    .uni-group-name { margin: 18px 8px 6px; font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--on-dark); }
+    .uni-sigla { font-size: 20px; font-weight: 600; min-width: 84px; flex: 0 0 auto; }
+    .uni-name { flex: 1; min-width: 0; font-size: 14px; color: var(--on-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .uni-empty { margin: 18px 8px; font-size: 14px; line-height: 1.5; color: var(--on-dark); }
+    .uni-btn { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.12); background: transparent; padding: 12px 8px; min-height: 44px; cursor: pointer; font: inherit; color: var(--white); }
     .uni-btn[aria-pressed="true"] { background: rgba(255, 255, 255, 0.08); }
     .uni-dot { background: rgba(255, 255, 255, 0.25); }
     .uni-btn[aria-pressed="true"] .uni-dot { background: var(--coral); }
+    .uni-list .uni-card { margin: 8px 0 16px; }
     .uni-card { margin-top: 20px; background: var(--white); color: var(--ink); border-radius: 24px; padding: 24px; }
     .slot { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed #b9b5ac; display: flex; align-items: center; justify-content: center; color: var(--muted); flex: 0 0 auto; }
 
+    /* En el celular la lista crece con la página: con alto fijo, la tarjeta abierta adentro quedaba cortada. */
+    @media (max-width: 760px) { .uni-list { max-height: none; overflow: visible; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; } }
     @media (prefers-reduced-motion: reduce) { .layer { transition: none; } .ping { animation: none; } }
 </style>
 
 <script>
+    const fold = (text: string) => text.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+    /** En el celular, la tarjeta se abre debajo de la universidad elegida y no al final de la lista. */
+    const narrow = window.matchMedia("(max-width: 760px)");
+
     for (const map of document.querySelectorAll<HTMLElement>("[data-map]")) {
+        const input = map.querySelector<HTMLInputElement>("[data-search-input]")!;
+        const clear = map.querySelector<HTMLButtonElement>("[data-clear]")!;
+        const empty = map.querySelector<HTMLElement>("[data-empty]")!;
+        const cards = map.querySelector<HTMLElement>("[data-cards]")!;
+        const groups = [...map.querySelectorAll<HTMLElement>("[data-group]")];
+        let province: string | null = null;
+        let current = "";
+        let currentGroup: string | undefined;
+
         const view = (v: string) => {
             map.dataset.view = v;
             for (const b of map.querySelectorAll<HTMLElement>(".map-switch [data-zoom]")) b.setAttribute("aria-pressed", String(b.dataset.zoom === v));
         };
-        const select = (id: string) => {
+
+        /** Muestra las universidades de la provincia elegida que tienen todas las palabras buscadas. */
+        const filter = () => {
+            const words = fold(input.value).split(/\s+/).filter(Boolean);
+            let shown = 0;
+            for (const g of groups) {
+                let any = false;
+                for (const b of g.querySelectorAll<HTMLElement>("[data-uni]")) {
+                    const ok = (!province || g.dataset.group === province) && words.every((w) => b.dataset.search!.includes(w));
+                    b.closest("li")!.hidden = !ok;
+                    if (ok) {
+                        any = true;
+                        shown++;
+                    }
+                }
+                g.hidden = !any;
+            }
+            empty.hidden = shown > 0;
+            clear.hidden = !province;
+            clear.textContent = province ? `${province} ✕` : "";
+            clear.setAttribute("aria-label", province ? `Ver todas las provincias, no solo ${province}` : "");
+        };
+
+        /** La tarjeta va al lado de su botón en el celular, y debajo de la lista en pantallas anchas. */
+        const place = () => {
+            const card = map.querySelector<HTMLElement>(`[data-detail="${current}"]`)!;
+            if (!narrow.matches) return void cards.append(card);
+            const buttons = [...map.querySelectorAll<HTMLElement>(`[data-uni="${current}"]`)].filter((b) => !b.closest("li")!.hidden);
+            const button = buttons.find((b) => b.closest<HTMLElement>("[data-group]")!.dataset.group === currentGroup) ?? buttons[0];
+            (button?.closest("li") ?? cards).append(card);
+        };
+
+        const select = (id: string, group?: string) => {
+            current = id;
+            currentGroup = group;
             for (const b of map.querySelectorAll<HTMLElement>("[data-uni]")) b.setAttribute("aria-pressed", String(b.dataset.uni === id));
             for (const d of map.querySelectorAll<HTMLElement>("[data-detail]")) d.hidden = d.dataset.detail !== id;
-            for (const p of map.querySelectorAll<HTMLElement>("[data-unis]")) {
-                const on = p.dataset.unis!.split(" ").includes(id);
+            for (const p of map.querySelectorAll<HTMLElement>("[data-province]")) {
+                const on = province ? p.dataset.province === province : p.dataset.unis!.split(" ").includes(id);
                 p.classList.toggle("is-on", on);
                 p.setAttribute("aria-pressed", String(on));
             }
+            place();
         };
+
         map.addEventListener("click", (e) => {
-            const el = (e.target as HTMLElement).closest<HTMLElement>("[data-zoom], [data-uni], [data-unis]");
+            const el = (e.target as HTMLElement).closest<HTMLElement>("[data-zoom], [data-clear], [data-province], [data-uni]");
             if (!el) return;
             if (el.dataset.zoom) return view(el.dataset.zoom);
-            select(el.dataset.uni ?? el.dataset.unis!.split(" ")[0]);
+            if (el.hasAttribute("data-clear")) {
+                province = null;
+                filter();
+                return select(current, currentGroup);
+            }
+            if (el.dataset.province) {
+                province = el.dataset.province;
+                input.value = "";
+                filter();
+                select(el.dataset.unis!.split(" ")[0], province);
+                return view("arg");
+            }
+            select(el.dataset.uni!, el.closest<HTMLElement>("[data-group]")?.dataset.group);
             view("arg");
         });
-        select(map.querySelector<HTMLElement>("[data-uni]")!.dataset.uni!);
+        input.addEventListener("input", () => {
+            province = null;
+            filter();
+            select(current, currentGroup);
+        });
+        narrow.addEventListener("change", place);
+        select(map.querySelector<HTMLElement>('[data-uni][aria-pressed="true"]')!.dataset.uni!);
     }
 </script>
