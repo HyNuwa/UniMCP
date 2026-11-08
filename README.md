@@ -182,7 +182,7 @@ Necesitás [Node.js](https://nodejs.org) 22 o superior.
 ```bash
 npx -y @nuwujix/unimcp login
 ```
-Buscás tu campus por sigla, facultad o provincia (`UNC`, `exactas`, `Córdoba`), y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Se hace una sola vez: después el servidor renueva las sesiones solo.
+Buscás tu campus por sigla, facultad o provincia (`UNC`, `exactas`, `Córdoba`), y te pide el usuario y la contraseña del aula y después los de Guaraní (que suele ser tu DNI). Si te equivocás de contraseña, te la vuelve a pedir (hasta 3 veces, para que no se bloquee tu cuenta). Se hace una sola vez: después el servidor renueva las sesiones solo.
 
 Para ver si anda todo, `npx -y @nuwujix/unimcp check` prueba los logins y dice qué tools funcionan en tu aula, sin mostrar datos personales. Si anduvo, pegá el resumen en [el hilo del mapa](https://github.com/HyNuwa/UniMCP/discussions/64) y aparecés en la [web](https://hynuwa.github.io/UniMCP/#mapa), en el pin de tu campus.
 

@@ -1,7 +1,7 @@
 import type { Campus } from "../shared/campus.js";
 import { credentialEnvVars, saveCredentials } from "../shared/credentials.js";
-import { ask, askHidden } from "../shared/input.js";
 import { logger } from "../shared/logger.js";
+import { askCredentials } from "../shared/login-retry.js";
 import { LocalGuaraniSession } from "./client/local-session.js";
 
 /**
@@ -11,12 +11,10 @@ import { LocalGuaraniSession } from "./client/local-session.js";
  */
 export async function loginGuarani(campus: Campus): Promise<void> {
     const site = campus.guarani!;
-    const username = (await ask(`Usuario de SIU Guaraní (${new URL(site.baseUrl).host}, suele ser el DNI): `)).trim();
-    if (!username) throw new Error("Falta el usuario.");
-    const password = await askHidden("Contraseña: ");
-    const credentials = { username, password };
-
-    await new LocalGuaraniSession(site).login(credentials);
+    // Una contraseña mal se vuelve a pedir, en vez de cortar y tener que correr login de nuevo.
+    const { credentials } = await askCredentials(`Usuario de SIU Guaraní (${new URL(site.baseUrl).host}, suele ser el DNI): `, (c) =>
+        new LocalGuaraniSession(site).login(c),
+    );
 
     if (await saveCredentials("guarani", credentials)) {
         logger.info("SIU Guaraní: credenciales guardadas en el keychain del sistema.");
