@@ -4,6 +4,8 @@ Lo que cambia en cada versión para quien usa UniMCP. El formato sigue [Keep a C
 
 ## [Sin publicar]
 
+## [0.2.0] - 2026-11-08
+
 - 87 aulas nuevas, y ahora hay al menos una en cada provincia: UNC (FAMAF), UNR, UNL, UNLP, UNSAM, UNMdP, UNLu, UNVM, UADER, UNaM, UNaF, UNCA, UNLaR, UNSE, UNPAZ, UNAHUR, 20 regionales más de la UTN, más facultades de la UBA, la UNT, la UNSa y la UNICEN, y UNS, UNNE, UNER, UNCuyo, UNSJ, UNSL, UNLPam, UNCo, UNPSJB y UNTDF. Son 99 campus de 32 universidades.
 - `unimcp login` busca tu campus por sigla, facultad o provincia, sin tildes ni mayúsculas, en vez de mostrar la lista entera. Si no está, te dice dónde pedirlo: el formulario "Pedir mi universidad".
 - Si en `unimcp login` te equivocás de contraseña (del aula o de Guaraní), te avisa y te la vuelve a pedir, hasta 3 veces, en vez de cortar y obligarte a empezar de nuevo.
@@ -40,5 +42,6 @@ La primera versión publicada en npm y en el registro de MCP.
 - Modo HTTP multiusuario con OAuth, donde la contraseña del aula se usa una vez y no se guarda.
 - Doce campus de UNJu, UNSa, UNT, UBA y UTN, y cualquier otro por variables de entorno.
 
-[Sin publicar]: https://github.com/HyNuwa/UniMCP/compare/v0.1.0...master
+[Sin publicar]: https://github.com/HyNuwa/UniMCP/compare/v0.2.0...master
+[0.2.0]: https://github.com/HyNuwa/UniMCP/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/HyNuwa/UniMCP/releases/tag/v0.1.0
