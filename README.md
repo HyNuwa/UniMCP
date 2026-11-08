@@ -22,10 +22,14 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 | `unju` | UNJu | Universidad Nacional de Jujuy | Jujuy | `virtual.unju.edu.ar` | `alumnos.unju.edu.ar` |
 | `unsa-exactas` | UNSa | Facultad de Ciencias Exactas | Salta | `exavirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
 | `unsa-salud` | UNSa | Facultad de Ciencias de la Salud | Salta | `saludvirtual.unsa.edu.ar` | `autogestiong3.unsa.edu.ar` |
+| `unsa-humanidades` | UNSa | Facultad de Humanidades | Salta | `fhvirtual.unsa.edu.ar/moodle` | — |
+| `unsa-economicas` | UNSa | Facultad de Ciencias Económicas, Jurídicas y Sociales | Salta | `moodleeco.unsa.edu.ar/moodle` | — |
 | `unsa` | UNSa | Otras facultades | Salta | — | `autogestiong3.unsa.edu.ar` |
 | `unt-facet` | UNT | FACET | Tucumán | `facetvirtual.facet.unt.edu.ar` | `guarani.unt.edu.ar` |
 | `unt-face` | UNT | Ciencias Económicas | Tucumán | `campus2.unt.edu.ar` | `guarani.unt.edu.ar` |
 | `unt-filo` | UNT | Filosofía y Letras | Tucumán | `campus.filo.unt.edu.ar` | `guarani.unt.edu.ar` |
+| `unt-arquitectura` | UNT | Facultad de Arquitectura y Urbanismo | Tucumán | `campus3.unt.edu.ar` | — |
+| `unt-derecho` | UNT | Facultad de Derecho y Ciencias Sociales | Tucumán | `campus4.unt.edu.ar` | — |
 | `unt` | UNT | Otras facultades | Tucumán | — | `guarani.unt.edu.ar` |
 | `uba-fiuba` | UBA | Ingeniería (FIUBA) | Ciudad Autónoma de Buenos Aires | `campusgrado.fi.uba.ar` | `guaraniautogestion.fi.uba.ar` |
 | `uba-exactas` | UBA | Ciencias Exactas y Naturales | Ciudad Autónoma de Buenos Aires | `campus.exactas.uba.ar` (SSO idEx) | `inscripciones.exactas.uba.ar` |
@@ -37,18 +41,83 @@ Este es un Model Context Protocol server **NO OFICIAL** para universidades argen
 | `utn-frt` | UTN | Regional Tucumán | Tucumán | `frt.cvg.utn.edu.ar` | — |
 | `utn-frc` | UTN | Regional Córdoba | Córdoba | `uv.frc.utn.edu.ar` | — |
 | `utn-frsf` | UTN | Regional Santa Fe | Santa Fe | `campusvirtual.frsf.utn.edu.ar` | — |
+| `utn-fra` | UTN | Facultad Regional Avellaneda | Buenos Aires | `www.utnfravirtual.org.ar` | — |
+| `utn-frbb` | UTN | Facultad Regional Bahía Blanca | Buenos Aires | `aulavirtual.frbb.utn.edu.ar` | — |
+| `utn-frgp` | UTN | Facultad Regional General Pacheco | Buenos Aires | `frgp.cvg.utn.edu.ar` | — |
+| `utn-frlp` | UTN | Facultad Regional La Plata | Buenos Aires | `frlp.cvg.utn.edu.ar` | — |
+| `utn-frp` | UTN | Facultad Regional Paraná | Entre Ríos | `frp.cvg.utn.edu.ar` | — |
+| `utn-frre` | UTN | Facultad Regional Resistencia | Chaco | `frre.cvg.utn.edu.ar` | — |
+| `utn-frro` | UTN | Facultad Regional Rosario | Santa Fe | `frro.cvg.utn.edu.ar` | — |
+| `utn-frch` | UTN | Facultad Regional Chubut | Chubut | `frch.cvg.utn.edu.ar` | — |
+| `utn-frcon` | UTN | Facultad Regional Concordia | Entre Ríos | `frcon.cvg.utn.edu.ar` | — |
+| `utn-frlr` | UTN | Facultad Regional La Rioja | La Rioja | `frlr.cvg.utn.edu.ar` | — |
+| `utn-frn` | UTN | Facultad Regional del Neuquén | Neuquén | `frn.cvg.utn.edu.ar` | — |
+| `utn-frra` | UTN | Facultad Regional Rafaela | Santa Fe | `frra.cvg.utn.edu.ar` | — |
+| `utn-frrq` | UTN | Facultad Regional Reconquista | Santa Fe | `frrq.cvg.utn.edu.ar` | — |
+| `utn-frsc` | UTN | Facultad Regional Santa Cruz | Santa Cruz | `frsc.cvg.utn.edu.ar` | — |
+| `utn-frsfco` | UTN | Facultad Regional San Francisco | Córdoba | `frsfco.cvg.utn.edu.ar` | — |
+| `utn-frsr` | UTN | Facultad Regional San Rafael | Mendoza | `campus.frsr.utn.edu.ar/moodle` | — |
+| `utn-frtl` | UTN | Facultad Regional Trenque Lauquen | Buenos Aires | `frtl.cvg.utn.edu.ar` | — |
+| `utn-frvm` | UTN | Facultad Regional Villa María | Córdoba | `cvirtual.frvm.utn.edu.ar` | — |
 | `unc-famaf` | UNC | Matemática, Astronomía, Física y Computación (FAMAF) | Córdoba | `famaf.aulavirtual.unc.edu.ar` | — |
 | `unicen-exactas` | UNICEN | Ciencias Exactas | Buenos Aires | `moodle.exa.unicen.edu.ar` | — |
+| `unicen-humanas` | UNICEN | Facultad de Ciencias Humanas | Buenos Aires | `campus.fch.unicen.edu.ar` | — |
 | `uns` | UNS | Universidad Nacional del Sur | Buenos Aires | `moodle.uns.edu.ar/moodle` | — |
 | `unne` | UNNE | Universidad Nacional del Nordeste | Corrientes | `virtual-moodle.unne.edu.ar` | — |
 | `uner-ingenieria` | UNER | Ingeniería (FIUNER) | Entre Ríos | `campus.ingenieria.uner.edu.ar` | — |
 | `uncuyo-fad` | UNCuyo | Artes y Diseño | Mendoza | `virtual.fad.uncu.edu.ar` | — |
+| `uncuyo-ingenieria` | UNCuyo | Facultad de Ingeniería | Mendoza | `aulaabierta.ingenieria.uncuyo.edu.ar` | — |
 | `unsj` | UNSJ | Universidad Nacional de San Juan | San Juan | `campusvirtual.unsj.edu.ar` | — |
 | `unsl` | UNSL | Universidad Nacional de San Luis | San Luis | `moodle4vz.unsl.edu.ar/moodle` | — |
 | `unlpam-agronomia` | UNLPam | Agronomía | La Pampa | `v5.campus.agro.unlpam.edu.ar` | — |
 | `unco` | UNCo | Universidad Nacional del Comahue | Neuquén | `pedco.uncoma.edu.ar` | — |
+| `unco-medicas` | UNCo | Facultad de Ciencias Médicas | Río Negro | `campusvirtualfacimed.uncoma.edu.ar` | — |
+| `unco-plena` | UNCo | PLENA (Plataforma de Entorno Abierto) | Neuquén | `plena.uncoma.edu.ar` | — |
 | `unpsjb` | UNPSJB | Universidad Nacional de la Patagonia San Juan Bosco | Chubut | `campusvirtual.unp.edu.ar` | — |
 | `untdf` | UNTDF | Universidad Nacional de Tierra del Fuego | Tierra del Fuego | `campus.untdf.edu.ar` | — |
+| `unaf-recursos-naturales` | UNaF | Facultad de Recursos Naturales | Formosa | `frn.ead3.unf.edu.ar` | — |
+| `unam-enfermeria` | UNaM | Escuela de Enfermería | Misiones | `aula.escenf.unam.edu.ar` | — |
+| `unam-forestales` | UNaM | Facultad de Ciencias Forestales | Misiones | `campusvirtual.fcf.unam.edu.ar` | — |
+| `unam-forestales-distancia` | UNaM | Facultad de Ciencias Forestales (a distancia) | Misiones | `aulavirtual.fcf.unam.edu.ar` | — |
+| `unam-economicas` | UNaM | Facultad de Ciencias Económicas | Misiones | `aulavirtual.fce.unam.edu.ar` | — |
+| `unam-economicas-distancia` | UNaM | Facultad de Ciencias Económicas (a distancia) | Misiones | `ead.fce.unam.edu.ar` | — |
+| `unam-exactas` | UNaM | Facultad de Ciencias Exactas, Químicas y Naturales | Misiones | `www.fceqyn.unam.edu.ar/moodle` | — |
+| `unam-humanidades` | UNaM | Facultad de Humanidades y Ciencias Sociales | Misiones | `virtual.fhycs.unam.edu.ar` | — |
+| `unam-ingenieria` | UNaM | Facultad de Ingeniería | Misiones | `aulavirtual.fio.unam.edu.ar` | — |
+| `unca` | UNCA | Universidad Nacional de Catamarca | Catamarca | `campus.unca.edu.ar/campus` | — |
+| `unlar` | UNLaR | Universidad Nacional de La Rioja | La Rioja | `campusvirtual.unlar.edu.ar` | — |
+| `unse` | UNSE | Campus virtual (SIED) | Santiago del Estero | `campusvirtual.unse.edu.ar` | — |
+| `unse-fceyt` | UNSE | Facultad de Ciencias Exactas y Tecnologías | Santiago del Estero | `cuv-fceyt.unse.edu.ar` | — |
+| `unlp-naturales` | UNLP | Facultad de Ciencias Naturales y Museo | Buenos Aires | `aulasvirtuales.fcnym.unlp.edu.ar` | — |
+| `unlp-aulasweb-grado` | UNLP | AulasWeb Grado (varias facultades) | Buenos Aires | `aulaswebgrado.ead.unlp.edu.ar` | — |
+| `unlp-aulasweb-posgrado` | UNLP | AulasWeb Posgrado (varias facultades) | Buenos Aires | `aulaswebposgrado.ead.unlp.edu.ar` | — |
+| `unr-comunidades` | UNR | Comunidades (plataforma general) | Santa Fe | `comunidades.campusvirtualunr.edu.ar` | — |
+| `unr-carreras-cursos` | UNR | Carreras y Cursos (a distancia) | Santa Fe | `cursos.campusvirtualunr.edu.ar` | — |
+| `unr-derecho` | UNR | Facultad de Derecho | Santa Fe | `comunidades5.campusvirtualunr.edu.ar` | — |
+| `unr-economicas` | UNR | Facultad de Ciencias Económicas y Estadística | Santa Fe | `comunidades3.campusvirtualunr.edu.ar` | — |
+| `unr-humanidades-artes` | UNR | Facultad de Humanidades y Artes | Santa Fe | `comunidades4.campusvirtualunr.edu.ar` | — |
+| `unr-medicas` | UNR | Facultad de Ciencias Médicas | Santa Fe | `comunidades2.campusvirtualunr.edu.ar` | — |
+| `unr-psicologia` | UNR | Facultad de Psicología | Santa Fe | `comunidades1.campusvirtualunr.edu.ar` | — |
+| `unvm` | UNVM | Campus virtual | Córdoba | `campusvirtual.unvm.edu.ar` | — |
+| `unvm-distancia` | UNVM | Educación a distancia | Córdoba | `distancia.unvm.edu.ar` | — |
+| `uader` | UADER | Campus de educación a distancia | Entre Ríos | `campusuader.entrerios.gov.ar` | — |
+| `uader-gestion` | UADER | Facultad de Ciencias de la Gestión | Entre Ríos | `fcgvirtual.entrerios.gov.ar` | — |
+| `uader-vida-salud` | UADER | Facultad de Ciencias de la Vida y la Salud | Entre Ríos | `fcvsvirtual.entrerios.gov.ar` | — |
+| `uader-ciencia-tecnologia` | UADER | Facultad de Ciencia y Tecnología | Entre Ríos | `fcytvirtual.entrerios.gov.ar` | — |
+| `uader-humanidades` | UADER | Facultad de Humanidades, Artes y Ciencias Sociales | Entre Ríos | `fhaycsvirtual.uader.edu.ar` | — |
+| `unl-economicas` | UNL | Facultad de Ciencias Económicas | Santa Fe | `servicios.unl.edu.ar/aulavirtual/fce` | — |
+| `unl-ingenieria-quimica` | UNL | Facultad de Ingeniería Química | Santa Fe | `servicios.unl.edu.ar/aulavirtual/fiq` | — |
+| `unlu` | UNLu | Universidad Nacional de Luján | Buenos Aires | `moodle.unlu.edu.ar` | — |
+| `unmdp-faud` | UNMdP | Facultad de Arquitectura, Urbanismo y Diseño | Buenos Aires | `campusfaud.mdp.edu.ar` | — |
+| `unsam-unidad-central` | UNSAM | Unidad Central | Buenos Aires | `campusvirtualunidadcentral.unsam.edu.ar` | — |
+| `unsam-ciencia-tecnologia` | UNSAM | Ciencia y Tecnología (ECyT, EByN, INCALIN, Sabato y Dan Beninson) | Buenos Aires | `campusvirtualecyt.unsam.edu.ar` | — |
+| `unsam-economia-negocios` | UNSAM | Escuela de Economía y Negocios | Buenos Aires | `campusvirtualeeyn.unsam.edu.ar` | — |
+| `unsam-habitat-arte-rehabilitacion` | UNSAM | Escuelas de Hábitat y Sostenibilidad, Arte y Patrimonio e ICRM | Buenos Aires | `campusvirtualhsyaeicrm.unsam.edu.ar` | — |
+| `unsam-humanidades` | UNSAM | Escuela de Humanidades | Buenos Aires | `campusvirtualhu.unsam.edu.ar` | — |
+| `unsam-lenguas` | UNSAM | Programa de Lenguas | Buenos Aires | `campusvirtuallenguas.unsam.edu.ar` | — |
+| `unsam-sociales` | UNSAM | Sociales (EPyG e EIDAES) | Buenos Aires | `campusvirtualsociales.unsam.edu.ar` | — |
+| `unahur` | UNAHUR | Universidad Nacional de Hurlingham | Buenos Aires | `campus2026.unahur.edu.ar` | — |
+| `unpaz` | UNPAZ | Universidad Nacional de José C. Paz | Buenos Aires | `campusvirtual.unpaz.edu.ar` | — |
 
 Cada aula se verificó con `tool_mobile_get_public_config` (el servicio móvil de Moodle tiene que estar habilitado) y cada Guaraní con su página de login de autogestión. Entran las aulas con login propio de Moodle o con SSO de Keycloak: las que entran con OAuth2 o con un portal propio (como varias de la UNC) todavía no. Probado a fondo solo en **UNJu**; los demás **faltan probarlos con usuarios reales**. Si sos de otra universidad, probalo y contanos cómo te fue con la plantilla [Probé mi universidad](https://github.com/HyNuwa/UniMCP/issues/new?template=probe-mi-universidad.yml), aunque haya andado todo bien. Más formas de colaborar en [CONTRIBUTING.md](CONTRIBUTING.md).
 

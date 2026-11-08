@@ -24,7 +24,7 @@ describe("registro de campus", () => {
 
 describe("buscar el campus", () => {
     test("por provincia, sin importar tildes ni mayúsculas", () => {
-        assert.deepEqual(ids("cordoba").sort(), ["unc-famaf", "utn-frc"]);
+        assert.deepEqual(ids("cordoba").sort(), ["unc-famaf", "unvm", "unvm-distancia", "utn-frc", "utn-frsfco", "utn-frvm"]);
         assert.deepEqual(ids("CÓRDOBA"), ids("cordoba"));
     });
 

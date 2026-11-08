@@ -83,7 +83,9 @@ function dots(r: number, step: number, dot: number, colors: Record<string, strin
 const svg = (body: string) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}">${body}</svg>`;
 
 const countries = shapes(await load("world.json"), (f) => f.id ?? "");
-const provinces = shapes(await load("provinces.json"), (f) => f.properties.shapeName);
+/** Nombres que geoBoundaries escribe mal: places.ts y campus.ts usan el correcto, que es el que se busca. */
+const SHAPE_NAME_FIX: Record<string, string> = { "La Roja": "La Rioja" };
+const provinces = shapes(await load("provinces.json"), (f) => SHAPE_NAME_FIX[f.properties.shapeName] ?? f.properties.shapeName);
 /** Malvinas se pinta como Argentina. */
 const ARGENTINA = new Set(["ARG", "FLK"]);
 const withCampus = new Set<string>(Object.values(CITIES).map((c) => c.province));

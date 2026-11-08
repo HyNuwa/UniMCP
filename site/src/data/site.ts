@@ -1,6 +1,6 @@
 // Cruza lo que sale del código (generated.json, de scripts/data.mts) con lo que sabe la web (places.ts, copy.ts).
 import generated from "./generated.json";
-import { CAMPUS_CITY, CITIES, TESTED_BY, UNIVERSITY_NAME, type CityId } from "./places";
+import { CAMPUS_CITY, CITIES, PROVINCE_PIN, TESTED_BY, UNIVERSITY_NAME, type CityId } from "./places";
 import { CONFIRMED, TOOL_COPY } from "./copy";
 import { RADIUS, percent } from "../lib/projection";
 
@@ -55,14 +55,15 @@ export const UNIVERSITIES = [...new Set(generated.campus.map((c) => c.universida
 });
 
 /**
- * Las provincias con campus, de norte a sur: un pin cada una, en la ciudad de su primer campus, con cuántas
+ * Las provincias con campus, de norte a sur: un pin cada una, en su centro (PROVINCE_PIN), con cuántas
  * universidades tiene. Con decenas de universidades, un pin por provincia no se pisa como las siglas.
  */
 export const PROVINCES = [...new Set(generated.campus.map((c) => c.provincia))]
     .map((name) => {
-        const city = CITIES[CAMPUS_CITY[generated.campus.find((c) => c.provincia === name)!.id]];
+        const pin = PROVINCE_PIN[name];
+        if (!pin) throw new Error(`Falta el pin de ${name} en PROVINCE_PIN (src/data/places.ts).`);
         const unis = UNIVERSITIES.filter((u) => u.provinces.includes(name)).map((u) => u.id);
-        return { name, unis, lon: city.lon, lat: city.lat, side: city.side, ...percent(RADIUS.argentina, city.lon, city.lat) };
+        return { name, unis, ...pin, ...percent(RADIUS.argentina, pin.lon, pin.lat) };
     })
     .sort((a, b) => b.lat - a.lat);
 

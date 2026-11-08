@@ -4,7 +4,7 @@ Lo que cambia en cada versión para quien usa UniMCP. El formato sigue [Keep a C
 
 ## [Sin publicar]
 
-- 18 aulas nuevas, en 13 provincias más: UNC (FAMAF), UTN Córdoba y Santa Fe, cuatro facultades más de la UBA, UNICEN, UNS, UNNE, UNER, UNCuyo, UNSJ, UNSL, UNLPam, UNCo, UNPSJB y UNTDF. Son 30 campus de 17 universidades.
+- 87 aulas nuevas, y ahora hay al menos una en cada provincia: UNC (FAMAF), UNR, UNL, UNLP, UNSAM, UNMdP, UNLu, UNVM, UADER, UNaM, UNaF, UNCA, UNLaR, UNSE, UNPAZ, UNAHUR, 20 regionales más de la UTN, más facultades de la UBA, la UNT, la UNSa y la UNICEN, y UNS, UNNE, UNER, UNCuyo, UNSJ, UNSL, UNLPam, UNCo, UNPSJB y UNTDF. Son 99 campus de 32 universidades.
 - `unimcp login` busca tu campus por sigla, facultad o provincia, sin tildes ni mayúsculas, en vez de mostrar la lista entera.
 - `unimcp check` termina diciendo dónde pegar el resumen para aparecer en el mapa de la web, en el pin de tu campus.
 
