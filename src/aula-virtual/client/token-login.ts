@@ -1,7 +1,7 @@
 import { randomInt } from "node:crypto";
 import type { CookieJar } from "tough-cookie";
 import type { AulaSite } from "../../shared/campus.js";
-import { loginHint, type Credentials } from "../../shared/credentials.js";
+import { loginHint, RejectedCredentialsError, type Credentials } from "../../shared/credentials.js";
 import { MoodleError } from "./web-service.js";
 
 export class LoginRequiredError extends Error {
@@ -11,10 +11,11 @@ export class LoginRequiredError extends Error {
     }
 }
 
-export class InvalidCredentialsError extends Error {
+export class InvalidCredentialsError extends RejectedCredentialsError {
+    /** @param reason el mensaje del aula ("Datos erróneos…"), que `unimcp login` muestra al repreguntar. */
     constructor(reason?: string) {
         const base = `El aula rechazó usuario o contraseña. ${loginHint()}`;
-        super(reason ? `${base} Motivo del aula: ${reason}` : base);
+        super(reason ? `${base} Motivo del aula: ${reason}` : base, "El aula", reason);
         this.name = "InvalidCredentialsError";
     }
 }

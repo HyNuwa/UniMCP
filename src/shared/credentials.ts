@@ -6,6 +6,20 @@ export interface Credentials {
 }
 
 /**
+ * La plataforma rechazó usuario o contraseña. Cada una tiene su subclase; `unimcp login` repregunta
+ * con `rejected` (qué la rechazó, "El aula") y `reason` (lo que dijo la plataforma).
+ */
+export class RejectedCredentialsError extends Error {
+    constructor(
+        message: string,
+        readonly rejected: string,
+        readonly reason?: string,
+    ) {
+        super(message);
+    }
+}
+
+/**
  * Cada plataforma usa su propio usuario: en el aula suele ser el institucional y en Guaraní, el DNI.
  */
 export type CredentialAccount = "aula" | "guarani";

@@ -1,6 +1,6 @@
 import type { CookieJar } from "tough-cookie";
 import type { GuaraniSite } from "../../shared/campus.js";
-import { loginHint, type Credentials } from "../../shared/credentials.js";
+import { loginHint, RejectedCredentialsError, type Credentials } from "../../shared/credentials.js";
 import { withoutCredentials } from "../../shared/html.js";
 import { fetchWithCookies } from "../../shared/http.js";
 import type { GuaraniSession } from "./session.js";
@@ -13,10 +13,11 @@ export class GuaraniLoginRequiredError extends Error {
     }
 }
 
-export class InvalidGuaraniCredentialsError extends Error {
+export class InvalidGuaraniCredentialsError extends RejectedCredentialsError {
+    /** @param reason el aviso de `#error_login`, que `unimcp login` muestra al repreguntar. */
     constructor(reason?: string) {
         const base = `Guaraní rechazó usuario o contraseña. ${loginHint()}`;
-        super(reason ? `${base} Motivo de Guaraní: ${reason}` : base);
+        super(reason ? `${base} Motivo de Guaraní: ${reason}` : base, "Guaraní", reason);
         this.name = "InvalidGuaraniCredentialsError";
     }
 }
