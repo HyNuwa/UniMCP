@@ -169,7 +169,7 @@ Guaraní no tiene API: el servidor entra con tu usuario y lee las páginas como 
 
 ## Cómo instalar
 ### Instalación fácil: Claude Desktop
-1. Bajá `unimcp-<versión>.mcpb` del [último release](https://github.com/HyNuwa/UniMCP/releases/latest).
+1. Descargá la extensión: [`unimcp.mcpb`](https://github.com/HyNuwa/UniMCP/releases/latest/download/unimcp.mcpb) (también está en el [último release](https://github.com/HyNuwa/UniMCP/releases/latest), con la versión en el nombre).
 2. Hacele doble click (o arrastralo a *Configuración → Extensiones* de Claude Desktop) e instalalo.
 3. Completá tu campus (el id de la tabla de arriba, por ejemplo `unju`) y tus usuarios y contraseñas del aula y de Guaraní. Claude Desktop guarda las contraseñas de forma segura y solo viajan a tu universidad.
 

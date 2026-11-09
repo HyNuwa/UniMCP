@@ -1,7 +1,7 @@
 name: Extensión de Claude Desktop
 
 # Al publicar un release, arma unimcp-<versión>.mcpb y lo adjunta para que se baje desde la página del
-# release. Las credenciales llegan a la extensión por variables de entorno, así que da igual que se arme
+# release, junto con una copia como unimcp.mcpb para el link directo al último. Las credenciales llegan a la extensión por variables de entorno, así que da igual que se arme
 # en Linux: el binario del keychain no hace falta.
 on:
   release:
@@ -21,6 +21,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run mcpb
-      - run: gh release upload "${{ github.event.release.tag_name }}" unimcp-*.mcpb --clobber
+      # Also as unimcp.mcpb: a fixed name keeps releases/latest/download/unimcp.mcpb (the site and README) working
+      - run: cp unimcp-*.mcpb unimcp.mcpb
+      - run: gh release upload "${{ github.event.release.tag_name }}" unimcp-*.mcpb unimcp.mcpb --clobber
         env:
           GH_TOKEN: ${{ github.token }}
