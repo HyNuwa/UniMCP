@@ -80,7 +80,7 @@ export const HORIZONS = [
 
 /** Las pestañas de instalación; `{pkg}` es el nombre del paquete en npm. */
 export const INSTALL = [
-    { id: "desktop", label: "Claude Desktop", file: "extensión .mcpb", code: "1. Bajá unimcp-<versión>.mcpb del último release\n2. Hacele doble click e instalalo\n3. Completá tu campus (ej: unju) y tus usuarios", note: "Claude Desktop guarda las contraseñas de forma segura y trae su propio Node." },
+    { id: "desktop", label: "Claude Desktop", file: "extensión .mcpb", code: "1. Descargá la extensión (unimcp.mcpb)\n2. Hacele doble click e instalalo\n3. Completá tu campus (ej: unju) y tus usuarios", note: "Claude Desktop guarda las contraseñas de forma segura y trae su propio Node." },
     { id: "code", label: "Claude Code", file: "terminal", code: "npx -y {pkg} login\nclaude mcp add uni -- npx -y {pkg}", note: "El login se hace una sola vez. Para ver si anda todo: npx -y {pkg} check" },
     { id: "codex", label: "Codex", file: "terminal", code: "npx -y {pkg} login\ncodex mcp add uni -- npx -y {pkg}", note: "El login se hace una sola vez." },
     { id: "gemini", label: "Gemini CLI", file: "terminal", code: "npx -y {pkg} login\ngemini mcp add uni npx -y {pkg}", note: "El login se hace una sola vez." },

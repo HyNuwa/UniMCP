@@ -1,6 +1,6 @@
 ---
 import { INSTALL } from "../data/copy";
-import { PKG, REPO } from "../data/site";
+import { MCPB_URL, PKG } from "../data/site";
 
 const tabs = INSTALL.map((t) => ({ ...t, code: t.code.replaceAll("{pkg}", PKG), note: t.note.replaceAll("{pkg}", PKG) }));
 ---
@@ -17,7 +17,7 @@ const tabs = INSTALL.map((t) => ({ ...t, code: t.code.replaceAll("{pkg}", PKG), 
                 <li><span class="mono">02</span><span>Lo agregás a tu cliente. Las sesiones se renuevan solas.</span></li>
                 <li><span class="mono">03</span><span>Le preguntás lo que necesites.</span></li>
             </ol>
-            <a class="pill pill-white" href={`${REPO}/releases/latest`} style="margin-top: 28px">Bajar la extensión ↗</a>
+            <a class="pill pill-white" href={MCPB_URL} download style="margin-top: 28px">Descargar para Claude Desktop</a>
         </div>
         <div style="flex: 1.3 1 440px; min-width: 0" data-tabs>
             <div role="tablist" aria-label="Cliente" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px">

@@ -4,6 +4,8 @@ Lo que cambia en cada versión para quien usa UniMCP. El formato sigue [Keep a C
 
 ## [Sin publicar]
 
+- La extensión de Claude Desktop se descarga directo desde la web y el README, con un link fijo al último release (`unimcp.mcpb`), sin buscar el archivo en la página del release.
+
 ## [0.2.0] - 2026-11-08
 
 - 87 aulas nuevas, y ahora hay al menos una en cada provincia: UNC (FAMAF), UNR, UNL, UNLP, UNSAM, UNMdP, UNLu, UNVM, UADER, UNaM, UNaF, UNCA, UNLaR, UNSE, UNPAZ, UNAHUR, 20 regionales más de la UTN, más facultades de la UBA, la UNT, la UNSa y la UNICEN, y UNS, UNNE, UNER, UNCuyo, UNSJ, UNSL, UNLPam, UNCo, UNPSJB y UNTDF. Son 99 campus de 32 universidades.

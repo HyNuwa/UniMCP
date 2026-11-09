@@ -7,6 +7,8 @@ import { RADIUS, percent } from "../lib/projection";
 export const PKG = generated.paquete;
 export const VERSION = generated.version;
 export const REPO = "https://github.com/HyNuwa/UniMCP";
+/** Descarga directa de la extensión del último release: release.yml la sube también con este nombre fijo. */
+export const MCPB_URL = `${REPO}/releases/latest/download/unimcp.mcpb`;
 /** El hilo donde cada uno pega su `unimcp check` para aparecer en el mapa. */
 export const THREAD = generated.hilo;
 const probaron: Record<string, string[]> = generated.probaron;

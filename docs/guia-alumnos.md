@@ -22,7 +22,7 @@ UniMCP le da a tu asistente de IA (Claude, ChatGPT, Gemini…) acceso a tu **aul
 
 ## Instalarlo en Claude Desktop
 1. Instalá [Claude Desktop](https://claude.ai/download) y entrá con tu cuenta.
-2. Bajá `unimcp-<versión>.mcpb` del [último release](https://github.com/HyNuwa/UniMCP/releases/latest).
+2. Descargá la extensión: [`unimcp.mcpb`](https://github.com/HyNuwa/UniMCP/releases/latest/download/unimcp.mcpb).
 3. Hacele doble click (o arrastralo a *Configuración → Extensiones*) y tocá *Instalar*.
 4. Completá:
    - **Campus**: el id de tu facultad de la tabla, por ejemplo `unju` o `uba-fiuba`.
